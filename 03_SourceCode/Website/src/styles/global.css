@@ -356,6 +356,16 @@ canvas {
 
 /* immersive home */
 .immersive-home {
+  --hero-safe-top: max(88px, 12vh);
+  --article-title-safe-top: max(88px, 9vh);
+  --road-sign-safe-top: 28vh;
+  --road-sign-top-padding: clamp(18px, 3vh, 32px);
+  --road-sign-min-height: 250px;
+  --road-sign-stagger: 12px;
+  --road-sign-post-height: 52px;
+  --program-title-offset: clamp(120px, 18vh, 190px);
+  --program-card-offset: clamp(56px, 10vh, 104px);
+  --program-card-gap: clamp(72px, 12vh, 128px);
   position: relative;
   min-height: var(--story-height);
   background: var(--land-sky);
@@ -410,7 +420,7 @@ canvas {
 
 .hero-copy {
   position: sticky;
-  top: 24vh;
+  top: var(--hero-safe-top);
   width: min(650px, 92vw);
   padding: clamp(24px, 4vw, 48px);
   background: rgba(255, 246, 221, 0.9);
@@ -513,24 +523,28 @@ canvas {
 
 .stage-copy--light { color: var(--sea-text); }
 
+.story-stage--articles .stage-copy {
+  top: var(--article-title-safe-top);
+}
+
 .road-signs {
   position: sticky;
-  top: 38vh;
+  top: var(--road-sign-safe-top);
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 18px;
-  padding-top: 38px;
+  padding-top: var(--road-sign-top-padding);
 }
 
 .road-sign {
   position: relative;
-  min-height: 250px;
+  min-height: var(--road-sign-min-height);
   padding: 25px;
   border: 4px solid var(--land-ink);
   background: color-mix(in srgb, var(--land-cloud) 92%, transparent);
   box-shadow: 7px 7px 0 rgba(24, 35, 59, 0.24);
   clip-path: polygon(0 7px, 7px 7px, 7px 0, calc(100% - 7px) 0, calc(100% - 7px) 7px, 100% 7px, 100% calc(100% - 7px), calc(100% - 7px) calc(100% - 7px), calc(100% - 7px) 100%, 7px 100%, 7px calc(100% - 7px), 0 calc(100% - 7px));
-  transform: translateY(calc(var(--sign-index) * 18px));
+  transform: translateY(calc(var(--sign-index) * var(--road-sign-stagger)));
 }
 
 .road-sign::after {
@@ -582,19 +596,21 @@ canvas {
 }
 
 .portholes {
-  padding-top: 32vh;
+  display: grid;
+  gap: var(--program-card-gap);
+  padding-top: var(--program-card-offset);
 }
 
 .porthole {
-  position: sticky;
-  top: calc(21vh + var(--porthole-index) * 8vh);
+  position: relative;
+  top: auto;
   display: grid;
   width: min(820px, 90vw);
   min-height: 260px;
   grid-template-columns: 220px 1fr;
   gap: 28px;
   align-items: center;
-  margin: 0 0 36vh auto;
+  margin: 0 0 0 auto;
   padding: 22px;
   border: 4px solid var(--sea-light);
   background: rgba(4, 22, 47, 0.88);
@@ -693,9 +709,9 @@ canvas {
 .stage-link--light { color: var(--sea-text); }
 
 .story-stage--programs > .stage-link {
-  position: absolute;
-  right: 0;
-  bottom: 20vh;
+  position: static;
+  display: inline-block;
+  margin-top: var(--program-card-offset);
 }
 
 .constellation-card {
@@ -1227,8 +1243,19 @@ canvas {
 @media (max-width: 980px) {
   .content-grid--programs { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .about-grid { grid-template-columns: 1fr 1fr; }
-  .road-signs { grid-template-columns: 1fr; width: min(620px, 88vw); margin-left: auto; }
-  .road-sign { min-height: 0; transform: translateY(calc(var(--sign-index) * 10px)); }
+  .road-signs {
+    grid-template-columns: none;
+    grid-auto-flow: column;
+    grid-auto-columns: min(82vw, 440px);
+    width: 100%;
+    margin-left: 0;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scroll-snap-type: x proximity;
+    scrollbar-width: thin;
+  }
+  .road-sign { min-height: 230px; transform: none; scroll-snap-align: start; }
+  .road-sign__post { display: none; }
   .road-sign::after { display: none; }
   .story-stage--articles { min-height: 1650px; }
   .detail-layout { grid-template-columns: 1fr; }
@@ -1237,6 +1264,15 @@ canvas {
 
 @media (max-width: 767px) {
   :root { --pixel-shadow: 4px 4px 0 rgba(24, 35, 59, 0.2); }
+  .immersive-home {
+    --hero-safe-top: max(76px, 8vh);
+    --article-title-safe-top: max(76px, 8vh);
+    --road-sign-safe-top: 28vh;
+    --road-sign-top-padding: 18px;
+    --program-title-offset: clamp(92px, 12vh, 120px);
+    --program-card-offset: 48px;
+    --program-card-gap: 42px;
+  }
   .desktop-nav { display: none; }
   .menu-button { display: inline-flex; }
   .site-nav { min-height: 68px; padding: 10px 16px; backdrop-filter: none; }
@@ -1250,14 +1286,15 @@ canvas {
   .story-stage--articles { height: 170vh; min-height: 1240px; }
   .story-stage--programs { height: 230vh; min-height: 1720px; }
   .story-stage--space { height: 120vh; min-height: 840px; }
-  .hero-copy { top: 18vh; width: 100%; padding: 24px; }
+  .hero-copy { top: var(--hero-safe-top); width: 100%; padding: 24px; }
   .hero-copy h1 { font-size: clamp(2.4rem, 13vw, 4.2rem); }
   .scene-label { display: none; }
   .stage-copy { top: 16vh; }
-  .road-signs { top: 37vh; width: 100%; gap: 12px; }
+  .story-stage--articles .stage-copy { top: var(--article-title-safe-top); }
+  .road-signs { top: var(--road-sign-safe-top); width: 100%; gap: 12px; }
   .road-sign { padding: 20px; }
-  .portholes { padding-top: 30vh; }
-  .porthole { top: calc(18vh + var(--porthole-index) * 6vh); width: 100%; min-height: 0; grid-template-columns: 1fr; gap: 14px; margin-bottom: 29vh; }
+  .portholes { padding-top: var(--program-card-offset); }
+  .porthole { top: auto; width: 100%; min-height: 0; grid-template-columns: 1fr; gap: 14px; margin-bottom: 0; }
   .porthole__glass { width: 100%; height: 116px; border-radius: 0; border-width: 6px; }
   .porthole__glass span { display: none; }
   .constellation-card { top: 17vh; width: 100%; padding: 25px; }
@@ -1302,9 +1339,10 @@ canvas {
     padding-block: 120px 80px;
   }
   .hero-copy, .stage-copy, .road-signs, .porthole, .constellation-card { position: relative; top: auto; }
+  .story-stage--articles .stage-copy { top: auto; }
   .road-signs { margin-top: 45px; }
-  .portholes { padding-top: 50px; }
-  .porthole { margin-bottom: 35px; }
+  .portholes { gap: 35px; padding-top: 50px; }
+  .porthole { margin-bottom: 0; }
   .story-stage--articles > .stage-link, .story-stage--programs > .stage-link { position: static; display: inline-block; margin-top: 35px; }
   .journey-end { position: relative; bottom: auto; margin-top: 100px; }
 }
@@ -1363,6 +1401,12 @@ body[data-story-phase="space"] .site-nav--floating::after {
   font-size: clamp(1rem, 1.7vw, 1.15rem);
 }
 
+.story-stage--programs .stage-copy {
+  position: relative;
+  top: auto;
+  padding-top: var(--program-title-offset);
+}
+
 .pixel-window__corner {
   position: absolute;
   width: 16px;
@@ -1419,15 +1463,51 @@ body[data-story-phase="space"] .site-nav--floating::after {
 .road-sign__post {
   position: absolute;
   right: 28px;
-  bottom: -76px;
+  bottom: calc(-1 * var(--road-sign-post-height));
   width: 18px;
-  height: 76px;
+  height: var(--road-sign-post-height);
   background: #75452f;
   box-shadow: inset -6px 0 0 #4b3027;
 }
 .road-sign--arrow .road-sign__post { right: 50%; }
 .road-sign--board .road-sign__post { right: auto; left: 28px; box-shadow: inset -6px 0 0 #4b3027, calc(100% + 240px) 0 0 #75452f; }
 .road-sign::after { display: none; }
+
+@media (min-width: 981px) and (max-height: 820px) {
+  .immersive-home {
+    --article-title-safe-top: max(72px, 8vh);
+    --road-sign-safe-top: 30vh;
+    --road-sign-top-padding: 18px;
+    --road-sign-min-height: 190px;
+    --road-sign-stagger: 8px;
+    --road-sign-post-height: 28px;
+  }
+  .road-sign { padding: 18px; }
+  .road-sign h3 { margin: 10px 0 8px; font-size: 1rem; }
+  .road-sign p {
+    display: -webkit-box;
+    overflow: hidden;
+    font-size: 0.82rem;
+    line-height: 1.45;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+  }
+  .road-sign > div { margin-top: 10px; }
+}
+
+@media (max-width: 980px) and (max-height: 700px) {
+  .road-sign { min-height: 190px; padding: 16px; }
+  .road-sign h3 { margin: 10px 0 8px; font-size: 0.95rem; }
+  .road-sign p {
+    display: -webkit-box;
+    overflow: hidden;
+    font-size: 0.8rem;
+    line-height: 1.45;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+  }
+  .road-sign > div { margin-top: 8px; }
+}
 
 .waterline-dom-effect {
   position: fixed;
@@ -1667,18 +1747,34 @@ body[data-story-phase="space"] .site-nav--floating::after {
   .constellation-star { position: relative; inset: auto; display: flex; align-items: center; gap: 12px; }
   .constellation-star span { opacity: 1; transform: none; }
   .constellation-star::after { display: none; }
+  .story-stage--programs .stage-copy { padding-top: 0; }
 
   .immersive-home.immersive-home--force-motion { --story-height: var(--full-story-height) !important; }
-  .immersive-home--force-motion .hero-copy { position: sticky; top: 24vh; }
+  .immersive-home--force-motion .story-stage { padding-block: 0; }
+  .immersive-home--force-motion .story-stage--hero { height: 160vh; min-height: 980px; }
+  .immersive-home--force-motion .story-stage--articles { height: 190vh; min-height: 1260px; }
+  .immersive-home--force-motion .story-stage--programs { height: 300vh; min-height: 1900px; }
+  .immersive-home--force-motion .story-stage--space { height: 210vh; min-height: 1320px; }
+  .immersive-home--force-motion .hero-copy { position: sticky; top: var(--hero-safe-top); }
   .immersive-home--force-motion .stage-copy { position: sticky; top: 18vh; }
-  .immersive-home--force-motion .road-signs { position: sticky; top: 38vh; margin-top: 0; }
-  .immersive-home--force-motion .portholes { padding-top: 32vh; }
-  .immersive-home--force-motion .porthole { position: sticky; top: calc(21vh + var(--porthole-index) * 8vh); margin-bottom: 36vh; }
+  .immersive-home--force-motion .story-stage--articles .stage-copy { top: var(--article-title-safe-top); }
+  .immersive-home--force-motion .road-signs { position: sticky; top: var(--road-sign-safe-top); margin-top: 0; }
+  .immersive-home--force-motion .story-stage--programs .stage-copy { position: relative; top: auto; padding-top: var(--program-title-offset); }
+  .immersive-home--force-motion .portholes { padding-top: var(--program-card-offset); }
+  .immersive-home--force-motion .porthole { position: relative; top: auto; margin-bottom: 0; }
   .immersive-home--force-motion .constellation-card { position: sticky; top: 18vh; }
-  .immersive-home--force-motion .story-stage--articles > .stage-link,
-  .immersive-home--force-motion .story-stage--programs > .stage-link { position: absolute; display: inline; margin-top: 0; }
+  .immersive-home--force-motion .story-stage--articles > .stage-link { position: absolute; display: inline; margin-top: 0; }
+  .immersive-home--force-motion .story-stage--programs > .stage-link { position: static; display: inline-block; margin-top: var(--program-card-offset); }
   .immersive-home--force-motion .journey-end { position: absolute; bottom: 70px; margin-top: 0; }
   .immersive-home--force-motion .waterline-dom-effect { height: 64px; backdrop-filter: hue-rotate(calc(var(--refraction-strength, 0) * 12deg)) contrast(calc(1 + var(--refraction-strength, 0) * 0.2)) saturate(calc(1 + var(--refraction-strength, 0) * 0.35)); }
   .immersive-home--force-motion .waterline-dom-effect span { top: 23px; transform: translateX(calc(var(--refraction-strength, 0) * -5px)); }
   .immersive-home--force-motion .waterline-dom-effect i { top: 34px; transform: translateX(calc(var(--refraction-strength, 0) * 8px)); opacity: 0.45; }
+}
+
+@media (max-width: 767px) and (prefers-reduced-motion: reduce) {
+  .immersive-home.immersive-home--force-motion { --story-height: 650vh !important; }
+  .immersive-home--force-motion .story-stage--hero { height: 130vh; min-height: 820px; }
+  .immersive-home--force-motion .story-stage--articles { height: 170vh; min-height: 1240px; }
+  .immersive-home--force-motion .story-stage--programs { height: 230vh; min-height: 1720px; }
+  .immersive-home--force-motion .story-stage--space { height: 120vh; min-height: 900px; }
 }

@@ -215,3 +215,35 @@ test("keeps the M4.5-corrected world orientation fixed through the sea-to-space 
   assert.doesNotMatch(sceneController, /maxRotation/);
   assert.doesNotMatch(sceneController, /Math\.sin\(transform \* Math\.PI\)/);
 });
+
+test("keeps the traveler corridor and Programs archive free of content collisions", async () => {
+  const [css, storyConfig] = await Promise.all([
+    readFile(new URL("src/styles/global.css", root), "utf8"),
+    readFile(new URL("src/config/story.config.ts", root), "utf8"),
+  ]);
+
+  assert.match(css, /--hero-safe-top:\s*max\(88px,\s*12vh\)/);
+  assert.match(css, /\.hero-copy\s*\{[\s\S]*?top:\s*var\(--hero-safe-top\)/);
+  assert.match(css, /@media \(max-width:\s*767px\)[\s\S]*?--hero-safe-top:\s*max\(76px,\s*8vh\)/);
+  assert.match(storyConfig, /traveler:\s*\{\s*start:\s*0\.13,\s*travel:\s*0\.46/);
+  assert.match(css, /--road-sign-safe-top:\s*28vh/);
+  assert.match(css, /--road-sign-min-height:\s*250px/);
+  assert.match(css, /--road-sign-stagger:\s*12px/);
+  assert.match(css, /--road-sign-post-height:\s*52px/);
+  assert.match(css, /\.road-signs\s*\{[\s\S]*?top:\s*var\(--road-sign-safe-top\)/);
+  assert.match(css, /\.road-sign\s*\{[\s\S]*?min-height:\s*var\(--road-sign-min-height\)/);
+  assert.match(css, /@media \(min-width:\s*981px\) and \(max-height:\s*820px\)[\s\S]*?--road-sign-min-height:\s*190px[\s\S]*?--road-sign-post-height:\s*28px/);
+  assert.match(css, /@media \(max-width:\s*980px\)[\s\S]*?grid-auto-flow:\s*column[\s\S]*?\.road-sign__post\s*\{\s*display:\s*none;/);
+  assert.match(css, /@media \(max-width:\s*980px\) and \(max-height:\s*700px\)[\s\S]*?min-height:\s*190px/);
+  assert.match(css, /\.immersive-home--force-motion \.road-signs\s*\{\s*position:\s*sticky;\s*top:\s*var\(--road-sign-safe-top\)/);
+  assert.doesNotMatch(css, /\.road-signs\s*\{\s*position:\s*sticky;\s*top:\s*(?:37|38)vh/);
+
+  assert.match(css, /\.story-stage--programs \.stage-copy\s*\{\s*position:\s*relative;\s*top:\s*auto;/);
+  assert.match(css, /\.portholes\s*\{\s*display:\s*grid;\s*gap:\s*var\(--program-card-gap\);/);
+  assert.match(css, /\.porthole\s*\{\s*position:\s*relative;\s*top:\s*auto;/);
+  assert.match(css, /\.immersive-home--force-motion \.porthole\s*\{\s*position:\s*relative;\s*top:\s*auto;\s*margin-bottom:\s*0;/);
+  assert.match(css, /\.immersive-home--force-motion \.story-stage--programs\s*\{\s*height:\s*300vh;\s*min-height:\s*1900px;/);
+  assert.match(css, /@media \(max-width:\s*767px\) and \(prefers-reduced-motion:\s*reduce\)[\s\S]*?--story-height:\s*650vh/);
+  assert.doesNotMatch(css, /\.porthole\s*\{\s*position:\s*sticky/);
+  assert.doesNotMatch(css, /--porthole-index\) \* (?:6|8)vh/);
+});
