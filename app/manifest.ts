@@ -1,0 +1,14 @@
+import type { MetadataRoute } from "next";
+
+export default function manifest(): MetadataRoute.Manifest {
+  return {
+    name: "像素漫游者",
+    short_name: "PIXEL//WALK",
+    description: "软件开发、个人项目和奇怪想法的像素叙事网站。",
+    start_url: "/",
+    display: "standalone",
+    background_color: "#050411",
+    theme_color: "#181443",
+    icons: [{ src: "/favicon.svg", sizes: "any", type: "image/svg+xml" }],
+  };
+}
