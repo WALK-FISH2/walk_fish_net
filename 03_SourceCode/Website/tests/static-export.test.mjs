@@ -103,3 +103,35 @@ test("keeps content, SEO, reduced-motion, and migrated source boundaries", async
   assert.doesNotMatch(contentConfig, /const projects = defineCollection/);
   await access(new URL("src/content/programs/tidy-desk.md", root));
 });
+
+test("centralizes overworld parallax without scene-local layer coefficients", async () => {
+  const [storyConfig, overworldScene] = await Promise.all([
+    readFile(new URL("src/config/story.config.ts", root), "utf8"),
+    readFile(new URL("src/interactive/scenes/OverworldScene.ts", root), "utf8"),
+  ]);
+
+  for (const layer of ["far", "mid", "near", "foreground"]) {
+    assert.match(storyConfig, new RegExp(`${layer}:\\s*\\{[\\s\\S]*?strength:`), layer);
+  }
+  assert.match(overworldScene, /STORY_CONFIG\.overworld/);
+  assert.doesNotMatch(overworldScene, /progress\s*\*\s*width\s*\*\s*0\.(?:07|19|4|46)/);
+  assert.doesNotMatch(overworldScene, /nearShift\s*\*\s*1\.35/);
+});
+
+test("keeps article content available across the Canvas fallback boundary", async () => {
+  const [home, homeComponent, sceneController, css] = await Promise.all([
+    readFile(new URL("dist/index.html", root), "utf8"),
+    readFile(new URL("src/components/ImmersiveHome.tsx", root), "utf8"),
+    readFile(new URL("src/interactive/SceneController.ts", root), "utf8"),
+    readFile(new URL("src/styles/global.css", root), "utf8"),
+  ]);
+
+  assert.match(home, /class="story-canvas pixel-art" aria-hidden="true"/);
+  assert.match(home, /\/articles\/first-post\//);
+  assert.match(home, /\/articles\/content-as-levels\//);
+  assert.match(homeComponent, /catch\s*\{[\s\S]*?setCanvasFailed\(true\)/);
+  assert.match(sceneController, /onContextLost\?\.\(\)/);
+  assert.match(sceneController, /this\.destroyed \|\| !this\.initialized/);
+  assert.match(css, /\.immersive-home--fallback \.story-canvas\s*\{\s*display:\s*none/);
+  assert.match(css, /\.immersive-home--fallback \.canvas-fallback\s*\{\s*display:\s*block/);
+});

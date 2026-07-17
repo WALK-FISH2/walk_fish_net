@@ -73,17 +73,28 @@
 
 ## M3：陆地世界
 
+阶段状态：`[x]` 已于 2026-07-17 正式验收，10/10 项完成。
+
 - [x] `M3-01` 建立陆地色板（代码证据：`src/interactive/scenes/OverworldScene.ts` 的陆地渐变和分层颜色）
 - [x] `M3-02` 天空渐变与两层云（代码证据：天空渐变带及两组不同速度的云层循环）
 - [x] `M3-03` 远山、丘陵和中景（代码证据：远山、丘陵、塔与树木分层绘制）
 - [x] `M3-04` 草地与前景遮挡（代码证据：草地、路径、花朵和前景层）
 - [x] `M3-05` 原创引导物（代码证据：旅行者和塔的原创像素化引导构图）
-- [ ] `M3-06` 视差配置
-  - 说明：远、中、近层已有不同位移系数，但仍硬编码在 `OverworldScene.ts`，没有完成可集中维护的视差配置。
-- [x] `M3-07` 路牌式文章卡片（代码证据：`src/components/ImmersiveHome.tsx` 和 `src/styles/global.css` 的 road-sign DOM/CSS）
-- [x] `M3-08` 首屏面板精修（代码证据：Hero DOM/CSS；浏览器证据：桌面 0% 截图）
-- [x] `M3-09` 移动端与 Reduced Motion（代码证据：响应式 CSS 与 Reduced Motion 分支；浏览器证据：375px 和 Reduced Motion 验证）
-- [x] `M3-10` 0%、25% 截图验收（浏览器证据：上一轮 `desktop-00-fixed.png`、`desktop-25.png`）
+- [x] `M3-06` 视差配置（代码证据：`src/config/story.config.ts` 集中定义最大位移、远景、中景、近景、前景强度及层内倍率；`OverworldScene.ts` 只读取配置；静态边界测试确认旧系数不再散落）
+- [x] `M3-07` 路牌式文章卡片（代码证据：`src/components/ImmersiveHome.tsx` 和 `src/styles/global.css` 的 road-sign DOM/CSS；浏览器证据：首篇文章指针点击进入 `/articles/first-post/`，第二篇链接获得键盘焦点，`activeElement.href` 为 `/articles/content-as-levels/`）
+- [x] `M3-08` 首屏面板精修（代码证据：Hero DOM/CSS；浏览器证据：1280×720、0%、陆地阶段截图 `m3-desktop-00.png`）
+- [x] `M3-09` 移动端与 Reduced Motion（浏览器证据：375×812 时横向溢出为 0、Canvas 为 375×812、3 个文章入口仍存在；Reduced Motion 下 `matchMedia` 为 true、故事高度为 `auto`、Hero 为非 sticky 的 `relative`）
+- [x] `M3-10` 0%、25% 截图验收（浏览器证据：`m3-desktop-00.png`、`m3-desktop-25.png`；25% 时 CSS 进度为 `0.25`，从 25% 回滚后为 `0`，截图 `m3-desktop-reverse-00.png`）
+
+M3 正式验收证据：
+
+- 命令：`npm run check` 为 0 errors / 0 warnings / 0 hints，`npm run lint` 通过，`npm test` 为 6/6，`npm run build` 生成 15 个静态 HTML；
+- 正向/反向：桌面从 0% 滚至 25% 后再回到 0%，记录进度 `0 → 0.25 → 0`，阶段与导航始终为陆地；
+- 视觉：0%、25% 与反向回到 0% 的截图均显示天空、云、山、丘陵、草地、路径、原创旅行者和前景遮挡，没有明显退化；
+- 可访问性：文章链接可见、可用、可指针导航且可获得键盘焦点；Canvas 为 `aria-hidden="true"`；
+- 降级：静态首页包含全部文章 DOM；Canvas 初始化异常与 WebGL context lost 均进入 `canvasFailed`，CSS 切换到 `.canvas-fallback`；对应静态边界测试通过；
+- 稳定性：修复 resize 早于 Pixi renderer 初始化的竞态后，375px 切换与重载复验的浏览器 warn/error 列表为空；
+- 阶段边界：`docs/product/dive-underwater-spec.md` 已被 Git 跟踪，本轮没有修改其内容，也没有开始 M4。
 
 ## M4：下潜与深海
 

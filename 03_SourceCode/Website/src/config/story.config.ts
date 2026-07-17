@@ -7,6 +7,40 @@ export const STORY_CONFIG = {
     oceanToSpace: [0.66, 0.8],
     space: [0.8, 1],
   },
+  overworld: {
+    parallax: {
+      // Fractions of the viewport width. Layer strengths match the documented
+      // far/mid/near/foreground bands while preserving the existing travel.
+      maxTravel: 0.54,
+      far: {
+        strength: 0.13,
+        mountain: 0.7,
+        lowerCloud: 1.5,
+      },
+      mid: {
+        strength: 0.35,
+        hills: [0.3, 0.35, 0.28],
+        tower: 0.55,
+      },
+      near: {
+        strength: 0.74,
+        path: [0.16, 0.06, 0.03],
+        flowers: 0.7,
+        dust: {
+          base: 0.3,
+          step: 0.08,
+          variants: 3,
+        },
+      },
+      foreground: {
+        strength: 1,
+      },
+    },
+    traveler: {
+      start: 0.13,
+      travel: 0.46,
+    },
+  },
   quality: {
     high: { particles: 220, dpr: 2 },
     medium: { particles: 130, dpr: 1.5 },

@@ -22,6 +22,7 @@ export class SceneController {
   private pointerX = 0.5;
   private pointerY = 0.5;
   private canvas?: HTMLCanvasElement;
+  private initialized = false;
   private destroyed = false;
   constructor(private readonly onContextLost?: () => void) {}
 
@@ -30,6 +31,11 @@ export class SceneController {
     TextureStyle.defaultOptions.scaleMode = "nearest";
     const dpr = Math.min(window.devicePixelRatio || 1, STORY_CONFIG.quality[this.quality].dpr);
     await this.app.init({ canvas, width: window.innerWidth, height: window.innerHeight, resolution: dpr, autoDensity: true, antialias: false, backgroundAlpha: 0, preference: "webgl" });
+    if (this.destroyed) {
+      this.app.destroy(false, { children: true, texture: false, textureSource: false });
+      return;
+    }
+    this.initialized = true;
     const overworld = new OverworldScene();
     const underwater = new UnderwaterScene();
     const space = new SpaceScene();
@@ -43,7 +49,7 @@ export class SceneController {
   }
 
   resize(width: number, height: number, dpr = 1) {
-    if (this.destroyed) return;
+    if (this.destroyed || !this.initialized) return;
     this.width = width;
     this.height = height;
     this.app.renderer.resolution = Math.min(dpr, STORY_CONFIG.quality[this.quality].dpr);
@@ -60,6 +66,11 @@ export class SceneController {
   destroy() {
     if (this.destroyed) return;
     this.destroyed = true;
+    if (!this.initialized) {
+      this.diveTransition.destroy();
+      this.oceanTransition.destroy();
+      return;
+    }
     this.app.ticker.remove(this.tick);
     this.canvas?.removeEventListener("webglcontextlost", this.handleContextLost);
     document.removeEventListener("visibilitychange", this.handleVisibility);
@@ -67,6 +78,7 @@ export class SceneController {
     this.diveTransition.destroy();
     this.oceanTransition.destroy();
     this.app.destroy(false, { children: true, texture: false, textureSource: false });
+    this.initialized = false;
   }
 
   private tick = (ticker: Ticker) => { this.elapsed += Math.min(ticker.deltaMS / 1000, 0.05); this.renderFrame(); };
