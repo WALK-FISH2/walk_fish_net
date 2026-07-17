@@ -1,0 +1,55 @@
+pixel_walk_vibe_docs/
+├─ .codex/
+│  ├─ checklists/
+│  │  ├─ handoff.md
+│  │  └─ preflight.md
+│  └─ prompts/
+│     ├─ bugfix.md
+│     ├─ docs-sync.md
+│     ├─ phase-02-world-art.md
+│     ├─ phase-03-ocean-to-space.md
+│     ├─ program-demo-module.md
+│     ├─ review.md
+│     └─ static-export-audit.md
+├─ .github/
+│  ├─ ISSUE_TEMPLATE/
+│  │  ├─ bug_report.md
+│  │  └─ feature_request.md
+│  └─ pull_request_template.md
+├─ docs/
+│  ├─ adr/
+│  │  ├─ 0001-static-first.md
+│  │  ├─ 0002-current-framework-static-export-gate.md
+│  │  ├─ 0003-markdown-mdx-content.md
+│  │  ├─ 0004-canvas-dom-separation.md
+│  │  ├─ 0005-scroll-progress-state-machine.md
+│  │  ├─ 0006-program-demo-isolation.md
+│  │  ├─ 0007-progressive-enhancement.md
+│  │  ├─ 0008-original-assets-only.md
+│  │  ├─ 0009-program-domain-and-routes.md
+│  │  └─ README.md
+│  ├─ engineering/
+│  │  ├─ coding-standards.md
+│  │  ├─ content-authoring.md
+│  │  ├─ performance-budget.md
+│  │  ├─ security-privacy.md
+│  │  ├─ static-deployment.md
+│  │  └─ testing-strategy.md
+│  ├─ product/
+│  │  ├─ acceptance-criteria.md
+│  │  ├─ content-model.md
+│  │  ├─ interaction-spec.md
+│  │  └─ visual-system.md
+│  ├─ workflows/
+│  │  ├─ release-checklist.md
+│  │  ├─ review-checklist.md
+│  │  └─ vibe-coding-workflow.md
+│  └─ README.md
+├─ AGENTS.md
+├─ architecture.md
+├─ CHANGELOG.md
+├─ constitution.md
+├─ plan.md
+├─ README.md
+├─ spec.md
+└─ tasks.md

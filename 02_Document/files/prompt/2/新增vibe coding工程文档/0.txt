@@ -1,0 +1,52 @@
+我已经在项目根目录新增了一套Vibe Coding工程文档。
+
+请先完整阅读：
+
+- constitution.md
+- spec.md
+- architecture.md
+- plan.md
+- tasks.md
+- AGENTS.md
+- docs/product/content-model.md
+- docs/product/interaction-spec.md
+- docs/product/visual-system.md
+- docs/product/acceptance-criteria.md
+- docs/engineering/static-deployment.md
+- docs/adr/README.md
+- docs/adr/0001-static-first.md
+- docs/adr/0002-current-framework-static-export-gate.md
+- docs/adr/0004-canvas-dom-separation.md
+- docs/adr/0005-scroll-progress-state-machine.md
+- docs/adr/0009-program-domain-and-routes.md
+
+本轮先不要修改场景代码，也不要继续新增视觉效果。
+
+请根据当前仓库、现有代码、commit 3cd17db和你上一轮的验证结果，对照tasks.md做一次状态对账。
+
+要求：
+
+1. 检查当前实际技术栈和静态输出目录；
+2. 确认Astro迁移已经完成；
+3. 确认11个静态HTML分别对应哪些路由；
+4. 检查是否仍有Node服务端运行时依赖；
+5. 检查当前内容模型是否仍使用Project/projects语义；
+6. 检查M1、M2、M3、M4、M5、M6的实际完成程度；
+7. 不得因为你上一轮说“完成”就直接把任务标记为[x]；
+8. 只有提供了命令、构建结果、浏览器验证或代码证据的项目才能标记为[x]；
+9. 只完成一部分的任务要保持[ ]，并在下面增加说明；
+10. 更新tasks.md；
+11. 根据当前Astro架构更新architecture.md；
+12. 根据静态部署结果更新ADR 0002的状态；
+13. 不要修改constitution.md；
+14. 不要重写现有代码。
+
+最终请输出：
+
+- 当前实际架构；
+- 静态输出目录；
+- 已验证的11个路由；
+- M1到M6的逐项状态；
+- 每个状态对应的验证证据；
+- 当前最应该执行的下一个任务；
+- 修改了哪些文档。

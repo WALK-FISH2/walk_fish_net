@@ -1,0 +1,71 @@
+请执行tasks.md中的M2：Programs领域迁移。
+
+重要定义：
+
+“做点啥呢”不是普通项目经历列表，也不是公司项目列表。
+它专门用于展示我本人编写的程序、工具、网页应用、交互实验和程序演示。
+
+本轮不要修改首页三世界的背景美术，也不要重做滚动动画。
+
+请完成：
+
+1. 审查现有Project/projects类型、内容目录、路由和组件；
+2. 建立Program领域模型；
+3. 对外中文栏目名称继续使用“做点啥呢”；
+4. 推荐主路由调整为：
+   - /programs
+   - /programs/[slug]
+5. 如果当前已经公开使用/projects：
+   - 保留/projects兼容跳转；
+   - 保留/projects/[slug]兼容；
+   - 不让旧链接直接失效；
+6. Program至少包含：
+   - title
+   - slug
+   - summary
+   - status
+   - category
+   - stack
+   - tags
+   - featured
+   - order
+   - demoType
+   - demoUrl
+   - sourceUrl
+   - ownerContribution
+   - limitations
+   - privacy
+7. demoType支持：
+   - static-embedded
+   - external-live
+   - video
+   - gif
+   - screenshots
+   - none
+8. 程序详情页必须显示：
+   - 这是什么程序
+   - 为什么编写它
+   - 本人完成了什么
+   - 核心功能
+   - 技术方案
+   - 程序演示
+   - 当前限制
+   - 数据和隐私说明
+9. 对只有静态前端演示的程序明确显示：
+   “这是静态演示版，部分后端、数据库、登录或实时功能未接入。”
+10. 不伪造接口成功和后端能力；
+11. 不把所有程序演示代码打包进首页；
+12. 更新搜索、筛选、SEO和Sitemap；
+13. 更新相关测试；
+14. 更新tasks.md、architecture.md和内容维护文档。
+
+请先给出迁移影响范围和文件列表，再实施。
+
+完成后运行实际存在的：
+- Astro Check
+- ESLint
+- 测试
+- 生产构建
+- 静态路由验证
+
+最终汇报旧路由兼容方式和Programs内容示例。
