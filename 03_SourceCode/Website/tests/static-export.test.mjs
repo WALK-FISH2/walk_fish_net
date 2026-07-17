@@ -150,12 +150,12 @@ test("centralizes the reversible M4 dive timeline and underwater layers", async 
   ]);
 
   for (const range of [
-    "landOmen: [0.3, 0.315]",
-    "surfaceReveal: [0.315, 0.33]",
-    "riseToMiddle: [0.33, 0.345]",
-    "crossContent: [0.345, 0.36]",
-    "fullSubmerge: [0.36, 0.37]",
-    "cameraDescent: [0.37, 0.38]",
+    "cooling: [0.3, 0.315]",
+    "farWave: [0.315, 0.328]",
+    "waveApproach: [0.328, 0.342]",
+    "waveBreak: [0.342, 0.355]",
+    "foamCover: [0.355, 0.368]",
+    "underwaterSettle: [0.368, 0.38]",
     "surfaceRetreat: [0.38, 0.43]",
     "preheat: [0.64, 0.66]",
   ]) assert.ok(storyConfig.includes(range), range);
@@ -176,8 +176,34 @@ test("centralizes the reversible M4 dive timeline and underwater layers", async 
   assert.match(homeComponent, /--waterline-y/);
   assert.match(homeComponent, /DEMO_TYPE_LABELS\[program\.demoType\]/);
   assert.match(homeComponent, /get\("motion"\) === "full"/);
+  assert.match(homeComponent, /forceFullMotionMode[\s\S]*?ScrollTrigger\.refresh\(\)/);
   assert.match(homeComponent, /get\("canvas"\) === "fallback"/);
   assert.match(css, /top:\s*calc\(var\(--waterline-y/);
   assert.match(css, /height:\s*64px/);
   assert.match(css, /immersive-home--force-motion/);
+});
+
+test("implements isolated reversible M4.5 pixel waves and pooled foam", async () => {
+  const [storyConfig, diveTransition, sceneController, oceanTransition] = await Promise.all([
+    readFile(new URL("src/config/story.config.ts", root), "utf8"),
+    readFile(new URL("src/interactive/transitions/DiveTransition.ts", root), "utf8"),
+    readFile(new URL("src/interactive/SceneController.ts", root), "utf8"),
+    readFile(new URL("src/interactive/transitions/OceanToSpaceTransition.ts", root), "utf8"),
+  ]);
+
+  assert.match(storyConfig, /export function getLandOceanTransitionState/);
+  for (const layer of ["far", "mid", "foreground"]) {
+    assert.match(storyConfig, new RegExp(`${layer}:\\s*\\{[\\s\\S]*?amplitude:[\\s\\S]*?wavelength:[\\s\\S]*?phase:[\\s\\S]*?speed:[\\s\\S]*?alpha:[\\s\\S]*?pixelStep:[\\s\\S]*?foamWeight:`), layer);
+  }
+  assert.match(diveTransition, /type FoamParticle/);
+  assert.match(diveTransition, /const foamPool: readonly FoamParticle\[\] = Array\.from/);
+  assert.match(diveTransition, /drawPixelWaveLayer\(this\.farWave/);
+  assert.match(diveTransition, /drawPixelWaveLayer\(this\.midWave/);
+  assert.match(diveTransition, /drawPixelWaveLayer\(this\.foregroundWave/);
+  assert.match(diveTransition, /drawReducedWaveCurtain/);
+  assert.match(diveTransition, /transition\.seamCover/);
+  assert.doesNotMatch(diveTransition, /Math\.random/);
+  assert.match(sceneController, /STORY_CONFIG\.sections\.oceanToSpace/);
+  assert.match(oceanTransition, /class OceanToSpaceTransition/);
+  assert.doesNotMatch(oceanTransition, /getLandOceanTransitionState/);
 });

@@ -43,12 +43,12 @@ export const STORY_CONFIG = {
   },
   dive: {
     timeline: {
-      landOmen: [0.3, 0.315],
-      surfaceReveal: [0.315, 0.33],
-      riseToMiddle: [0.33, 0.345],
-      crossContent: [0.345, 0.36],
-      fullSubmerge: [0.36, 0.37],
-      cameraDescent: [0.37, 0.38],
+      cooling: [0.3, 0.315],
+      farWave: [0.315, 0.328],
+      waveApproach: [0.328, 0.342],
+      waveBreak: [0.342, 0.355],
+      foamCover: [0.355, 0.368],
+      underwaterSettle: [0.368, 0.38],
       surfaceRetreat: [0.38, 0.43],
     },
     surface: {
@@ -58,6 +58,61 @@ export const STORY_CONFIG = {
       submerged: 0.08,
       top: 0.025,
       distant: -0.12,
+      farWaveVisible: 0.92,
+      frontWaveApproach: 0.88,
+      frontWaveMiddle: 0.56,
+      frontWaveExit: -0.08,
+    },
+    waves: {
+      far: {
+        amplitude: 0.012,
+        wavelength: 112,
+        phase: 0.35,
+        speed: 0.32,
+        alpha: 0.42,
+        color: 0x1d91a9,
+        highlight: 0x64d8dc,
+        pixelStep: 18,
+        pixelBlock: 4,
+        verticalOffset: 0.08,
+        crestBlocks: 1,
+        foamWeight: 0.08,
+      },
+      mid: {
+        amplitude: 0.024,
+        wavelength: 82,
+        phase: 1.25,
+        speed: 0.56,
+        alpha: 0.68,
+        color: 0x25bec4,
+        highlight: 0x89f0d7,
+        pixelStep: 14,
+        pixelBlock: 5,
+        verticalOffset: 0.025,
+        crestBlocks: 2,
+        foamWeight: 0.28,
+      },
+      foreground: {
+        amplitude: 0.052,
+        wavelength: 58,
+        phase: 2.15,
+        speed: 0.9,
+        alpha: 0.9,
+        color: 0x64d8dc,
+        highlight: 0xe8ffff,
+        pixelStep: 10,
+        pixelBlock: 6,
+        verticalOffset: 0,
+        crestBlocks: 3,
+        foamWeight: 1,
+      },
+    },
+    foam: {
+      desktopCount: 96,
+      mobileScale: 0.38,
+      coverSpread: 0.38,
+      drift: 0.018,
+      mistAlpha: 0.16,
     },
     camera: {
       landTravel: 0.14,
@@ -129,24 +184,57 @@ export function lerp(from: number, to: number, amount: number) {
   return from + (to - from) * clamp(amount);
 }
 
+export function getLandOceanTransitionState(progress: number) {
+  const timeline = STORY_CONFIG.dive.timeline;
+  const surface = STORY_CONFIG.dive.surface;
+  const cooling = smoothstep(mapProgress(progress, timeline.cooling));
+  const farWaveProgress = smoothstep(mapProgress(progress, timeline.farWave));
+  const farWave = progress >= timeline.farWave[0] ? 0.32 + farWaveProgress * 0.68 : 0;
+  const waveApproach = smoothstep(mapProgress(progress, timeline.waveApproach));
+  const waveBreak = smoothstep(mapProgress(progress, timeline.waveBreak));
+  const foamCover = smoothstep(mapProgress(progress, timeline.foamCover));
+  const underwaterSettle = smoothstep(mapProgress(progress, timeline.underwaterSettle));
+  const surfaceRetreat = smoothstep(mapProgress(progress, timeline.surfaceRetreat));
+  const seamCover = foamCover * (1 - underwaterSettle);
+
+  let frontWaveY: number = surface.frontWaveApproach;
+  if (progress >= timeline.waveBreak[0]) frontWaveY = lerp(surface.frontWaveApproach, surface.frontWaveMiddle, waveBreak);
+  if (progress >= timeline.foamCover[0]) frontWaveY = lerp(surface.frontWaveMiddle, surface.frontWaveExit, foamCover);
+  if (progress >= timeline.underwaterSettle[0]) frontWaveY = lerp(surface.frontWaveExit, surface.frontWaveExit - 0.06, underwaterSettle);
+
+  return {
+    cooling,
+    farWave,
+    farWaveProgress,
+    waveApproach,
+    waveBreak,
+    foamCover,
+    underwaterSettle,
+    surfaceRetreat,
+    seamCover,
+    frontWaveY,
+  };
+}
+
 export function getDiveState(progress: number) {
   const timeline = STORY_CONFIG.dive.timeline;
   const surface = STORY_CONFIG.dive.surface;
-  const landOmen = smoothstep(mapProgress(progress, timeline.landOmen));
-  const surfaceReveal = smoothstep(mapProgress(progress, timeline.surfaceReveal));
-  const riseToMiddle = smoothstep(mapProgress(progress, timeline.riseToMiddle));
-  const crossContent = smoothstep(mapProgress(progress, timeline.crossContent));
-  const fullSubmerge = smoothstep(mapProgress(progress, timeline.fullSubmerge));
-  const cameraDescent = smoothstep(mapProgress(progress, timeline.cameraDescent));
-  const surfaceRetreat = smoothstep(mapProgress(progress, timeline.surfaceRetreat));
-  const landFade = smoothstep(mapProgress(progress, [timeline.fullSubmerge[0], timeline.cameraDescent[1]]));
-  const underwaterReveal = smoothstep(mapProgress(progress, [timeline.riseToMiddle[0], timeline.fullSubmerge[1]]));
+  const transition = getLandOceanTransitionState(progress);
+  const landOmen = transition.cooling;
+  const surfaceReveal = transition.farWave;
+  const riseToMiddle = transition.waveApproach;
+  const crossContent = transition.waveBreak;
+  const fullSubmerge = transition.foamCover;
+  const cameraDescent = transition.underwaterSettle;
+  const surfaceRetreat = transition.surfaceRetreat;
+  const landFade = smoothstep(mapProgress(progress, [timeline.foamCover[0], timeline.underwaterSettle[1]]));
+  const underwaterReveal = smoothstep(mapProgress(progress, [timeline.waveApproach[0], timeline.foamCover[1]]));
   let surfaceY: number = surface.belowViewport;
-  if (progress >= timeline.surfaceReveal[0]) surfaceY = lerp(surface.belowViewport, surface.revealed, surfaceReveal);
-  if (progress >= timeline.riseToMiddle[0]) surfaceY = lerp(surface.revealed, surface.middle, riseToMiddle);
-  if (progress >= timeline.crossContent[0]) surfaceY = lerp(surface.middle, surface.submerged, crossContent);
-  if (progress >= timeline.fullSubmerge[0]) surfaceY = lerp(surface.submerged, surface.top, fullSubmerge);
-  if (progress >= timeline.cameraDescent[0]) surfaceY = lerp(surface.top, surface.top * 0.72, cameraDescent);
+  if (progress >= timeline.farWave[0]) surfaceY = lerp(surface.belowViewport, surface.revealed, transition.farWaveProgress);
+  if (progress >= timeline.waveApproach[0]) surfaceY = lerp(surface.revealed, surface.middle, riseToMiddle);
+  if (progress >= timeline.waveBreak[0]) surfaceY = lerp(surface.middle, surface.submerged, crossContent);
+  if (progress >= timeline.foamCover[0]) surfaceY = lerp(surface.submerged, surface.top, fullSubmerge);
+  if (progress >= timeline.underwaterSettle[0]) surfaceY = lerp(surface.top, surface.top * 0.72, cameraDescent);
   if (progress >= timeline.surfaceRetreat[0]) surfaceY = lerp(surface.top * 0.72, surface.distant, surfaceRetreat);
   const surfaceOpacity = surfaceReveal * (1 - surfaceRetreat);
 
@@ -163,7 +251,8 @@ export function getDiveState(progress: number) {
     underwaterReveal,
     surfaceY,
     surfaceOpacity,
-    refraction: surfaceOpacity * smoothstep(mapProgress(progress, [timeline.riseToMiddle[0], timeline.crossContent[1]])),
+    refraction: surfaceOpacity * smoothstep(mapProgress(progress, [timeline.waveApproach[0], timeline.waveBreak[1]])),
+    transition,
   };
 }
 

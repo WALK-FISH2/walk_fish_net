@@ -1,6 +1,6 @@
 # 技术架构 Architecture
 
-版本：1.3.0
+版本：1.4.0
 
 状态：当前已验证架构
 
@@ -148,15 +148,17 @@ BASE_PATH=/pixel-walk-audit
 - DOM 与旋转的 Canvas 世界层分离，因此海洋到星空过渡时文本保持水平；
 - Reduced Motion 与移动端通过独立分支降低旋转和动画强度。
 
-当前实现按绝对进度确定性重绘。M4 已完成 50%→30% 的标准动效倒放和 Reduced Motion 往返帧一致性验收；M5 的完整反向倒放及 76%/80% 关键帧仍缺浏览器证据，不应由 M4 的结果外推。
+当前实现按绝对进度确定性重绘。M4 已完成 50%→30% 的深海倒放，M4.5 已完成 38%→30% 的陆海翻涌倒放和 Reduced Motion 往返帧一致性验收；M5 的完整反向倒放及 76%/80% 关键帧仍缺浏览器证据，不应由 M4/M4.5 的结果外推。
 
 陆地世界的视差参数统一位于 `STORY_CONFIG.overworld.parallax`。配置通过 `maxTravel` 和远景、中景、近景、前景四层强度表达整体深度关系，并集中维护山、云、丘陵、路径、花朵和尘粒的层内倍率；`OverworldScene` 不再保存未说明的视差系数。四层有效位移保持在迁移前约 `0.07 / 0.19 / 0.40 / 0.54` 的范围，浏览器 0%、25% 与反向回滚验收未发现明显视觉退化。
 
 `SceneController` 使用初始化状态守卫保护 `resize()` 和提前销毁路径，避免响应式视口切换或页面重载早于 Pixi renderer 初始化时访问未就绪的 renderer。该守卫不改变单一进度源或场景绘制结果。
 
-M4 的细分时间线、深海层级和尾段预热统一位于 `STORY_CONFIG.dive` 与 `STORY_CONFIG.underwater`：
+M4/M4.5 的细分时间线、陆海翻涌参数、深海层级和尾段预热统一位于 `STORY_CONFIG.dive` 与 `STORY_CONFIG.underwater`：
 
-- `getDiveState(globalProgress)` 将 `0.300–0.430` 映射为环境变化、水面出现、升至中部、经过内容、完全入水、镜头下潜和水面退远；Canvas 水线与 DOM 折射带共同读取该函数；
+- `getLandOceanTransitionState(globalProgress)` 将 `0.300–0.380` 映射为 cooling、farWave、waveApproach、waveBreak、foamCover 和 underwaterSettle，`getDiveState()` 在此基础上继续驱动 `0.380–0.430` 的 surfaceRetreat；Canvas 水线与 DOM 折射带共同读取同一状态；
+- `STORY_CONFIG.dive.waves` 分别维护远浪、中浪、前浪的幅度、波长、相位、速度、透明度、像素步长、块大小、垂直偏移、浪峰块数量和泡沫权重；`DiveTransition` 为三层浪复用独立 Graphics，不与 M5 的 `OceanToSpaceTransition` 共用实现；
+- `DiveTransition` 使用 96 项固定泡沫数据池与单一复用 Graphics，向前和向后滚动均只由绝对进度重绘；375px 使用 `0.72` 细节倍率、`0.38` 泡沫倍率并取消薄雾，Reduced Motion 只绘制单层静态像素浪幕；
 - `SceneController` 在完全入水阶段对陆地容器应用冷色 tint、低对比透明度、向上位移和轻微缩小，所有值只由全局进度计算，向上滚动时原路恢复；
 - `STORY_CONFIG.underwater.parallax` 明确区分远景、中景、近景、前景，`UnderwaterScene` 不再保存未说明的深海视差位移；鱼群、水母与气泡使用模块级固定池，逐帧只重绘已有 Graphics；
 - `0.640–0.660` 只执行 M4 预热：水流、海草和气泡轻量增强，鱼群逐渐离开，光束轻微倾斜；`OceanToSpaceTransition` 仍从 `0.660` 开始，本轮没有扩展 M5；
@@ -165,24 +167,25 @@ M4 的细分时间线、深海层级和尾段预热统一位于 `STORY_CONFIG.di
 
 ## 10. 验证门禁
 
-本次 M4 验收实际执行：
+本次 M4.5 验收实际执行：
 
 ```text
 npm run check
 npm run lint
 npm test
+npm run build:sites
 ```
 
-最新 M4 验收结果为：生产构建成功并生成 15 个静态 HTML，Astro Check 为 0 errors / 0 warnings / 0 hints，lint 通过，7 项静态输出与源码边界测试全部通过。纯静态服务器逐一验证 11 个主页面和 4 个 Projects 兼容页为 HTTP 200，未知路由为 404，`dist/server` 不存在。
+最新 M4.5 验收结果为：生产构建成功并生成 15 个静态 HTML，Astro Check 为 0 errors / 0 warnings / 0 hints，lint 通过，8 项静态输出与源码边界测试全部通过。纯静态服务器逐一验证 11 个主页面和 4 个 Projects 兼容页为 HTTP 200，未知路由为 404，`dist/server` 不存在。
 
-浏览器在 1280×720 标准动效下逐一验证 30.0%、31.5%、32.0%、34.5%、36.5%、38.0%、43.0%、50.0%、62.0% 和 65.99%，并完成 50%→30% 倒放；在 375×812 下确认水线中点、Program 单列布局、无正向横向溢出和链接可用；Reduced Motion 的 50% 两帧摘要一致；Canvas 强制降级时文章与 Programs DOM 仍完整。标准、Reduced Motion、移动端和降级状态的浏览器 warn/error 均为空。
+浏览器在 1280×720 标准动效下逐一验证 31.5%、32.8%、34.2%、35.0%、35.8%、36.8% 和 38.0%，并完成 38%→30% 倒放；在 375×812 下复验 31.5%、35.8%、38.0%、无正向横向溢出和链接可用；Reduced Motion 的 35.8% 间隔 700ms 两帧摘要及 38%→30%→35.8% 往返帧摘要一致；Canvas 强制降级时文章与 Programs DOM 仍完整。文章入口指针点击进入真实详情，Programs 导航指针点击进入 `/programs`，二者均 `tabIndex=0` 且可获得焦点；标准、Reduced Motion、移动端和降级状态的浏览器 warn/error 均为空。
 
 ## 11. 已知未完成项
 
 - DemoRegistry 与程序演示隔离层尚未实现；
 - 当前 `static-embedded` 只提供静态说明；真正的独立演示容器和按需加载由 M7 跟踪；
 - M5 的完整反向滚动、76% 和 80% 过渡帧缺独立浏览器证据；
-- M5 仍有局部时序、跨形态粒子复用和对象池目标；M3 陆地视差与 M4 下潜/深海配置已经集中并完成正式验收。
+- M5 仍有局部时序、跨形态粒子复用和对象池目标；M3 陆地视差、M4 下潜/深海与 M4.5 陆海翻涌配置已经集中并完成正式验收。
 
 ## 12. 架构变化流程
 

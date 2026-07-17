@@ -45,7 +45,11 @@ export function ImmersiveHome({ articles, programs }: { articles: ArticleSummary
     const acceptanceParams = new URLSearchParams(window.location.search);
     const forceFullMotionMode = acceptanceParams.get("motion") === "full";
     const forceCanvasFallback = acceptanceParams.get("canvas") === "fallback";
-    queueMicrotask(() => { if (!disposed) setForceFullMotion(forceFullMotionMode); });
+    queueMicrotask(() => {
+      if (disposed) return;
+      setForceFullMotion(forceFullMotionMode);
+      if (forceFullMotionMode) resizeFrame = requestAnimationFrame(() => ScrollTrigger.refresh());
+    });
     const media = window.matchMedia("(prefers-reduced-motion: reduce)");
     const initialReducedMotion = media.matches && !forceFullMotionMode;
     reducedMotionRef.current = initialReducedMotion;
