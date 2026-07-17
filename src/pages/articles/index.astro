@@ -1,0 +1,12 @@
+---
+import { getCollection } from "astro:content";
+import { ContentFilter } from "../../components/ContentFilter";
+import PageShell from "../../components/PageShell.astro";
+import { articleSummary, sortArticles } from "../../lib/content";
+const entries = sortArticles(await getCollection("articles", ({ data }) => !data.draft));
+const articles = entries.map(articleSummary);
+---
+<PageShell title="文章" description="开发笔记、设计思考与一路捡到的奇怪问题。" theme="land" canonicalPath="/articles/">
+  <section class="archive-hero archive-hero--land"><div><p class="eyebrow">LOG BOOK · {String(articles.length).padStart(2, "0")}</p><h1>沿途记录</h1><p>开发笔记、设计思考，以及把奇怪想法做成东西时留下的脚印。</p></div><div class="pixel-sun" aria-hidden="true"></div></section>
+  <section class="archive-section" aria-label="文章列表"><ContentFilter client:load kind="article" items={articles} /></section>
+</PageShell>

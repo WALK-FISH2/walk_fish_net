@@ -13,10 +13,9 @@
 # testing
 /coverage
 
-# next.js
-/.next/
+# Astro build cache
+/.astro/
 /.vinext/
-/out/
 
 # misc
 .DS_Store
@@ -35,9 +34,9 @@ yarn-error.log*
 .vercel
 
 # typescript
-next-env.d.ts
 *.tsbuildinfo
 /dist/
+/sites-dist/
 /.wrangler/
 /outputs/
 /work/

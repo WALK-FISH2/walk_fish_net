@@ -1,0 +1,8 @@
+---
+import { SITE_CONFIG, sitePath } from "../config/site.config";
+---
+<footer class="site-footer">
+  <div><p class="eyebrow">END OF CURRENT MAP</p><p>世界仍在生成中。下一次来，也许会多一片岛。</p></div>
+  <div class="footer-links"><a href={sitePath("/articles")}>文章</a><a href={sitePath("/projects")}>项目</a><a href={`mailto:${SITE_CONFIG.email}`}>邮件</a></div>
+  <p class="footer-meta">© {new Date().getFullYear()} {SITE_CONFIG.name} · ORIGINAL PIXEL WORLD</p>
+</footer>

@@ -1,0 +1,14 @@
+---
+import { getCollection, render, type CollectionEntry } from "astro:content";
+import ContentLayout from "../../layouts/ContentLayout.astro";
+import { articleSummary, entrySlug, sortArticles } from "../../lib/content";
+
+export async function getStaticPaths() {
+  const entries = sortArticles(await getCollection("articles", ({ data }) => !data.draft));
+  return entries.map((entry, index) => ({ params: { slug: entrySlug(entry) }, props: { entry, previous: entries[index - 1], next: entries[index + 1] } }));
+}
+interface Props { entry: CollectionEntry<"articles">; previous?: CollectionEntry<"articles">; next?: CollectionEntry<"articles">; }
+const { entry, previous, next } = Astro.props;
+const { Content, headings } = await render(entry);
+---
+<ContentLayout item={articleSummary(entry)} {headings} previous={previous ? articleSummary(previous) : undefined} next={next ? articleSummary(next) : undefined}><Content /></ContentLayout>

@@ -1,0 +1,53 @@
+---
+import "../styles/global.css";
+import { SITE_CONFIG, sitePath } from "../config/site.config";
+
+interface Props {
+  title?: string;
+  description?: string;
+  theme?: "land" | "sea" | "space";
+  canonicalPath?: string;
+  noShell?: boolean;
+}
+
+const {
+  title = SITE_CONFIG.title,
+  description = SITE_CONFIG.description,
+  theme = "space",
+  canonicalPath = Astro.url.pathname,
+  noShell = false,
+} = Astro.props;
+const fullTitle = title === SITE_CONFIG.title ? title : `${title} · ${SITE_CONFIG.name}`;
+const canonical = new URL(sitePath(canonicalPath), Astro.site ?? Astro.url.origin);
+const ogImage = new URL(sitePath("/og-v2.png"), Astro.site ?? Astro.url.origin);
+---
+
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="generator" content={Astro.generator} />
+    <meta name="description" content={description} />
+    <meta name="theme-color" content="#181443" />
+    <link rel="canonical" href={canonical} />
+    <link rel="icon" href={sitePath("/favicon.svg")} />
+    <link rel="manifest" href={sitePath("/manifest.webmanifest")} />
+    <meta property="og:type" content="website" />
+    <meta property="og:locale" content="zh_CN" />
+    <meta property="og:site_name" content={SITE_CONFIG.name} />
+    <meta property="og:title" content={fullTitle} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:image" content={ogImage} />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={fullTitle} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={ogImage} />
+    <title>{fullTitle}</title>
+  </head>
+  <body class:list={[!noShell && "page-shell", !noShell && `page-shell--${theme}`]}>
+    <a class="skip-link" href="#main-content">跳到主要内容</a>
+    <slot />
+  </body>
+</html>
