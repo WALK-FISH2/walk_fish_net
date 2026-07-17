@@ -644,11 +644,34 @@ canvas {
   box-shadow: 35px 18px 0 #0a6b6d, 72px -8px 0 -5px #0a6b6d;
 }
 
-.porthole__copy > div:first-child {
+.porthole__meta {
   display: flex;
+  gap: 12px;
   justify-content: space-between;
   color: var(--sea-light);
   font: 700 0.66rem var(--font-pixel);
+}
+
+.porthole__limitation {
+  margin-top: 12px !important;
+  padding-left: 10px;
+  border-left: 3px solid var(--sea-coral);
+  color: rgba(229, 250, 255, 0.76);
+  font-size: 0.78rem !important;
+}
+
+.porthole__limitation strong { color: var(--sea-coral); }
+
+.porthole__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 18px;
+  align-items: center;
+}
+
+.porthole__actions > span {
+  color: rgba(229, 250, 255, 0.58);
+  font: 700 0.62rem var(--font-pixel);
 }
 
 .porthole ul {
@@ -1408,23 +1431,27 @@ body[data-story-phase="space"] .site-nav--floating::after {
 
 .waterline-dom-effect {
   position: fixed;
+  top: calc(var(--waterline-y, 1.08) * 100%);
   right: 0;
-  bottom: calc(var(--dive-progress, 0) * 100% - 9px);
   left: 0;
   z-index: 34;
-  height: 18px;
+  height: 64px;
   overflow: hidden;
-  opacity: var(--dive-active, 0);
+  opacity: var(--waterline-opacity, 0);
   pointer-events: none;
-  backdrop-filter: hue-rotate(12deg) contrast(1.2) saturate(1.35);
+  transform: translateY(-50%);
+  backdrop-filter: hue-rotate(calc(var(--refraction-strength, 0) * 12deg)) contrast(calc(1 + var(--refraction-strength, 0) * 0.2)) saturate(calc(1 + var(--refraction-strength, 0) * 0.35));
 }
 .waterline-dom-effect span,
 .waterline-dom-effect i {
   position: absolute;
-  inset: 0;
+  right: 0;
+  left: 0;
+  height: 10px;
   background: repeating-linear-gradient(90deg, rgba(229, 250, 255, 0.72) 0 12px, rgba(37, 190, 196, 0.35) 12px 22px, transparent 22px 34px);
 }
-.waterline-dom-effect i { inset: 7px 0 0; transform: translateX(7px); opacity: 0.45; }
+.waterline-dom-effect span { top: 23px; transform: translateX(calc(var(--refraction-strength, 0) * -5px)); }
+.waterline-dom-effect i { top: 34px; transform: translateX(calc(var(--refraction-strength, 0) * 8px)); opacity: 0.45; }
 
 .porthole {
   transition: transform 180ms steps(3), box-shadow 180ms steps(3);
@@ -1625,13 +1652,33 @@ body[data-story-phase="space"] .site-nav--floating::after {
   .story-progress__rail { top: auto; right: 10px; bottom: 3px; left: 10px; width: auto; height: 2px; }
   .story-progress__rail i { width: calc(var(--story-progress, 0) * 100%); height: 100%; }
   .story-progress button small { display: none; }
+  .waterline-dom-effect { height: 36px; }
+  .waterline-dom-effect span { top: 11px; }
+  .waterline-dom-effect i { top: 20px; }
+  .porthole__meta { align-items: flex-start; flex-direction: column; gap: 5px; }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .waterline-dom-effect { display: none; }
+  .waterline-dom-effect { height: 24px; backdrop-filter: none; }
+  .waterline-dom-effect span { top: 6px; transform: none; }
+  .waterline-dom-effect i { top: 14px; transform: none; opacity: 0.22; }
   .signal-station { position: relative; top: auto; }
   .constellation-links { position: relative; inset: auto; display: grid; height: auto; gap: 8px; margin-top: 45px; }
   .constellation-star { position: relative; inset: auto; display: flex; align-items: center; gap: 12px; }
   .constellation-star span { opacity: 1; transform: none; }
   .constellation-star::after { display: none; }
+
+  .immersive-home.immersive-home--force-motion { --story-height: var(--full-story-height) !important; }
+  .immersive-home--force-motion .hero-copy { position: sticky; top: 24vh; }
+  .immersive-home--force-motion .stage-copy { position: sticky; top: 18vh; }
+  .immersive-home--force-motion .road-signs { position: sticky; top: 38vh; margin-top: 0; }
+  .immersive-home--force-motion .portholes { padding-top: 32vh; }
+  .immersive-home--force-motion .porthole { position: sticky; top: calc(21vh + var(--porthole-index) * 8vh); margin-bottom: 36vh; }
+  .immersive-home--force-motion .constellation-card { position: sticky; top: 18vh; }
+  .immersive-home--force-motion .story-stage--articles > .stage-link,
+  .immersive-home--force-motion .story-stage--programs > .stage-link { position: absolute; display: inline; margin-top: 0; }
+  .immersive-home--force-motion .journey-end { position: absolute; bottom: 70px; margin-top: 0; }
+  .immersive-home--force-motion .waterline-dom-effect { height: 64px; backdrop-filter: hue-rotate(calc(var(--refraction-strength, 0) * 12deg)) contrast(calc(1 + var(--refraction-strength, 0) * 0.2)) saturate(calc(1 + var(--refraction-strength, 0) * 0.35)); }
+  .immersive-home--force-motion .waterline-dom-effect span { top: 23px; transform: translateX(calc(var(--refraction-strength, 0) * -5px)); }
+  .immersive-home--force-motion .waterline-dom-effect i { top: 34px; transform: translateX(calc(var(--refraction-strength, 0) * 8px)); opacity: 0.45; }
 }

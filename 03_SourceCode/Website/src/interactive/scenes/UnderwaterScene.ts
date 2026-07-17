@@ -1,9 +1,28 @@
 import { Container, Graphics } from "pixi.js";
-import { mixColor } from "../../config/story.config";
+import { STORY_CONFIG, getUnderwaterState, mixColor } from "../../config/story.config";
 import { drawFish, drawJellyfish, drawKelp, drawRuin } from "../pixel/draw";
 import type { PixelScene, SceneFrame } from "./types";
 
-const bubbleSeeds = Array.from({ length: 88 }, (_, index) => ({ x: ((index * 47) % 101) / 100, y: ((index * 71) % 97) / 96, size: 2 + (index % 6), speed: 0.025 + (index % 8) * 0.007, phase: index * 0.53 }));
+const bubblePool = Array.from({ length: 88 }, (_, index) => ({ x: ((index * 47) % 101) / 100, y: ((index * 71) % 97) / 96, size: 2 + (index % 6), speed: 0.025 + (index % 8) * 0.007, phase: index * 0.53 }));
+const farFishPool = Array.from({ length: 11 }, (_, index) => ({ x: index * 179, y: 0.21 + (index % 4) * 0.09, scale: 0.45 + (index % 3) * 0.1, direction: (index % 2 ? -1 : 1) as 1 | -1 }));
+const midFishPool = Array.from({ length: 8 }, (_, index) => ({ x: index * 241, y: 0.36 + (index % 5) * 0.08, scale: 0.8 + (index % 3) * 0.22, direction: (index % 3 === 0 ? -1 : 1) as 1 | -1 }));
+const jellyfishPool = Array.from({ length: 5 }, (_, index) => ({ x: 0.12 + index * 0.21, y: 0.22 + (index % 3) * 0.13, scale: 0.75 + (index % 2) * 0.35 }));
+
+function wrap(value: number, size: number) { return ((value % size) + size) % size; }
+
+function drawCoral(graphics: Graphics, x: number, groundY: number, scale: number, color: number) {
+  const stem = 9 * scale;
+  graphics.rect(x - stem / 2, groundY - 54 * scale, stem, 54 * scale).fill(color)
+    .rect(x - 22 * scale, groundY - 39 * scale, 23 * scale, stem).fill(color)
+    .rect(x - 25 * scale, groundY - 58 * scale, stem, 26 * scale).fill(color)
+    .rect(x + 2 * scale, groundY - 28 * scale, 22 * scale, stem).fill(color)
+    .rect(x + 17 * scale, groundY - 47 * scale, stem, 27 * scale).fill(color);
+}
+
+function drawRock(graphics: Graphics, x: number, groundY: number, radius: number, color: number) {
+  graphics.moveTo(x - radius, groundY).lineTo(x - radius * 0.72, groundY - radius * 0.66).lineTo(x - radius * 0.2, groundY - radius).lineTo(x + radius * 0.58, groundY - radius * 0.72).lineTo(x + radius, groundY).fill(color)
+    .rect(x - radius * 0.3, groundY - radius * 0.72, radius * 0.48, Math.max(2, radius * 0.12)).fill({ color: 0x31596b, alpha: 0.42 });
+}
 
 export class UnderwaterScene implements PixelScene {
   container = new Container();
@@ -16,69 +35,98 @@ export class UnderwaterScene implements PixelScene {
 
   constructor() { this.container.addChild(this.backdrop, this.farDecor, this.midground, this.nearDecor, this.particles, this.foreground); }
 
-  update({ width, height, progress, time, pointerX, pointerY, particleScale }: SceneFrame) {
+  update({ width, height, globalProgress, progress, time, pointerX, pointerY, particleScale, reducedMotion }: SceneFrame) {
     const bedY = height * 0.88;
+    const state = getUnderwaterState(globalProgress);
+    const parallax = STORY_CONFIG.underwater.parallax;
+    const preheatConfig = STORY_CONFIG.underwater.preheat;
+    const animationTime = reducedMotion ? 0 : time;
+    const farShift = progress * width * parallax.far.strength;
+    const midShift = progress * width * parallax.mid.strength;
+    const nearShift = progress * width * parallax.near.strength;
+    const fishExit = state.preheat * width * preheatConfig.fishExitTravel;
+    const currentDrift = state.preheat * width * preheatConfig.currentBoost;
+
     this.backdrop.clear();
     const bands = 18;
+    const surfaceColor = mixColor(0x167691, 0x0b4b69, state.established);
+    const abyssColor = mixColor(0x092744, 0x02091c, state.tail * 0.78);
     for (let index = 0; index < bands; index += 1) {
       const t = index / (bands - 1);
-      this.backdrop.rect(0, index * height / bands, width, height / bands + 1).fill(mixColor(0x126b88, 0x031126, Math.pow(t, 0.82)));
+      this.backdrop.rect(0, index * height / bands, width, height / bands + 1).fill(mixColor(surfaceColor, abyssColor, Math.pow(t, 0.82)));
     }
-    this.backdrop.rect(0, bedY, width, height - bedY).fill(0x020c1d);
+    this.backdrop.moveTo(0, bedY + 12);
+    for (let x = 0; x <= width + 48; x += 48) this.backdrop.lineTo(x, bedY + Math.sin(x * 0.027) * 12 + (x / 48 % 3) * 4);
+    this.backdrop.lineTo(width, height).lineTo(0, height).fill(0x020c1d);
 
     this.farDecor.clear();
-    const rayLean = (pointerX - 0.5) * 35;
-    for (let index = 0; index < 5; index += 1) {
+    const rayLean = (pointerX - 0.5) * 35 + state.preheat * width * preheatConfig.rayLean;
+    const rayCount = particleScale < 0.5 ? 3 : 5;
+    for (let index = 0; index < rayCount; index += 1) {
       const x = width * (0.04 + index * 0.23);
       this.farDecor.moveTo(x, -20).lineTo(x + width * 0.12, -20).lineTo(x + width * 0.24 + rayLean, height * 0.83).lineTo(x + width * 0.13 + rayLean, height * 0.83).fill({ color: 0x89f0d7, alpha: 0.025 + (index % 2) * 0.018 });
     }
-    drawRuin(this.farDecor, width * 0.22 - progress * 35, bedY, 0.65, 0x25bec4);
-    drawRuin(this.farDecor, width * 0.76 - progress * 60, bedY, 0.9, 0x5e8cff);
-    for (let index = 0; index < 11; index += 1) {
-      const direction = index % 2 ? -1 : 1;
-      const x = ((index * 179 + progress * 90 * direction + time * 9 * direction) % (width + 130)) - 65;
-      drawFish(this.farDecor, x, height * (0.21 + (index % 4) * 0.09), 0.45 + (index % 3) * 0.1, direction as 1 | -1, 0x5c91a4, 0.28);
+    drawRuin(this.farDecor, width * 0.22 - farShift * parallax.far.ruin[0], bedY, 0.65, 0x25bec4);
+    drawRuin(this.farDecor, width * 0.76 - farShift * parallax.far.ruin[1], bedY, 0.9, 0x5e8cff);
+    const farFishCount = Math.max(5, Math.round(farFishPool.length * (0.35 + particleScale * 0.65)));
+    for (let index = 0; index < farFishCount; index += 1) {
+      const fish = farFishPool[index];
+      const travel = farShift * parallax.far.fish + animationTime * 9;
+      const x = wrap(fish.x + travel * fish.direction, width + 130) - 65 + fishExit * fish.direction;
+      drawFish(this.farDecor, x, height * fish.y, fish.scale, fish.direction, 0x5c91a4, 0.28 * (1 - state.preheat * 0.72));
     }
 
     this.midground.clear();
-    for (let index = 0; index < 8; index += 1) {
-      const direction = index % 3 === 0 ? -1 : 1;
-      const x = ((index * 241 + progress * 170 * direction + time * 18 * direction) % (width + 170)) - 85;
-      drawFish(this.midground, x, height * (0.36 + (index % 5) * 0.08), 0.8 + (index % 3) * 0.22, direction as 1 | -1, index % 2 ? 0x8db9cb : 0x25bec4, 0.48);
+    const midFishCount = Math.max(3, Math.round(midFishPool.length * (0.32 + particleScale * 0.68)));
+    for (let index = 0; index < midFishCount; index += 1) {
+      const fish = midFishPool[index];
+      const travel = midShift * parallax.mid.fish + animationTime * 18;
+      const x = wrap(fish.x + travel * fish.direction, width + 170) - 85 + fishExit * fish.direction;
+      drawFish(this.midground, x, height * fish.y, fish.scale, fish.direction, index % 2 ? 0x8db9cb : 0x25bec4, 0.48 * (1 - state.preheat * 0.62));
     }
-    for (let index = 0; index < 5; index += 1) {
-      const x = width * (0.12 + index * 0.21) + Math.sin(time * 0.8 + index) * 11;
-      const y = height * (0.22 + (index % 3) * 0.13) + Math.cos(time * 0.65 + index) * 14;
-      drawJellyfish(this.midground, x, y, 0.75 + (index % 2) * 0.35, index % 2 ? 0xc16de0 : 0x89f0d7, 0.58);
+    const jellyfishCount = Math.max(2, Math.round(jellyfishPool.length * (0.36 + particleScale * 0.64)));
+    for (let index = 0; index < jellyfishCount; index += 1) {
+      const jellyfish = jellyfishPool[index];
+      const x = width * jellyfish.x - midShift * parallax.mid.jellyfish + Math.sin(animationTime * 0.8 + index) * 11 + currentDrift * 0.16;
+      const y = height * jellyfish.y + Math.cos(animationTime * 0.65 + index) * 14;
+      drawJellyfish(this.midground, x, y, jellyfish.scale, index % 2 ? 0xc16de0 : 0x89f0d7, 0.58);
     }
 
     this.nearDecor.clear();
-    for (let index = 0; index < 18; index += 1) {
-      const x = index / 17 * width;
-      const sway = Math.sin(time * 1.2 + index * 0.7 + progress * 5) * (10 + index % 3 * 3);
-      drawKelp(this.nearDecor, x, bedY + 8, 50 + (index % 5) * 18, sway, index % 4 === 0 ? 0xff806e : index % 3 === 0 ? 0x0a6b6d : 0x075b5d, 7 + index % 3);
+    const kelpCount = particleScale < 0.5 ? 10 : particleScale < 0.8 ? 14 : 18;
+    const kelpSwayBoost = 1 + state.preheat * preheatConfig.kelpBoost;
+    for (let index = 0; index < kelpCount; index += 1) {
+      const x = wrap(index / Math.max(1, kelpCount - 1) * width - nearShift * parallax.near.kelp + 35, width + 70) - 35;
+      const sway = Math.sin(animationTime * 1.2 + index * 0.7 + progress * 5) * (10 + index % 3 * 3) * kelpSwayBoost;
+      drawKelp(this.nearDecor, x, bedY + 8, 50 + (index % 5) * 18, sway, index % 3 === 0 ? 0x0a6b6d : 0x075b5d, 7 + index % 3);
     }
-    for (let index = 0; index < 12; index += 1) {
-      const x = index / 11 * width + 18;
-      this.nearDecor.circle(x, bedY + 10, 13 + index % 4 * 7).fill(index % 5 === 0 ? 0x6b3858 : 0x163b4a);
+    const rockCount = particleScale < 0.5 ? 7 : 12;
+    for (let index = 0; index < rockCount; index += 1) {
+      const x = wrap(index / Math.max(1, rockCount - 1) * width + 18 - nearShift * parallax.near.terrain + 32, width + 64) - 32;
+      drawRock(this.nearDecor, x, bedY + 13, 13 + index % 4 * 7, index % 5 === 0 ? 0x6b3858 : 0x163b4a);
+      if (index % 4 === 0) drawCoral(this.nearDecor, x + 20, bedY + 8, 0.55 + (index % 3) * 0.12, index % 2 ? 0xc95a67 : 0xff806e);
     }
 
     this.particles.clear();
-    const count = Math.round(bubbleSeeds.length * particleScale);
+    const count = Math.round(bubblePool.length * particleScale);
+    const bubbleSpeed = 1 + state.preheat * preheatConfig.bubbleSpeedBoost;
     for (let index = 0; index < count; index += 1) {
-      const bubble = bubbleSeeds[index];
-      const y = ((bubble.y - time * bubble.speed - progress * 0.17) % 1 + 1) % 1;
+      const bubble = bubblePool[index];
+      const y = wrap(bubble.y - animationTime * bubble.speed * bubbleSpeed - progress * parallax.near.bubbles, 1);
       const avoid = Math.max(0, 1 - Math.abs(y - pointerY) * 7);
-      const x = bubble.x * width + (bubble.x > pointerX ? 1 : -1) * avoid * 10 + Math.sin(time + bubble.phase) * 2;
+      const x = bubble.x * width + (bubble.x > pointerX ? 1 : -1) * avoid * 10 + Math.sin(animationTime + bubble.phase) * 2 + currentDrift * (0.05 + bubble.x * 0.06);
       this.particles.circle(Math.round(x), Math.round(y * height), bubble.size).stroke({ width: 1.2, color: 0x89f0d7, alpha: 0.35 + (index % 4) * 0.08 });
       if (index % 9 === 0) this.particles.rect(Math.round(x + 8), Math.round(y * height - 3), 2, 2).fill({ color: 0x89f0d7, alpha: 0.65 });
     }
 
     this.foreground.clear();
+    const foregroundTravel = progress * width * parallax.foreground.travel * parallax.foreground.strength;
     for (let index = -1; index < Math.ceil(width / 75) + 2; index += 1) {
-      const x = index * 75 - (progress * width * 0.45 % 75);
-      drawKelp(this.foreground, x, height + 8, 100 + (index % 4) * 35, Math.sin(time + index) * 18, index % 3 ? 0x032b3c : 0x063c46, 13);
+      const x = index * 75 - foregroundTravel % 75;
+      const sway = Math.sin(animationTime + index) * 18 * kelpSwayBoost;
+      drawKelp(this.foreground, x, height + 8, 100 + (index % 4) * 35, sway, index % 3 ? 0x032b3c : 0x063c46, 13);
     }
+    drawCoral(this.foreground, width * 0.9, height + 8, 1.35, 0x371f48);
     this.foreground.rect(0, bedY + 26, width, height - bedY).fill({ color: 0x010918, alpha: 0.44 });
   }
 

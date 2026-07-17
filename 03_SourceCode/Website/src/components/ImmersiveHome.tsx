@@ -2,9 +2,9 @@ import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useCallback, useEffect, useRef, useState, type CSSProperties, type PointerEvent as ReactPointerEvent } from "react";
 import { SITE_CONFIG, sitePath } from "../config/site.config";
-import { STORY_CONFIG, mapProgress } from "../config/story.config";
+import { STORY_CONFIG, getDiveState } from "../config/story.config";
 import { SceneController, detectQuality } from "../interactive/SceneController";
-import { PROGRAM_STATUS_LABELS, type ArticleSummary, type ProgramSummary } from "../types/content";
+import { DEMO_TYPE_LABELS, PROGRAM_STATUS_LABELS, type ArticleSummary, type ProgramSummary } from "../types/content";
 
 type Phase = "land" | "sea" | "space";
 function phaseFor(progress: number): Phase { return progress < 0.38 ? "land" : progress < 0.8 ? "sea" : "space"; }
@@ -19,14 +19,17 @@ export function ImmersiveHome({ articles, programs }: { articles: ArticleSummary
   const [ready, setReady] = useState(false);
   const [skipped, setSkipped] = useState(false);
   const [canvasFailed, setCanvasFailed] = useState(false);
+  const [forceFullMotion, setForceFullMotion] = useState(false);
 
   const updateProgress = useCallback((progress: number) => {
     const nextPhase = phaseFor(progress);
-    const dive = mapProgress(progress, STORY_CONFIG.sections.dive);
+    const dive = getDiveState(progress);
     const root = storyRef.current;
     root?.style.setProperty("--story-progress", String(progress));
-    root?.style.setProperty("--dive-progress", String(dive));
-    root?.style.setProperty("--dive-active", dive > 0 && dive < 1 ? "1" : "0");
+    root?.style.setProperty("--dive-progress", String(dive.overall));
+    root?.style.setProperty("--waterline-y", String(dive.surfaceY));
+    root?.style.setProperty("--waterline-opacity", String(dive.surfaceOpacity));
+    root?.style.setProperty("--refraction-strength", String(dive.refraction));
     root?.setAttribute("data-phase", nextPhase);
     document.body.dataset.storyPhase = nextPhase;
     controllerRef.current?.update(progress);
@@ -39,26 +42,35 @@ export function ImmersiveHome({ articles, programs }: { articles: ArticleSummary
     const canvas = canvasRef.current;
     const story = storyRef.current;
     if (!canvas || !story) return;
+    const acceptanceParams = new URLSearchParams(window.location.search);
+    const forceFullMotionMode = acceptanceParams.get("motion") === "full";
+    const forceCanvasFallback = acceptanceParams.get("canvas") === "fallback";
+    queueMicrotask(() => { if (!disposed) setForceFullMotion(forceFullMotionMode); });
     const media = window.matchMedia("(prefers-reduced-motion: reduce)");
-    reducedMotionRef.current = media.matches;
+    const initialReducedMotion = media.matches && !forceFullMotionMode;
+    reducedMotionRef.current = initialReducedMotion;
     const controller = new SceneController(() => setCanvasFailed(true));
     controllerRef.current = controller;
-    void (async () => {
-      try {
-        controller.setQuality(detectQuality());
-        await controller.init(canvas);
-        if (disposed) return controller.destroy();
-        controller.setReducedMotion(media.matches);
-        setReady(true);
-      } catch { if (!disposed) { setCanvasFailed(true); setReady(true); } }
-    })();
+    if (forceCanvasFallback) {
+      queueMicrotask(() => { if (!disposed) { setCanvasFailed(true); setReady(true); } });
+    } else {
+      void (async () => {
+        try {
+          controller.setQuality(detectQuality());
+          await controller.init(canvas);
+          if (disposed) return controller.destroy();
+          controller.setReducedMotion(initialReducedMotion);
+          setReady(true);
+        } catch { if (!disposed) { setCanvasFailed(true); setReady(true); } }
+      })();
+    }
     gsap.registerPlugin(ScrollTrigger);
     const trigger = ScrollTrigger.create({ trigger: story, start: "top top", end: "bottom bottom", scrub: true, onUpdate: (self) => updateProgress(self.progress) });
     const onResize = () => {
       cancelAnimationFrame(resizeFrame);
       resizeFrame = requestAnimationFrame(() => { controller.resize(window.innerWidth, window.innerHeight, window.devicePixelRatio); ScrollTrigger.refresh(); });
     };
-    const onMotion = (event: MediaQueryListEvent) => { reducedMotionRef.current = event.matches; controller.setReducedMotion(event.matches); };
+    const onMotion = (event: MediaQueryListEvent) => { const reduced = event.matches && !forceFullMotionMode; reducedMotionRef.current = reduced; controller.setReducedMotion(reduced); };
     window.addEventListener("resize", onResize);
     media.addEventListener("change", onMotion);
     return () => {
@@ -81,7 +93,7 @@ export function ImmersiveHome({ articles, programs }: { articles: ArticleSummary
   const loadingVisible = !ready && !skipped;
 
   return (
-    <div ref={storyRef} className={`immersive-home ${canvasFailed ? "immersive-home--fallback" : ""}`} data-phase={phase} style={{ "--story-height": `${STORY_CONFIG.scrollHeightVh}vh` } as CSSProperties} onPointerMove={pointerMove}>
+    <div ref={storyRef} className={`immersive-home ${canvasFailed ? "immersive-home--fallback" : ""} ${forceFullMotion ? "immersive-home--force-motion" : ""}`} data-phase={phase} style={{ "--story-height": `${STORY_CONFIG.scrollHeightVh}vh`, "--full-story-height": `${STORY_CONFIG.scrollHeightVh}vh` } as CSSProperties} onPointerMove={pointerMove}>
       <div className={`world-loader ${loadingVisible ? "" : "world-loader--done"}`} aria-hidden={!loadingVisible}>
         <div className="loader-mark" aria-hidden="true"><span /><span /><span /></div><p>正在生成世界……</p><strong>LOADING WORLD 02</strong>
         <div className="loader-track" role="progressbar" aria-label="世界加载进度" aria-valuemin={0} aria-valuemax={100} aria-valuenow={ready ? 100 : 0}><span style={{ width: ready ? "100%" : "16%" }} /></div>
@@ -127,7 +139,7 @@ export function ImmersiveHome({ articles, programs }: { articles: ArticleSummary
             {programs.map((program, index) => (
               <article key={program.slug} className={`porthole porthole--${["terminal", "probe", "capsule"][index % 3]}`} style={{ "--porthole-index": index } as CSSProperties}>
                 <div className="porthole__hardware" aria-hidden="true"><b /><b /><b /><b /></div><div className="porthole__glass" aria-hidden="true"><span /><i /></div>
-                <div className="porthole__copy"><div><span>{PROGRAM_STATUS_LABELS[program.status]}</span><span>FILE 0{index + 1}</span></div><h3><a href={sitePath(`/programs/${program.slug}/`)}>{program.title}</a></h3><p>{program.summary}</p><ul>{program.stack.map((item) => <li key={item}>{item}</li>)}</ul><a className="arrow-link" href={sitePath(`/programs/${program.slug}/`)}>查看程序 →</a></div>
+                <div className="porthole__copy"><div className="porthole__meta"><span>{PROGRAM_STATUS_LABELS[program.status]} · {DEMO_TYPE_LABELS[program.demoType]}</span><span>FILE 0{index + 1}</span></div><h3><a href={sitePath(`/programs/${program.slug}/`)}>{program.title}</a></h3><p>{program.summary}</p><p className="porthole__limitation"><strong>当前限制：</strong>{program.limitations[0]}</p><ul>{program.stack.map((item) => <li key={item}>{item}</li>)}</ul><div className="porthole__actions"><a className="arrow-link" href={sitePath(`/programs/${program.slug}/`)}>查看程序 →</a>{program.demoUrl ? <a className="arrow-link" href={program.demoUrl.startsWith("/") ? sitePath(program.demoUrl) : program.demoUrl}>立即体验 ↗</a> : <span>详情中查看演示说明</span>}</div></div>
               </article>
             ))}
           </div>

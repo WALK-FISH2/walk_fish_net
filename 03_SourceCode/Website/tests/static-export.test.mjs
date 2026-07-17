@@ -69,6 +69,9 @@ test("program pages expose the required domain content without claiming missing 
   const staticDisclaimer = "这是静态演示版，部分后端、数据库、登录或实时功能未接入。";
   assert.match(tidyDesk, new RegExp(staticDisclaimer));
   assert.doesNotMatch(home, new RegExp(staticDisclaimer));
+  assert.match(home, /在线程序/);
+  assert.match(home, /静态前端演示/);
+  assert.match(home, /当前限制/);
   assert.match(signalGarden, /当前没有可公开访问的程序演示/);
 });
 
@@ -134,4 +137,47 @@ test("keeps article content available across the Canvas fallback boundary", asyn
   assert.match(sceneController, /this\.destroyed \|\| !this\.initialized/);
   assert.match(css, /\.immersive-home--fallback \.story-canvas\s*\{\s*display:\s*none/);
   assert.match(css, /\.immersive-home--fallback \.canvas-fallback\s*\{\s*display:\s*block/);
+});
+
+test("centralizes the reversible M4 dive timeline and underwater layers", async () => {
+  const [storyConfig, sceneController, diveTransition, underwaterScene, homeComponent, css] = await Promise.all([
+    readFile(new URL("src/config/story.config.ts", root), "utf8"),
+    readFile(new URL("src/interactive/SceneController.ts", root), "utf8"),
+    readFile(new URL("src/interactive/transitions/DiveTransition.ts", root), "utf8"),
+    readFile(new URL("src/interactive/scenes/UnderwaterScene.ts", root), "utf8"),
+    readFile(new URL("src/components/ImmersiveHome.tsx", root), "utf8"),
+    readFile(new URL("src/styles/global.css", root), "utf8"),
+  ]);
+
+  for (const range of [
+    "landOmen: [0.3, 0.315]",
+    "surfaceReveal: [0.315, 0.33]",
+    "riseToMiddle: [0.33, 0.345]",
+    "crossContent: [0.345, 0.36]",
+    "fullSubmerge: [0.36, 0.37]",
+    "cameraDescent: [0.37, 0.38]",
+    "surfaceRetreat: [0.38, 0.43]",
+    "preheat: [0.64, 0.66]",
+  ]) assert.ok(storyConfig.includes(range), range);
+
+  for (const layer of ["far", "mid", "near", "foreground"]) {
+    assert.match(storyConfig, new RegExp(`${layer}:\\s*\\{[\\s\\S]*?strength:`), layer);
+  }
+  assert.match(storyConfig, /export function getDiveState/);
+  assert.match(storyConfig, /export function getUnderwaterState/);
+  assert.match(sceneController, /cameraDescent/);
+  assert.match(sceneController, /container\.tint/);
+  assert.match(diveTransition, /getDiveState\(globalProgress\)/);
+  assert.match(diveTransition, /const bubblePool = Array\.from/);
+  assert.match(underwaterScene, /STORY_CONFIG\.underwater\.parallax/);
+  assert.match(underwaterScene, /state\.preheat/);
+  assert.match(underwaterScene, /const (?:farFishPool|midFishPool|jellyfishPool) = Array\.from/);
+  assert.doesNotMatch(underwaterScene, /progress\s*\*\s*(?:35|60|90|170)/);
+  assert.match(homeComponent, /--waterline-y/);
+  assert.match(homeComponent, /DEMO_TYPE_LABELS\[program\.demoType\]/);
+  assert.match(homeComponent, /get\("motion"\) === "full"/);
+  assert.match(homeComponent, /get\("canvas"\) === "fallback"/);
+  assert.match(css, /top:\s*calc\(var\(--waterline-y/);
+  assert.match(css, /height:\s*64px/);
+  assert.match(css, /immersive-home--force-motion/);
 });

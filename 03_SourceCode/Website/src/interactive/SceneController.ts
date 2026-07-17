@@ -1,5 +1,5 @@
 import { Application, Container, TextureStyle, type Ticker } from "pixi.js";
-import { STORY_CONFIG, mapProgress, smoothstep, type QualityLevel } from "../config/story.config";
+import { STORY_CONFIG, getDiveState, mapProgress, mixColor, smoothstep, type QualityLevel } from "../config/story.config";
 import { OverworldScene } from "./scenes/OverworldScene";
 import { SpaceScene } from "./scenes/SpaceScene";
 import { UnderwaterScene } from "./scenes/UnderwaterScene";
@@ -85,16 +85,22 @@ export class SceneController {
   private renderFrame() {
     if (this.destroyed || this.scenes.length !== 3 || this.width === 0) return;
     const [overworld, underwater, space] = this.scenes;
-    const dive = smoothstep(mapProgress(this.progress, STORY_CONFIG.sections.dive));
+    const diveState = getDiveState(this.progress);
     const depth = mapProgress(this.progress, STORY_CONFIG.sections.underwater);
     const transform = smoothstep(mapProgress(this.progress, STORY_CONFIG.sections.oceanToSpace));
     const particleScale = this.quality === "high" ? 1 : this.quality === "medium" ? 0.62 : 0.32;
-    overworld.container.alpha = 1 - smoothstep(Math.max(0, (dive - 0.65) / 0.35));
-    underwater.container.alpha = Math.min(smoothstep(dive * 1.35), 1 - smoothstep(Math.max(0, (transform - 0.42) / 0.5)));
+    const landFade = diveState.landFade;
+    overworld.container.alpha = 1 - landFade;
+    overworld.container.tint = mixColor(0xffffff, 0x7396a0, diveState.landOmen * 0.48 + landFade * 0.42);
+    overworld.container.y = -diveState.cameraDescent * this.height * STORY_CONFIG.dive.camera.landTravel;
+    const landScale = 1 - diveState.cameraDescent * STORY_CONFIG.dive.camera.landScaleLoss;
+    overworld.container.scale.set(landScale);
+    underwater.container.alpha = Math.min(diveState.underwaterReveal, 1 - smoothstep(Math.max(0, (transform - 0.42) / 0.5)));
+    underwater.container.y = (1 - diveState.cameraDescent) * this.height * STORY_CONFIG.dive.camera.underwaterOffset;
     space.container.alpha = smoothstep(Math.max(0, (transform - 0.48) / 0.52));
     const locals = [mapProgress(this.progress, STORY_CONFIG.sections.overworld), depth, mapProgress(this.progress, STORY_CONFIG.sections.space)];
-    this.scenes.forEach((scene, index) => scene.update({ width: this.width, height: this.height, progress: locals[index], time: this.elapsed, pointerX: this.pointerX, pointerY: this.pointerY, particleScale }));
-    this.diveTransition.update(this.width, this.height, dive, depth, this.elapsed, particleScale);
+    this.scenes.forEach((scene, index) => scene.update({ width: this.width, height: this.height, globalProgress: this.progress, progress: locals[index], time: this.elapsed, pointerX: this.pointerX, pointerY: this.pointerY, particleScale, reducedMotion: this.reducedMotion }));
+    this.diveTransition.update(this.width, this.height, this.progress, this.elapsed, particleScale, this.reducedMotion);
     this.oceanTransition.update(this.width, this.height, transform, this.elapsed, particleScale, this.reducedMotion);
     const maxRotation = this.width < 768 ? Math.PI * 0.58 : Math.PI * 0.94;
     this.world.rotation = this.reducedMotion ? 0 : Math.sin(transform * Math.PI) * maxRotation;
