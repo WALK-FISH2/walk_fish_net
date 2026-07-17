@@ -10,7 +10,7 @@
 
 ## Decision
 
-Canvas 负责环境与装饰；DOM 负责全部重要信息和交互。
+Canvas 负责环境与装饰；DOM 负责全部重要信息和交互。分层不代表允许旋转 Canvas 世界；按照产品更正，Canvas 与 DOM 在全部阶段都保持水平。
 
 ## Alternatives
 
@@ -22,4 +22,4 @@ Canvas 负责环境与装饰；DOM 负责全部重要信息和交互。
 
 ## Verification
 
-禁用 Canvas 后仍能阅读和导航。
+禁用 Canvas 后仍能阅读和导航；海洋到星空期间 Canvas 世界方向固定为 0°。

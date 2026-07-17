@@ -102,8 +102,9 @@ export class SceneController {
     this.scenes.forEach((scene, index) => scene.update({ width: this.width, height: this.height, globalProgress: this.progress, progress: locals[index], time: this.elapsed, pointerX: this.pointerX, pointerY: this.pointerY, particleScale, reducedMotion: this.reducedMotion }));
     this.diveTransition.update(this.width, this.height, this.progress, this.elapsed, particleScale, this.reducedMotion);
     this.oceanTransition.update(this.width, this.height, transform, this.elapsed, particleScale, this.reducedMotion);
-    const maxRotation = this.width < 768 ? Math.PI * 0.58 : Math.PI * 0.94;
-    this.world.rotation = this.reducedMotion ? 0 : Math.sin(transform * Math.PI) * maxRotation;
+    // Product invariant: every world remains upright while colors, light and
+    // particles morph continuously between the ocean and space scenes.
+    this.world.rotation = 0;
     if (this.reducedMotion) this.app.render();
   }
   private handleContextLost = (event: Event) => { event.preventDefault(); this.onContextLost?.(); };

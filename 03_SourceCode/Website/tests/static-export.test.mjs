@@ -207,3 +207,11 @@ test("implements isolated reversible M4.5 pixel waves and pooled foam", async ()
   assert.match(oceanTransition, /class OceanToSpaceTransition/);
   assert.doesNotMatch(oceanTransition, /getLandOceanTransitionState/);
 });
+
+test("keeps the M4.5-corrected world orientation fixed through the sea-to-space morph", async () => {
+  const sceneController = await readFile(new URL("src/interactive/SceneController.ts", root), "utf8");
+
+  assert.match(sceneController, /this\.world\.rotation = 0/);
+  assert.doesNotMatch(sceneController, /maxRotation/);
+  assert.doesNotMatch(sceneController, /Math\.sin\(transform \* Math\.PI\)/);
+});
