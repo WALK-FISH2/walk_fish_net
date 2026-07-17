@@ -1,0 +1,56 @@
+---
+import { sitePath } from "../config/site.config";
+import type { ProgramSummary } from "../types/content";
+
+interface Props {
+  program: ProgramSummary;
+}
+
+const { program } = Astro.props;
+const demoHref = program.demoUrl ? sitePath(program.demoUrl) : undefined;
+const opensNewTab = Boolean(demoHref && /^https?:/i.test(demoHref));
+---
+
+<div class="program-demo" data-demo-type={program.demoType}>
+  {program.demoType === "static-embedded" && (
+    <div class="program-demo__static">
+      <p class="program-demo__notice">这是静态演示版，部分后端、数据库、登录或实时功能未接入。</p>
+      {program.demoDescription && <p>{program.demoDescription}</p>}
+      {demoHref && <a class="pixel-button pixel-button--primary" href={demoHref}>打开静态演示</a>}
+    </div>
+  )}
+
+  {program.demoType === "external-live" && (
+    <div class="program-demo__external">
+      <p>{program.demoDescription ?? "该程序提供可访问的在线版本。"}</p>
+      {demoHref
+        ? <a class="pixel-button pixel-button--primary" href={demoHref} target={opensNewTab ? "_blank" : undefined} rel={opensNewTab ? "noreferrer" : undefined}>打开在线程序</a>
+        : <p class="program-demo__notice">在线地址尚未公开。</p>}
+    </div>
+  )}
+
+  {program.demoType === "video" && (
+    demoHref
+      ? <video controls preload="metadata" src={demoHref}>当前浏览器无法播放该演示视频。</video>
+      : <p class="program-demo__notice">演示视频尚未公开。</p>
+  )}
+
+  {program.demoType === "gif" && (
+    demoHref
+      ? <img src={demoHref} alt={program.title + " GIF 演示"} loading="lazy" />
+      : <p class="program-demo__notice">GIF 演示尚未公开。</p>
+  )}
+
+  {program.demoType === "screenshots" && (
+    demoHref
+      ? <img src={demoHref} alt={program.title + " 程序截图"} loading="lazy" />
+      : <p class="program-demo__notice">程序截图尚未公开。</p>
+  )}
+
+  {program.demoType === "none" && (
+    <div class="program-demo__empty">
+      <p>当前没有可公开访问的程序演示。</p>
+      {program.demoDescription && <p>{program.demoDescription}</p>}
+    </div>
+  )}
+</div>

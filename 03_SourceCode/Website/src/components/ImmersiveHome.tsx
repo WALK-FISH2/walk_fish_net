@@ -4,12 +4,12 @@ import { useCallback, useEffect, useRef, useState, type CSSProperties, type Poin
 import { SITE_CONFIG, sitePath } from "../config/site.config";
 import { STORY_CONFIG, mapProgress } from "../config/story.config";
 import { SceneController, detectQuality } from "../interactive/SceneController";
-import type { ArticleSummary, ProjectSummary } from "../types/content";
+import { PROGRAM_STATUS_LABELS, type ArticleSummary, type ProgramSummary } from "../types/content";
 
 type Phase = "land" | "sea" | "space";
 function phaseFor(progress: number): Phase { return progress < 0.38 ? "land" : progress < 0.8 ? "sea" : "space"; }
 
-export function ImmersiveHome({ articles, projects }: { articles: ArticleSummary[]; projects: ProjectSummary[] }) {
+export function ImmersiveHome({ articles, programs }: { articles: ArticleSummary[]; programs: ProgramSummary[] }) {
   const storyRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const controllerRef = useRef<SceneController | null>(null);
@@ -103,7 +103,7 @@ export function ImmersiveHome({ articles, projects }: { articles: ArticleSummary
           <div className="hero-copy story-panel pixel-window">
             <span className="pixel-window__corner pixel-window__corner--a" aria-hidden="true" /><span className="pixel-window__corner pixel-window__corner--b" aria-hidden="true" />
             <p className="eyebrow">WORLD 01 · NEW GAME+</p><h1 id="home-title">你好，我是 <span>{SITE_CONFIG.author}</span></h1><p>{SITE_CONFIG.role}</p>
-            <div className="hero-actions"><a className="pixel-button pixel-button--primary" href={sitePath("/articles/")}>看看文章</a><a className="pixel-button" href={sitePath("/projects/")}>做点啥呢</a></div>
+            <div className="hero-actions"><a className="pixel-button pixel-button--primary" href={sitePath("/articles/")}>看看文章</a><a className="pixel-button" href={sitePath("/programs/")}>做点啥呢</a></div>
             <button className="scroll-cue" type="button" onClick={() => jumpTo(0.13)}><span aria-hidden="true">↓</span> 向下滚动</button>
           </div>
           <div className="scene-label" aria-hidden="true"><span>01</span> OVERWORLD · WIND EAST</div>
@@ -121,17 +121,17 @@ export function ImmersiveHome({ articles, projects }: { articles: ArticleSummary
           <a className="stage-link" href={sitePath("/articles/")}>查看全部文章 <span aria-hidden="true">→</span></a>
         </section>
 
-        <section className="story-stage story-stage--projects" aria-labelledby="featured-projects-title">
-          <div className="stage-copy stage-copy--light"><p className="eyebrow">DEPTH 3800 · ARCHIVE ONLINE</p><h2 id="featured-projects-title">沉在海里的项目档案</h2><p>完成的、正在做的，以及值得留下一盏信号灯的实验。</p></div>
+        <section className="story-stage story-stage--programs" aria-labelledby="featured-programs-title">
+          <div className="stage-copy stage-copy--light"><p className="eyebrow">DEPTH 3800 · PROGRAM ARCHIVE</p><h2 id="featured-programs-title">沉在海里的程序档案</h2><p>我本人编写的工具、网页应用、交互实验，以及仍在生长的程序原型。</p></div>
           <div className="portholes">
-            {projects.map((project, index) => (
-              <article key={project.slug} className={`porthole porthole--${["terminal", "probe", "capsule"][index % 3]}`} style={{ "--porthole-index": index } as CSSProperties}>
+            {programs.map((program, index) => (
+              <article key={program.slug} className={`porthole porthole--${["terminal", "probe", "capsule"][index % 3]}`} style={{ "--porthole-index": index } as CSSProperties}>
                 <div className="porthole__hardware" aria-hidden="true"><b /><b /><b /><b /></div><div className="porthole__glass" aria-hidden="true"><span /><i /></div>
-                <div className="porthole__copy"><div><span>{project.status}</span><span>FILE 0{index + 1}</span></div><h3><a href={sitePath(`/projects/${project.slug}/`)}>{project.title}</a></h3><p>{project.summary}</p><ul>{project.stack.map((item) => <li key={item}>{item}</li>)}</ul><a className="arrow-link" href={sitePath(`/projects/${project.slug}/`)}>查看详情 →</a></div>
+                <div className="porthole__copy"><div><span>{PROGRAM_STATUS_LABELS[program.status]}</span><span>FILE 0{index + 1}</span></div><h3><a href={sitePath(`/programs/${program.slug}/`)}>{program.title}</a></h3><p>{program.summary}</p><ul>{program.stack.map((item) => <li key={item}>{item}</li>)}</ul><a className="arrow-link" href={sitePath(`/programs/${program.slug}/`)}>查看程序 →</a></div>
               </article>
             ))}
           </div>
-          <a className="stage-link stage-link--light" href={sitePath("/projects/")}>打开全部档案 <span aria-hidden="true">→</span></a>
+          <a className="stage-link stage-link--light" href={sitePath("/programs/")}>打开全部程序 <span aria-hidden="true">→</span></a>
         </section>
 
         <section className="story-stage story-stage--space" aria-labelledby="space-about-title">
@@ -141,12 +141,12 @@ export function ImmersiveHome({ articles, projects }: { articles: ArticleSummary
           </div>
           <div className="constellation-links" aria-label="星座内容入口">
             {articles.slice(0, 2).map((article, index) => <a key={article.slug} className={`constellation-star constellation-star--${index + 1}`} href={sitePath(`/articles/${article.slug}/`)}><i aria-hidden="true" /><span>{article.title}</span></a>)}
-            {projects.slice(0, 2).map((project, index) => <a key={project.slug} className={`constellation-star constellation-star--${index + 3}`} href={sitePath(`/projects/${project.slug}/`)}><i aria-hidden="true" /><span>{project.title}</span></a>)}
+            {programs.slice(0, 2).map((program, index) => <a key={program.slug} className={`constellation-star constellation-star--${index + 3}`} href={sitePath(`/programs/${program.slug}/`)}><i aria-hidden="true" /><span>{program.title}</span></a>)}
           </div>
           <div className="journey-end"><button type="button" onClick={() => jumpTo(0)}>↺ 重新开始旅程</button><p>© {new Date().getFullYear()} {SITE_CONFIG.name} · WORLD CONTINUES</p></div>
         </section>
       </main>
-      <noscript><div className="noscript-note">动画需要 JavaScript，但文章、项目和导航仍然可以正常访问。</div></noscript>
+      <noscript><div className="noscript-note">动画需要 JavaScript，但文章、程序和导航仍然可以正常访问。</div></noscript>
     </div>
   );
 }

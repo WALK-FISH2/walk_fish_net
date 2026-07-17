@@ -1,0 +1,126 @@
+---
+import ProgramDemo from "../components/ProgramDemo.astro";
+import PageShell from "../components/PageShell.astro";
+import { sitePath } from "../config/site.config";
+import {
+  DEMO_TYPE_LABELS,
+  PROGRAM_STATUS_LABELS,
+  type ProgramSummary,
+} from "../types/content";
+
+interface Props {
+  program: ProgramSummary;
+  previous?: ProgramSummary;
+  next?: ProgramSummary;
+}
+
+const { program, previous, next } = Astro.props;
+const canonicalPath = "/programs/" + program.slug + "/";
+const privacyStorageLabels = {
+  none: "不存储数据",
+  "local-only": "仅保存在当前设备",
+  external: "由外部服务存储",
+} as const;
+const structuredData = {
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  name: program.title,
+  description: program.summary,
+  applicationCategory: program.category,
+  operatingSystem: "Web",
+  url: new URL(sitePath(canonicalPath), Astro.site ?? Astro.url.origin).toString(),
+};
+---
+
+<PageShell title={program.title} description={program.summary} theme="sea" {canonicalPath}>
+  <article class="detail-page program-detail">
+    <script is:inline type="application/ld+json" set:html={JSON.stringify(structuredData)} />
+    <a class="back-link" href={sitePath("/programs/")}>← 返回“做点啥呢”</a>
+    <header class="detail-header">
+      <p class="eyebrow">PROGRAM ARCHIVE</p>
+      <h1>{program.title}</h1>
+      <p class="detail-lede">{program.summary}</p>
+      <div class="detail-meta">
+        <span class="status-dot">{PROGRAM_STATUS_LABELS[program.status]}</span>
+        <span>{program.category}</span>
+        {program.startDate && <span>{program.startDate}{program.endDate ? " — " + program.endDate : ""}</span>}
+        <span>{DEMO_TYPE_LABELS[program.demoType]}</span>
+      </div>
+      <div class="tag-row detail-tags">{program.stack.map((item) => <span>{item}</span>)}</div>
+      {program.sourceUrl && (
+        <div class="detail-actions">
+          <a class="pixel-button" href={program.sourceUrl} target="_blank" rel="noreferrer">查看源码</a>
+        </div>
+      )}
+    </header>
+
+    <div class="detail-layout">
+      <div class="prose program-prose">
+        <section aria-labelledby="program-what">
+          <h2 id="program-what">这是什么程序</h2>
+          <p>{program.whatItIs}</p>
+        </section>
+
+        <section aria-labelledby="program-why">
+          <h2 id="program-why">为什么编写它</h2>
+          <p>{program.whyBuilt}</p>
+        </section>
+
+        <section aria-labelledby="program-owner">
+          <h2 id="program-owner">本人完成了什么</h2>
+          <ul>{program.ownerContribution.map((item) => <li>{item}</li>)}</ul>
+        </section>
+
+        <section aria-labelledby="program-features">
+          <h2 id="program-features">核心功能</h2>
+          <ul>{program.coreFeatures.map((item) => <li>{item}</li>)}</ul>
+        </section>
+
+        <section aria-labelledby="program-technical">
+          <h2 id="program-technical">技术方案</h2>
+          <ul>{program.technicalApproach.map((item) => <li>{item}</li>)}</ul>
+        </section>
+
+        <section aria-labelledby="program-demo">
+          <h2 id="program-demo">程序演示</h2>
+          <ProgramDemo {program} />
+        </section>
+
+        <section aria-labelledby="program-limitations">
+          <h2 id="program-limitations">当前限制</h2>
+          {program.limitations.length > 0
+            ? <ul>{program.limitations.map((item) => <li>{item}</li>)}</ul>
+            : <p>当前没有记录其他限制。</p>}
+        </section>
+
+        <section aria-labelledby="program-privacy">
+          <h2 id="program-privacy">数据和隐私说明</h2>
+          <dl class="privacy-list">
+            <div><dt>数据存储</dt><dd>{privacyStorageLabels[program.privacy.storesData]}</dd></div>
+            <div><dt>向外发送数据</dt><dd>{program.privacy.sendsDataExternally ? "会" : "不会"}</dd></div>
+            <div><dt>外部服务</dt><dd>{program.privacy.externalServices.length > 0 ? program.privacy.externalServices.join("、") : "无"}</dd></div>
+          </dl>
+        </section>
+      </div>
+
+      <aside class="toc" aria-label="本页目录">
+        <p>IN THIS FILE</p>
+        <ol>
+          <li><a href="#program-what">这是什么程序</a></li>
+          <li><a href="#program-why">为什么编写它</a></li>
+          <li><a href="#program-owner">本人完成了什么</a></li>
+          <li><a href="#program-features">核心功能</a></li>
+          <li><a href="#program-technical">技术方案</a></li>
+          <li><a href="#program-demo">程序演示</a></li>
+          <li><a href="#program-limitations">当前限制</a></li>
+          <li><a href="#program-privacy">数据和隐私说明</a></li>
+        </ol>
+      </aside>
+    </div>
+
+    <nav class="adjacent-nav" aria-label="相邻程序">
+      {previous ? <a href={sitePath("/programs/" + previous.slug + "/")}><span>← 上一个程序</span><strong>{previous.title}</strong></a> : <span></span>}
+      {next ? <a href={sitePath("/programs/" + next.slug + "/")}><span>下一个程序 →</span><strong>{next.title}</strong></a> : <span></span>}
+    </nav>
+  </article>
+</PageShell>

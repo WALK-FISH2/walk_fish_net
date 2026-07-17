@@ -1,31 +1,32 @@
 ---
 import type { MarkdownHeading } from "astro";
-import type { ArticleSummary, ProjectSummary } from "../types/content";
+import type { ArticleSummary } from "../types/content";
 import { sitePath } from "../config/site.config";
 import PageShell from "../components/PageShell.astro";
 
 interface Props {
-  item: ArticleSummary | ProjectSummary;
+  item: ArticleSummary;
   headings: MarkdownHeading[];
-  previous?: ArticleSummary | ProjectSummary;
-  next?: ArticleSummary | ProjectSummary;
+  previous?: ArticleSummary;
+  next?: ArticleSummary;
 }
 const { item, headings, previous, next } = Astro.props;
-const base = item.kind === "article" ? "/articles" : "/projects";
-const theme = item.kind === "article" ? "land" : "sea";
+const base = "/articles";
+const theme = "land";
 ---
 <PageShell title={item.title} description={item.description} {theme} canonicalPath={`${base}/${item.slug}/`}>
   <article class="detail-page">
-    <a class="back-link" href={sitePath(`${base}/`)}>← 返回{item.kind === "article" ? "文章" : "项目"}列表</a>
+    <a class="back-link" href={sitePath(`${base}/`)}>← 返回文章列表</a>
     <header class="detail-header">
-      <p class="eyebrow">{item.kind === "article" ? "TRAVEL LOG" : "PROJECT ARCHIVE"}</p>
+      <p class="eyebrow">TRAVEL LOG</p>
       <h1>{item.title}</h1>
       <p class="detail-lede">{item.description}</p>
       <div class="detail-meta">
-        {item.kind === "article" ? <><time datetime={item.publishDate}>发布于 {item.publishDate}</time>{item.updatedDate && <time datetime={item.updatedDate}>更新于 {item.updatedDate}</time>}<span>{item.readingTime} 分钟阅读</span></> : <><span class="status-dot">{item.status}</span><span>{item.startDate}{item.endDate ? ` — ${item.endDate}` : " — NOW"}</span></>}
+        <time datetime={item.publishDate}>发布于 {item.publishDate}</time>
+        {item.updatedDate && <time datetime={item.updatedDate}>更新于 {item.updatedDate}</time>}
+        <span>{item.readingTime} 分钟阅读</span>
       </div>
-      <div class="tag-row detail-tags">{(item.kind === "article" ? item.tags : item.stack).map((tag) => <span>{tag}</span>)}</div>
-      {item.kind === "project" && (item.demoUrl || item.sourceUrl) && <div class="detail-actions">{item.demoUrl && <a class="pixel-button pixel-button--primary" href={sitePath(item.demoUrl)}>查看演示</a>}{item.sourceUrl && <a class="pixel-button" href={item.sourceUrl} target="_blank" rel="noreferrer">查看源码</a>}</div>}
+      <div class="tag-row detail-tags">{item.tags.map((tag) => <span>{tag}</span>)}</div>
     </header>
     <div class="detail-layout">
       <div class="prose"><slot /></div>

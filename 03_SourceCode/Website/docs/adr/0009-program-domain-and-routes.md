@@ -22,4 +22,11 @@
 
 ## Verification
 
-所有新内容使用 Program schema；旧链接不会直接失效。
+2026-07-17 已验证：
+
+- 内容集合、类型、目录与组件统一使用 Program/programs；
+- `/programs/` 和 3 个 Program 详情页生成独立静态 HTML；
+- `/projects/` 和 3 个旧 slug 生成静态兼容跳转页；
+- 兼容页使用新 canonical 与 `noindex,follow`；
+- Sitemap 只收录 Programs 主路由；
+- 默认和子路径静态服务器验证均通过。

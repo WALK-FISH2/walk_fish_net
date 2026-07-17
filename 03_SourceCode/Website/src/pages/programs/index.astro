@@ -1,0 +1,23 @@
+---
+import { getCollection } from "astro:content";
+import { ContentFilter } from "../../components/ContentFilter";
+import PageShell from "../../components/PageShell.astro";
+import { programSummary, sortPrograms } from "../../lib/content";
+
+const entries = sortPrograms(await getCollection("programs", ({ data }) => !data.draft));
+const programs = entries.map(programSummary);
+---
+
+<PageShell title="做点啥呢" description="我本人编写的程序、工具、网页应用、交互实验和程序演示。" theme="sea" canonicalPath="/programs/">
+  <section class="archive-hero archive-hero--sea">
+    <div>
+      <p class="eyebrow">PROGRAM FILES · {String(programs.length).padStart(2, "0")}</p>
+      <h1>做点啥呢</h1>
+      <p>这里专门收录我本人编写的程序、工具、网页应用、交互实验和程序演示。</p>
+    </div>
+    <div class="sonar" aria-hidden="true"><span></span><span></span><span></span></div>
+  </section>
+  <section class="archive-section" aria-label="程序列表">
+    <ContentFilter client:load kind="program" items={programs} />
+  </section>
+</PageShell>

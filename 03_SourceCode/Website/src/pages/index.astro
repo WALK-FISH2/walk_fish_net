@@ -3,11 +3,11 @@ import { getCollection } from "astro:content";
 import { ImmersiveHome } from "../components/ImmersiveHome";
 import SiteNav from "../components/SiteNav.astro";
 import BaseLayout from "../layouts/BaseLayout.astro";
-import { articleSummary, projectSummary, sortArticles, sortProjects } from "../lib/content";
+import { articleSummary, programSummary, sortArticles, sortPrograms } from "../lib/content";
 const articleEntries = sortArticles(await getCollection("articles", ({ data }) => !data.draft && data.featured)).slice(0, 3);
-const projectEntries = sortProjects(await getCollection("projects", ({ data }) => !data.draft && data.featured)).slice(0, 3);
+const programEntries = sortPrograms(await getCollection("programs", ({ data }) => !data.draft && data.featured)).slice(0, 3);
 ---
 <BaseLayout noShell canonicalPath="/">
   <SiteNav floating />
-  <ImmersiveHome client:load articles={articleEntries.map(articleSummary)} projects={projectEntries.map(projectSummary)} />
+  <ImmersiveHome client:load articles={articleEntries.map(articleSummary)} programs={programEntries.map(programSummary)} />
 </BaseLayout>

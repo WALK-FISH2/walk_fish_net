@@ -1,12 +1,5 @@
 ---
-import { getCollection } from "astro:content";
-import { ContentFilter } from "../../components/ContentFilter";
-import PageShell from "../../components/PageShell.astro";
-import { projectSummary, sortProjects } from "../../lib/content";
-const entries = sortProjects(await getCollection("projects", ({ data }) => !data.draft));
-const projects = entries.map(projectSummary);
+import LegacyRedirect from "../../components/LegacyRedirect.astro";
 ---
-<PageShell title="做点啥呢" description="完成的工具、正在长大的原型，以及还没想明白的实验。" theme="sea" canonicalPath="/projects/">
-  <section class="archive-hero archive-hero--sea"><div><p class="eyebrow">SUBMERGED FILES · {String(projects.length).padStart(2, "0")}</p><h1>做点啥呢</h1><p>完成的工具、正在长大的原型，以及那些值得继续追踪的实验信号。</p></div><div class="sonar" aria-hidden="true"><span></span><span></span><span></span></div></section>
-  <section class="archive-section" aria-label="项目列表"><ContentFilter client:load kind="project" items={projects} /></section>
-</PageShell>
+
+<LegacyRedirect targetPath="/programs/" />

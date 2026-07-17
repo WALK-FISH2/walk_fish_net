@@ -400,7 +400,7 @@ canvas {
 
 .story-stage--hero { height: 180vh; min-height: 1100px; }
 .story-stage--articles { height: 200vh; min-height: 1260px; }
-.story-stage--projects { height: 310vh; min-height: 1960px; color: var(--sea-text); }
+.story-stage--programs { height: 310vh; min-height: 1960px; color: var(--sea-text); }
 .story-stage--space { height: 210vh; min-height: 1320px; color: var(--space-text); }
 
 .story-panel {
@@ -669,7 +669,7 @@ canvas {
 
 .stage-link--light { color: var(--sea-text); }
 
-.story-stage--projects > .stage-link {
+.story-stage--programs > .stage-link {
   position: absolute;
   right: 0;
   bottom: 20vh;
@@ -926,7 +926,7 @@ canvas {
 
 .filter-panel {
   display: grid;
-  grid-template-columns: minmax(260px, 1fr) 210px 180px;
+  grid-template-columns: minmax(260px, 1fr) repeat(3, minmax(150px, 190px));
   gap: 14px;
   padding: 17px;
   border: 3px solid currentColor;
@@ -966,7 +966,7 @@ canvas {
   gap: 20px;
 }
 
-.content-grid--projects { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.content-grid--programs { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 
 .content-card {
   position: relative;
@@ -1021,7 +1021,7 @@ canvas {
 .card-footer { margin-top: auto; padding-top: 18px; border-top: 2px dotted currentColor; }
 .card-footer .arrow-link { opacity: 1; }
 
-.project-cover {
+.program-cover {
   position: relative;
   height: 150px;
   overflow: hidden;
@@ -1030,7 +1030,7 @@ canvas {
   background: linear-gradient(135deg, var(--sea-cyan), var(--sea-mid) 60%, var(--sea-deep));
 }
 
-.project-cover__orb {
+.program-cover__orb {
   position: absolute;
   top: 28px;
   left: calc(50% - 42px);
@@ -1041,7 +1041,7 @@ canvas {
   box-shadow: 0 0 0 5px rgba(4, 22, 47, 0.5), inset 16px 10px 0 rgba(255, 255, 255, 0.12);
 }
 
-.project-cover__grid {
+.program-cover__grid {
   position: absolute;
   inset: 0;
   background-image: linear-gradient(rgba(137, 240, 215, 0.12) 1px, transparent 1px), linear-gradient(90deg, rgba(137, 240, 215, 0.12) 1px, transparent 1px);
@@ -1092,6 +1092,43 @@ canvas {
 .prose table { width: 100%; border-collapse: collapse; }
 .prose th, .prose td { border: 2px solid currentColor; padding: 10px 12px; text-align: left; }
 .prose th { font-family: var(--font-pixel); font-size: 0.76rem; }
+
+.program-prose > section:first-child h2 { margin-top: 0; }
+
+.program-demo {
+  padding: 22px;
+  border: 2px solid currentColor;
+  background: rgba(37, 190, 196, 0.08);
+}
+
+.program-demo > div { display: grid; gap: 14px; }
+.program-demo p { margin: 0; }
+.program-demo .pixel-button { justify-self: start; }
+.program-demo video,
+.program-demo img { display: block; width: 100%; height: auto; }
+
+.program-demo__notice {
+  padding: 13px 15px;
+  border-left: 4px solid var(--sea-light);
+  background: rgba(137, 240, 215, 0.1);
+  font-weight: 700;
+}
+
+.privacy-list {
+  display: grid;
+  gap: 10px;
+}
+
+.privacy-list div {
+  display: grid;
+  grid-template-columns: minmax(120px, 0.35fr) 1fr;
+  gap: 16px;
+  padding: 13px 0;
+  border-bottom: 1px dotted currentColor;
+}
+
+.privacy-list dt { font: 700 0.72rem var(--font-pixel); }
+.privacy-list dd { margin: 0; }
 
 .toc {
   position: sticky;
@@ -1165,7 +1202,7 @@ canvas {
 .footer-meta { grid-column: 1 / -1; opacity: 0.55; font: 700 0.62rem var(--font-pixel); }
 
 @media (max-width: 980px) {
-  .content-grid--projects { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .content-grid--programs { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .about-grid { grid-template-columns: 1fr 1fr; }
   .road-signs { grid-template-columns: 1fr; width: min(620px, 88vw); margin-left: auto; }
   .road-sign { min-height: 0; transform: translateY(calc(var(--sign-index) * 10px)); }
@@ -1188,7 +1225,7 @@ canvas {
   .story-stage { width: min(calc(100% - 26px), var(--page-width)); }
   .story-stage--hero { height: 130vh; min-height: 820px; }
   .story-stage--articles { height: 170vh; min-height: 1240px; }
-  .story-stage--projects { height: 230vh; min-height: 1720px; }
+  .story-stage--programs { height: 230vh; min-height: 1720px; }
   .story-stage--space { height: 120vh; min-height: 840px; }
   .hero-copy { top: 18vh; width: 100%; padding: 24px; }
   .hero-copy h1 { font-size: clamp(2.4rem, 13vw, 4.2rem); }
@@ -1210,9 +1247,9 @@ canvas {
   .archive-hero { min-height: 480px; grid-template-columns: 1fr; padding: 70px 0 45px; }
   .pixel-sun, .sonar { position: absolute; right: -80px; bottom: 30px; width: 180px; height: 180px; opacity: 0.38; }
   .filter-panel { grid-template-columns: 1fr; }
-  .content-grid, .content-grid--projects { grid-template-columns: 1fr; }
+  .content-grid, .content-grid--programs { grid-template-columns: 1fr; }
   .content-card { min-height: 0; padding: 23px; }
-  .project-cover { margin: -23px -23px 22px; }
+  .program-cover { margin: -23px -23px 22px; }
   .detail-page { padding-top: 55px; }
   .back-link { margin-bottom: 45px; }
   .detail-layout { margin-top: 55px; }
@@ -1236,7 +1273,7 @@ canvas {
     transition-duration: 0.01ms !important;
   }
   .immersive-home { --story-height: auto !important; }
-  .story-stage, .story-stage--hero, .story-stage--articles, .story-stage--projects, .story-stage--space {
+  .story-stage, .story-stage--hero, .story-stage--articles, .story-stage--programs, .story-stage--space {
     height: auto;
     min-height: 100svh;
     padding-block: 120px 80px;
@@ -1245,7 +1282,7 @@ canvas {
   .road-signs { margin-top: 45px; }
   .portholes { padding-top: 50px; }
   .porthole { margin-bottom: 35px; }
-  .story-stage--articles > .stage-link, .story-stage--projects > .stage-link { position: static; display: inline-block; margin-top: 35px; }
+  .story-stage--articles > .stage-link, .story-stage--programs > .stage-link { position: static; display: inline-block; margin-top: 35px; }
   .journey-end { position: relative; bottom: auto; margin-top: 100px; }
 }
 
@@ -1283,7 +1320,7 @@ body[data-story-phase="space"] .site-nav--floating::after {
 
 .story-stage--hero { height: 160vh; min-height: 980px; }
 .story-stage--articles { height: 190vh; min-height: 1260px; }
-.story-stage--projects { height: 300vh; min-height: 1900px; }
+.story-stage--programs { height: 300vh; min-height: 1900px; }
 .story-stage--space { height: 210vh; min-height: 1320px; }
 
 .hero-copy {
@@ -1573,7 +1610,7 @@ body[data-story-phase="space"] .site-nav--floating::after {
 @media (max-width: 767px) {
   .story-stage--hero { height: 130vh; min-height: 820px; }
   .story-stage--articles { height: 170vh; min-height: 1240px; }
-  .story-stage--projects { height: 230vh; min-height: 1720px; }
+  .story-stage--programs { height: 230vh; min-height: 1720px; }
   .story-stage--space { height: 120vh; min-height: 900px; }
   .road-sign--arrow { padding-right: 34px; }
   .porthole--probe, .porthole--capsule { width: 100%; margin-right: 0; grid-template-columns: 1fr; clip-path: none; }

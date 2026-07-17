@@ -1,273 +1,177 @@
 # 技术架构 Architecture
 
-版本：1.0.0  
-状态：目标架构  
-当前实现说明：现有项目据 Codex 汇报采用 vinext/React，但静态导出能力尚未独立验证。
+版本：1.2.0
 
-## 1. 架构目标
+状态：当前已验证架构
 
-- 静态部署；
-- 内容易维护；
-- 沉浸式滚动；
-- 程序演示隔离；
-- 可访问、可降级、可测试；
-- 不让动画代码污染文章和程序内容。
+对账日期：2026-07-17
+验证基线：Sites 源码仓库的 `3cd17db` 是“迁移到静态 Astro 世界”的提交，包含 Astro 配置、`src/pages/`、内容集合和静态导出测试。本地 Vibe Coding 文档最初位于另一条 Git 历史，因此首次对账时无法解析该提交；发布准备阶段只读获取 Sites 历史后已完成核对。本文结论同时采用 `3cd17db`、当前实现、实际构建和静态服务器结果。
 
-## 2. 逻辑分层
+## 1. 当前结论
+
+当前项目已经完成 Astro 迁移，并采用 Astro 的纯静态输出模式：
+
+- Astro 5.18.2 负责路由、内容集合、构建和静态 HTML 生成；
+- React 19.2.6 仅用于需要交互的客户端组件；
+- PixiJS 8.8.1 与 GSAP 3.13.0 用于首页沉浸式场景；
+- Markdown/MDX 内容在构建期读取；
+- 默认输出目录是 `dist/`；
+- 生产输出不要求常驻 Node 服务端；
+- 内容领域已经迁移为 `Program/programs`，`Project/projects` 只保留旧 URL 兼容层。
+
+## 2. 已验证技术栈
+
+| 层级 | 当前实现 | 证据 |
+| --- | --- | --- |
+| 框架 | Astro 5.18.2 | `package.json`、`npm ls --depth=0` |
+| UI | Astro 组件 + React 19.2.6 island | `src/pages/`、`src/components/` |
+| 内容 | Astro Content Collections + Markdown/MDX | `src/content.config.ts`、`src/content/` |
+| 场景 | PixiJS 8.8.1 + GSAP 3.13.0 | `src/interactive/` |
+| 构建模式 | `output: "static"`、`build.format: "directory"` | `astro.config.mjs` |
+| 类型检查 | Astro Check + TypeScript 5.9.3 | `npm run typecheck` 通过 |
+| 质量检查 | ESLint + Node test runner | `npm run lint`、`npm test` 通过 |
+
+## 3. 实际构建与请求链路
 
 ```mermaid
-flowchart TB
-    Content[Markdown / MDX Content]
-    Build[Build and Static Generation]
-    Pages[DOM Pages and Components]
-    Story[Immersive Story Controller]
-    Canvas[Canvas / WebGL Scene Layer]
-    Demo[Program Demo Runtime]
-    Output[Static Output]
-    Host[Static Hosting]
+flowchart LR
+    Articles["src/content/articles"]
+    Programs["src/content/programs"]
+    Pages["src/pages/*.astro"]
+    Astro["Astro static build"]
+    HTML["15 个独立 HTML"]
+    Assets["浏览器端 JS / CSS / Pixi 场景"]
+    Dist["dist/"]
+    Host["任意静态文件服务器"]
 
-    Content --> Build
-    Build --> Pages
-    Pages --> Output
-    Story --> Pages
-    Story --> Canvas
-    Demo --> Pages
-    Output --> Host
+    Articles --> Astro
+    Programs --> Astro
+    Pages --> Astro
+    Astro --> HTML
+    Astro --> Assets
+    HTML --> Dist
+    Assets --> Dist
+    Dist --> Host
 ```
 
-### 内容层
+页面正文、导航、链接、搜索筛选和可访问信息由真实 DOM 承载。首页交互组件在浏览器水合后启动 SceneController；静态 HTML 本身不依赖 Node 请求期渲染。
 
-文章、程序、个人信息、标签和媒体引用。
-
-### 页面层
-
-导航、文章列表/详情、程序列表/详情、关于我、SEO 和可访问 DOM。
-
-### 叙事控制层
-
-读取统一滚动进度，映射全局阶段，控制 DOM 内容状态并通知场景层。
-
-### 场景层
-
-陆地、下潜、深海、海洋到星空、星空、粒子、视差和画质降级。
-
-### 程序演示层
-
-站内静态演示、iframe 沙箱、外部演示、媒体演示和错误边界。
-
-### 构建部署层
-
-静态路由生成、资源压缩、sitemap、404、子路径和部署输出。
-
-## 3. 当前框架策略
-
-现有实现据报告使用 vinext/React。当前决策：
-
-1. 不因原建议是 Astro 就自动重构；
-2. 先执行静态导出审查；
-3. 若当前框架能稳定生成全部静态页面，则保留；
-4. 若动态路由无法预生成或必须常驻 Node，再提出迁移；
-5. 框架迁移必须通过 ADR。
-
-详见 `docs/adr/0002-current-framework-static-export-gate.md`。
-
-## 4. 推荐源码结构
-
-应根据现有仓库适配，不要求机械复制：
+## 4. 实际源码边界
 
 ```text
-app/
-├─ config/
-│  ├─ site.config.ts
-│  ├─ story.config.ts
-│  └─ quality.config.ts
+src/
+├─ components/              # Astro/React DOM 组件
+├─ config/                  # 站点与滚动阶段配置
 ├─ content/
-│  ├─ articles/
-│  └─ programs/
-├─ components/
-│  ├─ common/
-│  ├─ articles/
-│  ├─ programs/
-│  └─ home/
-├─ scenes/
-│  ├─ core/
-│  ├─ overworld/
-│  ├─ underwater/
-│  ├─ space/
-│  └─ transitions/
-├─ demos/
-│  ├─ registry.ts
-│  ├─ shells/
-│  └─ shared/
-├─ routes-or-pages/
-├─ styles/
-└─ utils/
+│  ├─ articles/             # 当前文章内容
+│  └─ programs/             # 本人编写的程序、工具和交互实验
+├─ interactive/
+│  ├─ SceneController.ts    # 单一滚动进度与场景协调
+│  ├─ scenes/               # 陆地、深海、星空
+│  └─ transitions/          # 下潜、海洋到星空
+├─ layouts/                 # 页面布局
+├─ lib/                     # 内容读取与排序
+├─ pages/                   # Astro 文件路由
+├─ styles/                  # 全局与响应式样式
+└─ types/                   # Article/Program 领域类型
 ```
 
-## 5. 内容模型
+## 5. 静态路由生成
 
-```ts
-type Article = {
-  slug: string;
-  title: string;
-  description: string;
-  publishDate: string;
-  updatedDate?: string;
-  cover?: string;
-  tags: string[];
-  featured: boolean;
-  draft: boolean;
-};
+`src/pages/articles/[slug].astro` 和 `src/pages/programs/[slug].astro` 使用 `getStaticPaths()` 在构建期枚举主内容；`src/pages/projects/[slug].astro` 使用同一 Programs slug 集合生成兼容跳转页。当前 `npm run build` 生成以下 15 个 HTML：
 
-type ProgramStatus =
-  | "completed"
-  | "in-progress"
-  | "prototype"
-  | "archived";
+| URL 路由 | 静态文件 | 来源 |
+| --- | --- | --- |
+| `/` | `dist/index.html` | `src/pages/index.astro` |
+| `/about/` | `dist/about/index.html` | `src/pages/about.astro` |
+| `/articles/` | `dist/articles/index.html` | 文章列表 |
+| `/articles/content-as-levels/` | `dist/articles/content-as-levels/index.html` | 文章内容集合 |
+| `/articles/first-post/` | `dist/articles/first-post/index.html` | 文章内容集合 |
+| `/articles/small-tools/` | `dist/articles/small-tools/index.html` | 文章内容集合 |
+| `/programs/` | `dist/programs/index.html` | “做点啥呢”主列表 |
+| `/programs/pixel-journey/` | `dist/programs/pixel-journey/index.html` | Program 内容集合 |
+| `/programs/signal-garden/` | `dist/programs/signal-garden/index.html` | Program 内容集合 |
+| `/programs/tidy-desk/` | `dist/programs/tidy-desk/index.html` | Program 内容集合 |
+| `/projects/` | `dist/projects/index.html` | 指向 `/programs/` 的兼容页 |
+| `/projects/pixel-journey/` | `dist/projects/pixel-journey/index.html` | 指向同 slug Program 的兼容页 |
+| `/projects/signal-garden/` | `dist/projects/signal-garden/index.html` | 指向同 slug Program 的兼容页 |
+| `/projects/tidy-desk/` | `dist/projects/tidy-desk/index.html` | 指向同 slug Program 的兼容页 |
+| `/404.html` | `dist/404.html` | `src/pages/404.astro` |
 
-type DemoType =
-  | "static-embedded"
-  | "external-live"
-  | "video"
-  | "gif"
-  | "screenshots"
-  | "none";
+静态服务器逐一请求上述 15 个 URL 均返回 HTTP 200，未知路由返回 HTTP 404。兼容页通过 meta refresh、`window.location.replace` 和无脚本链接跳转，并使用 `noindex,follow` 与新 canonical。Sitemap 只收录主 Programs 路由，不收录 Projects 兼容页。
 
-type Program = {
-  slug: string;
-  title: string;
-  summary: string;
-  status: ProgramStatus;
-  category: string;
-  stack: string[];
-  tags: string[];
-  cover?: string;
-  featured: boolean;
-  order?: number;
-  demoType: DemoType;
-  demoUrl?: string;
-  sourceUrl?: string;
-  limitations?: string[];
-  ownerContribution: string[];
-};
+## 6. 静态输出与运行时边界
+
+默认构建命令 `npm run build` 的唯一正式输出是 `dist/`。验证结果：
+
+- `dist/server` 不存在；
+- `dist/` 中没有 `.cjs`、`.mjs` 或 `.node` 服务端运行时文件；
+- 没有 Astro 服务端 adapter；
+- `src/pages/robots.txt.ts` 虽使用 `APIRoute` 类型，但显式 `prerender = true`，在构建期生成静态 `robots.txt`；
+- Node.js 只用于安装依赖、开发、构建、适配和测试，不是网站请求期依赖。
+
+`npm run build:sites` 会在默认 Astro 构建后执行 `scripts/build-sites-adapter.mjs`，生成单独的 Sites 部署包。该包中的 Worker 仅转发静态资源，不改变核心 `dist/` 的纯静态性质，也不是 Node 服务端运行时。
+
+## 7. 子路径部署
+
+`astro.config.mjs` 通过 `SITE_URL` 和 `BASE_PATH` 统一控制站点地址和 base path。本次以：
+
+```text
+SITE_URL=https://example.github.io
+BASE_PATH=/pixel-walk-audit
 ```
 
-完整规则见 `docs/product/content-model.md`。
+重新构建并用纯静态服务器验证。11 个带前缀路由及抽查的 CSS 资源均返回 HTTP 200；内部链接、资源地址和 canonical 均带 `/pixel-walk-audit` 前缀。
 
-## 6. 路由生成
+## 8. 当前 Program 内容模型
 
-构建时收集所有公开文章 slug、所有公开程序 slug、固定页面和兼容旧路由，并生成等价的静态文件。
+当前代码事实：
 
-若部署在 GitHub Pages 子路径，统一处理 base path、asset prefix、canonical、内部链接和图片路径。
+- `src/content.config.ts` 注册 `articles` 与 `programs`；
+- `src/types/content.ts` 定义 `ProgramSummary`、`ProgramStatus`、`DemoType` 与隐私结构；
+- `src/lib/content.ts` 使用 `CollectionEntry<"programs">`；
+- 内容存放在 `src/content/programs/`；
+- 主路由是 `/programs` 与 `/programs/[slug]`；
+- 每项 Program 必须包含本人贡献、限制、隐私、演示类型和详情页八个固定内容区块；
+- `static-embedded` 条目显示静态演示能力边界，不伪造后端、数据库、登录或实时能力。
 
-## 7. 首页滚动架构
+完整维护规则见 `docs/product/content-model.md`，领域与路由决策见 ADR 0009。
 
-首页只允许一个主进度来源：
+## 9. 首页交互架构
 
-```ts
-type StoryProgress = number; // 0..1
+首页只有一个全局滚动进度源。阶段范围由 `src/config/story.config.ts` 定义，`src/interactive/SceneController.ts` 将全局进度映射为陆地、下潜、深海、海洋到星空和星空的局部进度。
+
+场景层不直接承载核心文本或链接：
+
+- Canvas/Pixi：天空、山、海水、鱼、气泡、海草、浪花、星点、星云、粒子和世界旋转；
+- DOM/React：标题、摘要、文章与 Program 入口、按钮、导航、关于信息和页脚；
+- DOM 与旋转的 Canvas 世界层分离，因此海洋到星空过渡时文本保持水平；
+- Reduced Motion 与移动端通过独立分支降低旋转和动画强度。
+
+当前实现按进度确定性重绘，具备反向计算基础；但反向滚动和过渡的 76%/80% 关键帧仍缺浏览器验收，不应仅凭代码判定完成。
+
+## 10. 验证门禁
+
+本次架构对账已执行：
+
+```text
+npm ls --depth=0
+npm run build
+npm run typecheck
+npm run lint
+npm test
+python -m http.server 4173 --bind 127.0.0.1
 ```
 
-统一配置：
+结果为：构建成功、15 个 HTML、类型检查无错误/警告/提示、lint 通过、4 项静态输出测试通过、15 个主/兼容 URL 静态访问成功、未知路由 404。子路径下 15 个路由和抽查资源均为 HTTP 200，旧路由目标、canonical 与 Sitemap 均使用正确前缀。
 
-```ts
-const storySections = {
-  overworld: [0.00, 0.30],
-  dive: [0.30, 0.38],
-  underwater: [0.38, 0.66],
-  oceanToSpace: [0.66, 0.80],
-  space: [0.80, 1.00],
-} as const;
-```
+## 11. 已知未完成项
 
-映射函数：
+- DemoRegistry 与程序演示隔离层尚未实现；
+- 当前 `static-embedded` 只提供静态说明；真正的独立演示容器和按需加载由 M7 跟踪；
+- 反向滚动、76% 和 80% 过渡帧缺独立浏览器证据；
+- 场景内部仍有部分硬编码时序/视差参数和未完成的对象池目标。
 
-```ts
-function localProgress(globalProgress: number, start: number, end: number) {
-  return Math.min(1, Math.max(0, (globalProgress - start) / (end - start)));
-}
-```
+## 12. 架构变化流程
 
-各场景不能自行注册互相冲突的全局滚动监听。
-
-## 8. 场景接口
-
-```ts
-interface Scene {
-  init(): Promise<void>;
-  update(progress: number, deltaMs: number): void;
-  resize(viewport: Viewport): void;
-  setQuality(level: QualityLevel): void;
-  setReducedMotion(enabled: boolean): void;
-  destroy(): void;
-}
-```
-
-场景必须可安全销毁，资源失败时可降级。
-
-## 9. Canvas 与 DOM 边界
-
-Canvas：背景、云、山、海水、鱼、气泡、海草、浪花、星点、星云和粒子。
-
-DOM：标题、摘要、文章与程序文字、按钮、标签、导航、联系方式和错误提示。
-
-通过统一 story progress、场景状态和 CSS 变量协调。
-
-## 10. 程序演示架构
-
-### 模式 A：站内静态组件
-
-适合纯前端工具、算法演示和可视化。
-
-### 模式 B：站内 iframe
-
-适合需要独立样式、脚本和存储隔离的程序。
-
-### 模式 C：外部链接
-
-适合有独立后端或体积过大的程序。
-
-### 模式 D：媒体演示
-
-适合视频、GIF 和截图。
-
-推荐注册表：
-
-```ts
-type DemoRegistration = {
-  programSlug: string;
-  mode: "component" | "iframe" | "external" | "media";
-  entry?: () => Promise<unknown>;
-  url?: string;
-  sandbox?: string;
-};
-```
-
-## 11. 错误边界
-
-处理内容字段缺失、演示加载失败、WebGL 不可用、Canvas context lost、图片失败、资源路径错误、动态路由不存在、低性能设备、Reduced Motion 和 iframe 被阻止。
-
-错误不能导致整页白屏、导航不可用、无限 Loading 或正文消失。
-
-## 12. 性能架构
-
-- 首屏陆地优先加载；
-- 深海接近阶段时预加载；
-- 星空后台或接近阶段时加载；
-- 程序演示进入详情或点击体验时加载；
-- 画质分为 high、medium、low、static；
-- DPR 最大 2；
-- 页面隐藏暂停；
-- 粒子池复用并使用固定种子。
-
-## 13. 测试边界
-
-单元测试：内容校验、进度映射、阶段判定、DemoRegistry 和路由生成。
-
-集成测试：文章/程序列表到详情、演示失败、旧路由兼容、Reduced Motion 和静态输出。
-
-E2E：首页完整滚动、反向滚动、移动端、详情刷新、导航、404、键盘和控制台错误。
-
-## 14. 架构变化流程
-
-更换框架、引入 SSR/后端、改变内容源、改变演示隔离方式、改变核心路由、替换滚动架构或改变部署约束时必须新增 ADR。
+更换框架、引入 SSR/后端、改变内容源、改变演示隔离方式、改变核心路由、替换滚动架构或改变部署约束时，必须新增 ADR。当前 Astro 静态架构的接受结论记录在 `docs/adr/0002-current-framework-static-export-gate.md`。

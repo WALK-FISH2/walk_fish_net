@@ -14,7 +14,13 @@ export default defineConfig({
     format: "directory",
     assets: "assets",
   },
-  integrations: [react(), mdx(), sitemap()],
+  integrations: [
+    react(),
+    mdx(),
+    sitemap({
+      filter: (page) => !/\/projects(?:\/|$)/.test(new URL(page).pathname),
+    }),
+  ],
   vite: {
     build: {
       target: "es2022",
