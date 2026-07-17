@@ -1,0 +1,17 @@
+---
+import PageShell from "../components/PageShell.astro";
+import { SITE_CONFIG, sitePath } from "../config/site.config";
+const skills = ["TypeScript", "React", "Vue", "Node.js", "Python", "Java", "Canvas", "Web 可访问性"];
+---
+<PageShell title="关于我" description="关于像素漫游者：开发方向、工具箱、兴趣与联系方式。" theme="space" canonicalPath="/about/">
+  <section class="about-hero">
+    <div class="about-avatar" aria-hidden="true"><span></span><i></i></div>
+    <div><p class="eyebrow">PLAYER PROFILE · SLOT 01</p><h1>你好，我是 {SITE_CONFIG.author}</h1><p class="about-lede">{SITE_CONFIG.role}</p><p>我关心清晰的软件结构，也关心一个按钮按下去时是否有恰到好处的反馈。这里收集我的文章、项目，以及仍在学习的方向。</p><div class="detail-actions"><a class="pixel-button pixel-button--primary" href={`mailto:${SITE_CONFIG.email}`}>发一封邮件</a><a class="pixel-button" href={SITE_CONFIG.github} target="_blank" rel="noreferrer">GitHub</a></div></div>
+  </section>
+  <section class="about-grid">
+    <article><p class="eyebrow">CURRENT QUEST</p><h2>正在关注</h2><p>可维护的前端架构、富有叙事感的交互、数据可视化，以及让小工具真正进入日常工作流的方法。</p></article>
+    <article><p class="eyebrow">INVENTORY</p><h2>常用工具箱</h2><div class="skill-cloud">{skills.map((skill) => <span>{skill}</span>)}</div></article>
+    <article><p class="eyebrow">SIDE PATH</p><h2>旅途之外</h2><p>会记录新学到的东西，也喜欢把重复步骤做成脚本。偶尔为了一个过场动画花掉本来只够修一个按钮的时间。</p></article>
+  </section>
+  <section class="contact-banner"><span aria-hidden="true">✦</span><div><p class="eyebrow">NEXT SIGNAL</p><h2>要不要一起做点啥呢？</h2></div><a class="arrow-link" href={sitePath("/projects/")}>先看看项目 →</a></section>
+</PageShell>

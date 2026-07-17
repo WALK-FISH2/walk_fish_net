@@ -1,0 +1,13 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import SiteFooter from "./SiteFooter.astro";
+import SiteNav from "./SiteNav.astro";
+
+interface Props { title: string; description: string; theme?: "land" | "sea" | "space"; canonicalPath?: string; }
+const { title, description, theme = "space", canonicalPath } = Astro.props;
+---
+<BaseLayout {title} {description} {theme} {canonicalPath}>
+  <SiteNav />
+  <main id="main-content"><slot /></main>
+  <SiteFooter />
+</BaseLayout>
