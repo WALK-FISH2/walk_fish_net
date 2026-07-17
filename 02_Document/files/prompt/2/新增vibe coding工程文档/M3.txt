@@ -1,0 +1,83 @@
+请执行M3陆地世界的收尾与正式验收。
+
+开始前请阅读：
+
+- constitution.md
+- spec.md
+- architecture.md
+- tasks.md
+- AGENTS.md
+- docs/product/interaction-spec.md
+- docs/product/visual-system.md
+- docs/product/acceptance-criteria.md
+- docs/adr/0004-canvas-dom-separation.md
+- docs/adr/0005-scroll-progress-state-machine.md
+
+根据上一轮状态对账，M3当前为9/10，主体视觉已经完成。
+本轮不要重新设计陆地场景，不要修改深海、星空、Programs内容系统或路由。
+
+本轮只处理以下事项：
+
+1. 找出M3尚未完成的具体任务及其对应代码；
+2. 将当前硬编码的陆地视差系数集中迁移到统一配置；
+3. 视差配置至少明确区分：
+   - 远景
+   - 中景
+   - 近景
+   - 前景
+4. 不允许多个组件各自保存没有说明的视差魔法数字；
+5. 保持当前视觉效果不发生明显退化；
+6. 验证陆地场景向下滚动和向上滚动都正常；
+7. 验证0%和25%进度画面；
+8. 验证375px移动端；
+9. 验证prefers-reduced-motion；
+10. 检查文章入口仍然可点击、可聚焦；
+11. 检查Canvas失败或降级模式下内容仍然存在；
+12. 更新tasks.md，将M3标记为[x]的前提是所有验收都有实际证据；
+13. 不修改constitution.md；
+14. 不修改docs/product/dive-underwater-spec.md的内容；
+15. 确认docs/product/dive-underwater-spec.md已经被Git跟踪，供下一阶段M4使用。
+
+建议将配置集中在现有故事配置或类似文件中，例如：
+
+- story.config.ts
+- scene.config.ts
+- parallax.config.ts
+
+优先复用现有配置结构，不要为了一个配置新增不必要的架构层。
+
+请先输出：
+
+- 当前硬编码视差系数所在文件；
+- 计划迁移到哪个配置文件；
+- 本轮修改文件；
+- M3正式验收清单。
+
+完成后运行项目实际存在的：
+
+- Astro Check
+- ESLint
+- 测试
+- 生产构建
+- 静态输出测试
+
+浏览器验证至少包括：
+
+- 桌面0%
+- 桌面25%
+- 从25%向上滚回0%
+- 375px移动端
+- Reduced Motion
+- 浏览器控制台
+
+最终汇报：
+
+1. 视差配置迁移结果；
+2. 修改文件；
+3. M3每项验收证据；
+4. tasks.md状态；
+5. dive-underwater-spec.md是否已被Git跟踪；
+6. 构建与测试结果；
+7. 是否可以正式进入M4。
+
+本轮不要顺便开始M4。
