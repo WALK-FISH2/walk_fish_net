@@ -1,75 +1,209 @@
 import { Container, Graphics } from "pixi.js";
-import { clamp, smoothstep } from "../../config/story.config";
+import { STORY_CONFIG, clamp, getOceanSpaceMorphState, lerp, mixColor, smoothstep } from "../../config/story.config";
 import { drawPixelStar } from "../pixel/draw";
+import { MORPH_PARTICLES, type MorphParticle } from "./morphParticles";
 
-const foamSeeds = Array.from({ length: 64 }, (_, index) => ({
-  waveX: ((index * 47) % 101) / 100,
-  waveY: ((index * 73) % 37) / 36,
-  starX: ((index * 89) % 103) / 102,
-  starY: ((index * 59) % 97) / 96,
-  size: 2 + index % 4,
-  phase: index * 0.41,
-}));
+const STREAM_CENTERS_DESKTOP = [0.22, 0.5, 0.78] as const;
+const STREAM_CENTERS_MOBILE = [0.33, 0.67] as const;
+const LIGHT_BANDS = [
+  { start: 0.08, width: 0.095, phase: 0.2, color: 0x5e8cff },
+  { start: 0.34, width: 0.075, phase: 1.7, color: 0x5b4cb5 },
+  { start: 0.62, width: 0.11, phase: 3.1, color: 0xc16de0 },
+] as const;
+
+function wrap(value: number) {
+  return ((value % 1) + 1) % 1;
+}
+
+function particleStreamX(particle: MorphParticle, mobile: boolean) {
+  const centers = mobile ? STREAM_CENTERS_MOBILE : STREAM_CENTERS_DESKTOP;
+  return centers[particle.streamIndex % centers.length] + particle.streamOffset * (mobile ? 0.72 : 1);
+}
+
+function particleStarX(particle: MorphParticle, mobile: boolean) {
+  if (!mobile) return particle.starX;
+  const desktopCenter = STREAM_CENTERS_DESKTOP[particle.streamIndex % STREAM_CENTERS_DESKTOP.length];
+  return clamp(particleStreamX(particle, true) + (particle.starX - desktopCenter) * 0.62, 0.03, 0.97);
+}
 
 export class OceanToSpaceTransition {
   container = new Container();
-  private waves = new Graphics();
-  private foam = new Graphics();
+  private colorWash = new Graphics();
   private galaxy = new Graphics();
-  constructor() { this.container.addChild(this.galaxy, this.waves, this.foam); }
+  private streamGuides = new Graphics();
+  private meteorTrails = new Graphics();
+  private particles = new Graphics();
 
-  update(width: number, height: number, progress: number, time: number, particleScale: number, reducedMotion: boolean) {
-    const p = clamp(progress);
-    this.container.visible = p > 0.001 && p < 0.999;
+  constructor() {
+    this.container.addChild(this.colorWash, this.galaxy, this.streamGuides, this.meteorTrails, this.particles);
+  }
+
+  update(width: number, height: number, globalProgress: number, time: number, particleScale: number, reducedMotion: boolean) {
+    const state = getOceanSpaceMorphState(globalProgress);
+    const config = STORY_CONFIG.oceanToSpace;
+    const mobile = width < 768;
+    const activeScale = particleScale * (mobile ? config.particles.mobileDensityScale : 1);
+    const activeCount = Math.max(1, Math.round(MORPH_PARTICLES.length * activeScale));
+    const densityProgress = Math.max(state.bubbleDensity, state.preheat * 0.18);
+    const densityCeiling = reducedMotion
+      ? config.particles.baseDensity + densityProgress * 0.16
+      : lerp(config.particles.baseDensity, 1, densityProgress);
+    const streamStrength = Math.max(state.bubbleDensity, state.preheat * 0.12) * (reducedMotion ? 0.35 : 1);
+    const ambientWeight = reducedMotion ? 0 : 1 - state.deterministicLock;
+    const meteorRatio = reducedMotion
+      ? config.particles.meteorRatio.reducedMotion
+      : mobile ? config.particles.meteorRatio.mobile : config.particles.meteorRatio.desktop;
+
+    this.container.visible = globalProgress >= STORY_CONFIG.sections.underwater[0];
     if (!this.container.visible) return;
-    const waveIn = smoothstep(clamp((p - 0.12) / 0.35));
-    const waveOut = 1 - smoothstep(clamp((p - 0.68) / 0.3));
-    const waveAlpha = waveIn * waveOut;
-    const centerY = height * (0.88 - p * 0.73);
 
-    this.waves.clear();
-    if (!reducedMotion) {
-      const layerConfig = [
-        { offset: 34, amplitude: 25, color: 0x0b5275, alpha: 0.48, step: 20, speed: 7 },
-        { offset: 15, amplitude: 38, color: 0x25bec4, alpha: 0.6, step: 16, speed: 10 },
-        { offset: -8, amplitude: 53, color: 0xe5faff, alpha: 0.7, step: 12, speed: 14 },
-      ];
-      layerConfig.forEach((layer, layerIndex) => {
-        const base = centerY + layer.offset;
-        this.waves.moveTo(-80, base);
-        for (let x = -80; x <= width + 90; x += layer.step) {
-          const harmonic = Math.sin(x * 0.018 + p * layer.speed + time * 0.18) + Math.sin(x * 0.043 - p * (layer.speed * 0.7) + layerIndex - time * 0.12) * 0.42 + Math.sin(x * 0.091 + layerIndex * 2) * 0.16;
-          this.waves.lineTo(x, Math.round(base + harmonic * layer.amplitude * waveAlpha));
-        }
-        this.waves.lineTo(width + 90, base + 110).lineTo(-80, base + 110).fill({ color: layer.color, alpha: layer.alpha * waveAlpha });
-      });
-    } else {
-      const wipeY = height * (1 - p);
-      this.waves.rect(0, wipeY, width, 12).fill({ color: 0xc16de0, alpha: 0.65 }).rect(0, wipeY + 12, width, height).fill({ color: 0x181443, alpha: 0.36 });
-    }
+    this.drawColorWash(width, height, state.spaceBlend);
+    this.drawGalaxy(width, height, state.nebula, state.settleSpace);
+    this.drawStreamGuides(width, height, time, state.bubbleDensity, state.bubbleToStar, mobile, reducedMotion);
 
-    this.foam.clear();
-    const morph = smoothstep(clamp((p - 0.6) / 0.36));
-    const count = Math.round(foamSeeds.length * particleScale);
-    for (let index = 0; index < count; index += 1) {
-      const seed = foamSeeds[index];
-      const waveX = seed.waveX * width;
-      const waveY = centerY + (seed.waveY - 0.5) * 115 * waveAlpha + Math.sin(seed.phase + p * 16) * 10;
-      const starX = seed.starX * width;
-      const starY = seed.starY * height;
-      const x = waveX + (starX - waveX) * morph;
-      const y = waveY + (starY - waveY) * morph;
-      if (morph < 0.58) this.foam.rect(Math.round(x), Math.round(y), seed.size * 2, seed.size).fill({ color: 0xe5faff, alpha: waveAlpha * 0.8 });
-      else drawPixelStar(this.foam, Math.round(x), Math.round(y), Math.max(1, seed.size - 1), 0xfff3c4, 0.45 + morph * 0.5);
-    }
+    this.meteorTrails.clear();
+    this.particles.clear();
+    for (let index = 0; index < activeCount; index += 1) {
+      const particle = MORPH_PARTICLES[index];
+      const reveal = smoothstep(clamp((densityCeiling - particle.revealAt) / 0.08));
+      if (reveal <= 0.001) continue;
 
-    this.galaxy.clear();
-    const galaxyAlpha = smoothstep(clamp((p - 0.7) / 0.28));
-    if (galaxyAlpha > 0) {
-      this.galaxy.moveTo(-width * 0.15, height * 0.85).lineTo(width * 0.95, height * 0.08).stroke({ width: 34, color: 0x5e8cff, alpha: 0.08 * galaxyAlpha })
-        .moveTo(-width * 0.1, height * 0.82).lineTo(width, height * 0.05).stroke({ width: 5, color: 0xfff3c4, alpha: 0.16 * galaxyAlpha });
+      const travelProgress = Math.max(0, globalProgress - STORY_CONFIG.sections.underwater[0]);
+      const bubbleY = wrap(
+        particle.oceanY
+        - travelProgress * particle.oceanSpeed * 2.4
+        - state.preheat * particle.oceanSpeed * STORY_CONFIG.underwater.preheat.bubbleSpeedBoost
+        - time * particle.oceanSpeed * 0.17 * ambientWeight,
+      );
+      const ambientDrift = Math.sin(time * 0.72 + particle.phase) * particle.oceanDrift * ambientWeight;
+      const progressDrift = Math.sin(particle.phase + globalProgress * 18) * particle.oceanDrift;
+      const streamX = particleStreamX(particle, mobile);
+      const bubbleX = lerp(particle.oceanX, streamX, streamStrength) + ambientDrift + progressDrift;
+      const starX = particleStarX(particle, mobile);
+      const morph = state.bubbleToStar;
+      const xBeforeMeteor = lerp(bubbleX, starX, morph) * width;
+      const yBeforeMeteor = lerp(bubbleY, particle.starY, morph) * height;
+
+      const eligible = particle.meteorRank < meteorRatio;
+      const meteorOrder = eligible && meteorRatio > 0 ? particle.meteorRank / meteorRatio : 1;
+      const meteorProgress = eligible
+        ? smoothstep(clamp((state.starToMeteor - meteorOrder * 0.28) / 0.72))
+        : 0;
+      const travel = (mobile ? config.particles.meteorTravel.mobile : config.particles.meteorTravel.desktop)
+        * width * Math.pow(meteorProgress, 1.35);
+      const x = xBeforeMeteor + particle.meteorDirectionX * travel;
+      const y = yBeforeMeteor - particle.meteorDirectionY * travel;
+
+      if (meteorProgress > 0.001) {
+        this.drawMeteorTail(particle, x, y, meteorProgress, mobile, reveal);
+      }
+      this.drawParticle(particle, x, y, morph, state.brighten, meteorProgress, reveal, time, reducedMotion);
     }
   }
 
-  destroy() { this.container.destroy({ children: true }); }
+  private drawColorWash(width: number, height: number, spaceBlend: number) {
+    this.colorWash.clear();
+    if (spaceBlend <= 0) return;
+    const colors = STORY_CONFIG.oceanToSpace.colors;
+    const color = mixColor(colors.nightBlue, colors.indigo, spaceBlend);
+    this.colorWash.rect(0, 0, width, height).fill({ color, alpha: 0.08 + spaceBlend * 0.1 });
+  }
+
+  private drawGalaxy(width: number, height: number, nebula: number, settleSpace: number) {
+    this.galaxy.clear();
+    if (nebula <= 0.001) return;
+
+    for (let bandIndex = 0; bandIndex < LIGHT_BANDS.length; bandIndex += 1) {
+      const band = LIGHT_BANDS[bandIndex];
+      const oceanStartX = width * band.start;
+      const oceanStartY = -height * 0.04;
+      const oceanEndX = width * (band.start + band.width + 0.12);
+      const oceanEndY = height * 0.86;
+      const spaceStartX = -width * (0.18 - bandIndex * 0.035);
+      const spaceStartY = height * (0.9 - bandIndex * 0.035);
+      const spaceEndX = width * (0.93 + bandIndex * 0.04);
+      const spaceEndY = height * (0.08 + bandIndex * 0.03);
+      const startX = lerp(oceanStartX, spaceStartX, nebula);
+      const startY = lerp(oceanStartY, spaceStartY, nebula);
+      const endX = lerp(oceanEndX, spaceEndX, nebula);
+      const endY = lerp(oceanEndY, spaceEndY, nebula);
+      const blocks = 24;
+
+      for (let step = 0; step <= blocks; step += 1) {
+        const t = step / blocks;
+        const wave = Math.sin(t * Math.PI * 4 + band.phase) * (3 + nebula * 8);
+        const x = lerp(startX, endX, t) + wave;
+        const y = lerp(startY, endY, t) - wave * 0.35;
+        const blockWidth = 12 + bandIndex * 4 + settleSpace * (18 + bandIndex * 3);
+        const blockHeight = 5 + bandIndex * 2 + settleSpace * 4;
+        const alpha = nebula * (0.022 + bandIndex * 0.008 + settleSpace * 0.025);
+        this.galaxy.rect(Math.round(x / 4) * 4, Math.round(y / 4) * 4, blockWidth, blockHeight)
+          .fill({ color: band.color, alpha });
+      }
+    }
+  }
+
+  private drawStreamGuides(width: number, height: number, time: number, density: number, morph: number, mobile: boolean, reducedMotion: boolean) {
+    this.streamGuides.clear();
+    if (reducedMotion || density <= 0.01 || morph >= 0.9) return;
+    const centers = mobile ? STREAM_CENTERS_MOBILE : STREAM_CENTERS_DESKTOP;
+    const alpha = density * (1 - morph) * 0.1;
+    for (let stream = 0; stream < centers.length; stream += 1) {
+      for (let step = 0; step < 9; step += 1) {
+        const y = wrap(step / 9 - time * 0.035 - stream * 0.13) * height;
+        const x = centers[stream] * width + Math.sin(step * 1.7 + stream) * 9;
+        this.streamGuides.rect(Math.round(x), Math.round(y), 3 + stream % 2, 18 + step % 3 * 6)
+          .fill({ color: STORY_CONFIG.oceanToSpace.colors.bubble, alpha });
+      }
+    }
+  }
+
+  private drawMeteorTail(particle: MorphParticle, x: number, y: number, progress: number, mobile: boolean, alpha: number) {
+    const config = STORY_CONFIG.oceanToSpace;
+    const maximum = mobile ? config.particles.meteorTail.mobile : config.particles.meteorTail.desktop;
+    const length = maximum * particle.meteorLength * progress;
+    const steps = Math.max(1, Math.ceil(length / 7));
+    for (let step = 1; step <= steps; step += 1) {
+      const distance = Math.min(length, step * 7);
+      const tailAlpha = alpha * progress * (1 - step / (steps + 1)) * 0.68;
+      const block = step < 3 ? 4 : 3;
+      this.meteorTrails.rect(
+        Math.round(x - particle.meteorDirectionX * distance),
+        Math.round(y + particle.meteorDirectionY * distance),
+        block * 2,
+        block,
+      ).fill({ color: config.colors.star, alpha: tailAlpha });
+    }
+  }
+
+  private drawParticle(particle: MorphParticle, x: number, y: number, morph: number, brighten: number, meteor: number, reveal: number, time: number, reducedMotion: boolean) {
+    const colors = STORY_CONFIG.oceanToSpace.colors;
+    const ringFade = 1 - smoothstep(clamp((morph - 0.18) / 0.7));
+    const starReveal = smoothstep(clamp((morph - 0.22) / 0.72));
+    const radius = lerp(particle.oceanRadius, particle.starRadius, morph);
+    const ringColor = mixColor(colors.bubble, colors.bubbleHighlight, brighten);
+    const ringAlpha = reveal * ringFade * (0.34 + brighten * 0.4);
+
+    if (ringAlpha > 0.001) {
+      this.particles.circle(Math.round(x), Math.round(y), Math.max(1, radius))
+        .stroke({ width: lerp(1.25, 0.55, morph), color: ringColor, alpha: ringAlpha });
+    }
+
+    const highlightAlpha = reveal * (0.16 + brighten * 0.48) * (1 - morph * 0.35);
+    if (morph < 0.92 && highlightAlpha > 0.001) {
+      const highlightSize = Math.max(1, Math.round(lerp(1, particle.starRadius, brighten)));
+      this.particles.rect(Math.round(x - radius * 0.3), Math.round(y - radius * 0.45), highlightSize, highlightSize)
+        .fill({ color: colors.bubbleHighlight, alpha: highlightAlpha });
+    }
+
+    if (starReveal > 0.001) {
+      const twinkle = reducedMotion ? 0 : (Math.sin(time * 0.7 + particle.phase) + 1) * 0.055;
+      const starAlpha = reveal * starReveal * Math.min(1, particle.starBrightness + twinkle + meteor * 0.18);
+      drawPixelStar(this.particles, Math.round(x), Math.round(y), particle.starRadius, colors.star, starAlpha);
+    }
+  }
+
+  destroy() {
+    this.container.destroy({ children: true });
+  }
 }

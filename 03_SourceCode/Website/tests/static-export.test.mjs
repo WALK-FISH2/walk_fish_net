@@ -203,17 +203,74 @@ test("implements isolated reversible M4.5 pixel waves and pooled foam", async ()
   assert.match(diveTransition, /drawReducedWaveCurtain/);
   assert.match(diveTransition, /transition\.seamCover/);
   assert.doesNotMatch(diveTransition, /Math\.random/);
-  assert.match(sceneController, /STORY_CONFIG\.sections\.oceanToSpace/);
+  assert.match(storyConfig, /oceanToSpace:\s*\[0\.66,\s*0\.8\]/);
+  assert.match(sceneController, /getOceanSpaceMorphState\(this\.progress\)/);
   assert.match(oceanTransition, /class OceanToSpaceTransition/);
   assert.doesNotMatch(oceanTransition, /getLandOceanTransitionState/);
 });
 
 test("keeps the M4.5-corrected world orientation fixed through the sea-to-space morph", async () => {
-  const sceneController = await readFile(new URL("src/interactive/SceneController.ts", root), "utf8");
+  const [sceneController, oceanTransition, underwaterScene, spaceScene] = await Promise.all([
+    readFile(new URL("src/interactive/SceneController.ts", root), "utf8"),
+    readFile(new URL("src/interactive/transitions/OceanToSpaceTransition.ts", root), "utf8"),
+    readFile(new URL("src/interactive/scenes/UnderwaterScene.ts", root), "utf8"),
+    readFile(new URL("src/interactive/scenes/SpaceScene.ts", root), "utf8"),
+  ]);
 
   assert.match(sceneController, /this\.world\.rotation = 0/);
   assert.doesNotMatch(sceneController, /maxRotation/);
   assert.doesNotMatch(sceneController, /Math\.sin\(transform \* Math\.PI\)/);
+  for (const source of [oceanTransition, underwaterScene, spaceScene]) {
+    assert.doesNotMatch(source, /\.rotation\s*=/);
+    assert.doesNotMatch(source, /scale\.set\([^)]*-/);
+  }
+});
+
+test("implements one deterministic M5 particle pool from bubbles through stars and meteors", async () => {
+  const [storyConfig, sceneController, morphParticles, oceanTransition, underwaterScene, spaceScene, homeComponent, css] = await Promise.all([
+    readFile(new URL("src/config/story.config.ts", root), "utf8"),
+    readFile(new URL("src/interactive/SceneController.ts", root), "utf8"),
+    readFile(new URL("src/interactive/transitions/morphParticles.ts", root), "utf8"),
+    readFile(new URL("src/interactive/transitions/OceanToSpaceTransition.ts", root), "utf8"),
+    readFile(new URL("src/interactive/scenes/UnderwaterScene.ts", root), "utf8"),
+    readFile(new URL("src/interactive/scenes/SpaceScene.ts", root), "utf8"),
+    readFile(new URL("src/components/ImmersiveHome.tsx", root), "utf8"),
+    readFile(new URL("src/styles/global.css", root), "utf8"),
+  ]);
+
+  for (const range of [
+    "preheat: [0.64, 0.66]",
+    "bubbleDensity: [0.66, 0.69]",
+    "brighten: [0.69, 0.72]",
+    "bubbleToStar: [0.72, 0.755]",
+    "starToMeteor: [0.755, 0.785]",
+    "settleSpace: [0.785, 0.8]",
+  ]) assert.ok(storyConfig.includes(range), range);
+
+  assert.match(storyConfig, /export function getOceanSpaceMorphState/);
+  assert.match(storyConfig, /desktop:\s*0\.055/);
+  assert.match(storyConfig, /mobile:\s*0\.022/);
+  assert.match(storyConfig, /reducedMotion:\s*0/);
+  assert.match(morphParticles, /export type MorphParticle/);
+  assert.match(morphParticles, /export const MORPH_PARTICLES: readonly MorphParticle\[\] = Array\.from/);
+  assert.match(morphParticles, /createSeededRandom\(0x50495845\)/);
+  assert.doesNotMatch(morphParticles, /Math\.random/);
+  assert.match(oceanTransition, /MORPH_PARTICLES/);
+  assert.match(oceanTransition, /particle\.meteorRank < meteorRatio/);
+  assert.match(oceanTransition, /drawMeteorTail/);
+  assert.match(oceanTransition, /drawGalaxy/);
+  assert.doesNotMatch(oceanTransition, /private waves/);
+  assert.doesNotMatch(underwaterScene, /const bubblePool/);
+  assert.doesNotMatch(spaceScene, /const starSeeds/);
+  assert.doesNotMatch(spaceScene, /meteorX/);
+  assert.match(sceneController, /getOceanSpaceMorphState\(this\.progress\)/);
+  assert.match(sceneController, /this\.oceanTransition\.update\([^;]*this\.progress/);
+  assert.match(homeComponent, /--program-exit-opacity/);
+  assert.match(homeComponent, /data-programs-exited/);
+  assert.match(homeComponent, /--about-enter-opacity/);
+  assert.match(css, /var\(--program-exit-opacity, 1\)/);
+  assert.match(css, /\.immersive-home\[data-programs-exited\]/);
+  assert.match(css, /var\(--about-enter-opacity, 1\)/);
 });
 
 test("keeps the traveler corridor and Programs archive free of content collisions", async () => {

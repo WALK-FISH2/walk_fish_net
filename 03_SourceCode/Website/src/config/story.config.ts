@@ -158,6 +158,49 @@ export const STORY_CONFIG = {
       rayLean: 0.08,
     },
   },
+  oceanToSpace: {
+    timeline: {
+      preheat: [0.64, 0.66],
+      bubbleDensity: [0.66, 0.69],
+      brighten: [0.69, 0.72],
+      bubbleToStar: [0.72, 0.755],
+      starToMeteor: [0.755, 0.785],
+      settleSpace: [0.785, 0.8],
+    },
+    particles: {
+      maxCount: 180,
+      baseDensity: 0.49,
+      streamCount: {
+        desktop: 3,
+        mobile: 2,
+      },
+      mobileDensityScale: 0.86,
+      meteorRatio: {
+        desktop: 0.055,
+        mobile: 0.022,
+        reducedMotion: 0,
+      },
+      meteorTravel: {
+        desktop: 0.13,
+        mobile: 0.08,
+      },
+      meteorTail: {
+        desktop: 58,
+        mobile: 32,
+      },
+      deterministicLock: [0.59, 0.64],
+    },
+    colors: {
+      deepSea: 0x04162f,
+      nightBlue: 0x07112d,
+      indigo: 0x181443,
+      purple: 0x32245d,
+      nebula: 0x5b4cb5,
+      bubble: 0x89f0d7,
+      bubbleHighlight: 0xe5faff,
+      star: 0xfff3c4,
+    },
+  },
   quality: {
     high: { particles: 220, dpr: 2 },
     medium: { particles: 130, dpr: 1.5 },
@@ -264,6 +307,31 @@ export function getUnderwaterState(progress: number) {
     programs: smoothstep(mapProgress(progress, timeline.programs)),
     tail: smoothstep(mapProgress(progress, timeline.tail)),
     preheat: smoothstep(mapProgress(progress, timeline.preheat)),
+  };
+}
+
+export function getOceanSpaceMorphState(progress: number) {
+  const timeline = STORY_CONFIG.oceanToSpace.timeline;
+  const preheat = smoothstep(mapProgress(progress, timeline.preheat));
+  const bubbleDensity = smoothstep(mapProgress(progress, timeline.bubbleDensity));
+  const brighten = smoothstep(mapProgress(progress, timeline.brighten));
+  const bubbleToStar = smoothstep(mapProgress(progress, timeline.bubbleToStar));
+  const starToMeteor = smoothstep(mapProgress(progress, timeline.starToMeteor));
+  const settleSpace = smoothstep(mapProgress(progress, timeline.settleSpace));
+
+  return {
+    preheat,
+    bubbleDensity,
+    brighten,
+    bubbleToStar,
+    starToMeteor,
+    settleSpace,
+    deterministicLock: smoothstep(mapProgress(progress, STORY_CONFIG.oceanToSpace.particles.deterministicLock)),
+    oceanExit: smoothstep(mapProgress(progress, [timeline.brighten[0], timeline.settleSpace[1]])),
+    spaceBlend: smoothstep(mapProgress(progress, [timeline.brighten[0], timeline.settleSpace[1]])),
+    nebula: smoothstep(mapProgress(progress, [timeline.bubbleToStar[0], timeline.settleSpace[1]])),
+    programsExit: smoothstep(mapProgress(progress, [timeline.brighten[0], timeline.starToMeteor[1]])),
+    aboutEnter: settleSpace,
   };
 }
 

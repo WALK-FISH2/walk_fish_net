@@ -1,5 +1,5 @@
 import { Application, Container, TextureStyle, type Ticker } from "pixi.js";
-import { STORY_CONFIG, getDiveState, mapProgress, mixColor, smoothstep, type QualityLevel } from "../config/story.config";
+import { STORY_CONFIG, getDiveState, getOceanSpaceMorphState, mapProgress, mixColor, type QualityLevel } from "../config/story.config";
 import { OverworldScene } from "./scenes/OverworldScene";
 import { SpaceScene } from "./scenes/SpaceScene";
 import { UnderwaterScene } from "./scenes/UnderwaterScene";
@@ -87,7 +87,7 @@ export class SceneController {
     const [overworld, underwater, space] = this.scenes;
     const diveState = getDiveState(this.progress);
     const depth = mapProgress(this.progress, STORY_CONFIG.sections.underwater);
-    const transform = smoothstep(mapProgress(this.progress, STORY_CONFIG.sections.oceanToSpace));
+    const morphState = getOceanSpaceMorphState(this.progress);
     const particleScale = this.quality === "high" ? 1 : this.quality === "medium" ? 0.62 : 0.32;
     const landFade = diveState.landFade;
     overworld.container.alpha = 1 - landFade;
@@ -95,13 +95,13 @@ export class SceneController {
     overworld.container.y = -diveState.cameraDescent * this.height * STORY_CONFIG.dive.camera.landTravel;
     const landScale = 1 - diveState.cameraDescent * STORY_CONFIG.dive.camera.landScaleLoss;
     overworld.container.scale.set(landScale);
-    underwater.container.alpha = Math.min(diveState.underwaterReveal, 1 - smoothstep(Math.max(0, (transform - 0.42) / 0.5)));
+    underwater.container.alpha = Math.min(diveState.underwaterReveal, 1 - morphState.oceanExit);
     underwater.container.y = (1 - diveState.cameraDescent) * this.height * STORY_CONFIG.dive.camera.underwaterOffset;
-    space.container.alpha = smoothstep(Math.max(0, (transform - 0.48) / 0.52));
+    space.container.alpha = morphState.spaceBlend;
     const locals = [mapProgress(this.progress, STORY_CONFIG.sections.overworld), depth, mapProgress(this.progress, STORY_CONFIG.sections.space)];
     this.scenes.forEach((scene, index) => scene.update({ width: this.width, height: this.height, globalProgress: this.progress, progress: locals[index], time: this.elapsed, pointerX: this.pointerX, pointerY: this.pointerY, particleScale, reducedMotion: this.reducedMotion }));
     this.diveTransition.update(this.width, this.height, this.progress, this.elapsed, particleScale, this.reducedMotion);
-    this.oceanTransition.update(this.width, this.height, transform, this.elapsed, particleScale, this.reducedMotion);
+    this.oceanTransition.update(this.width, this.height, this.progress, this.elapsed, particleScale, this.reducedMotion);
     // Product invariant: every world remains upright while colors, light and
     // particles morph continuously between the ocean and space scenes.
     this.world.rotation = 0;

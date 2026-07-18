@@ -3,7 +3,6 @@ import { STORY_CONFIG, getUnderwaterState, mixColor } from "../../config/story.c
 import { drawFish, drawJellyfish, drawKelp, drawRuin } from "../pixel/draw";
 import type { PixelScene, SceneFrame } from "./types";
 
-const bubblePool = Array.from({ length: 88 }, (_, index) => ({ x: ((index * 47) % 101) / 100, y: ((index * 71) % 97) / 96, size: 2 + (index % 6), speed: 0.025 + (index % 8) * 0.007, phase: index * 0.53 }));
 const farFishPool = Array.from({ length: 11 }, (_, index) => ({ x: index * 179, y: 0.21 + (index % 4) * 0.09, scale: 0.45 + (index % 3) * 0.1, direction: (index % 2 ? -1 : 1) as 1 | -1 }));
 const midFishPool = Array.from({ length: 8 }, (_, index) => ({ x: index * 241, y: 0.36 + (index % 5) * 0.08, scale: 0.8 + (index % 3) * 0.22, direction: (index % 3 === 0 ? -1 : 1) as 1 | -1 }));
 const jellyfishPool = Array.from({ length: 5 }, (_, index) => ({ x: 0.12 + index * 0.21, y: 0.22 + (index % 3) * 0.13, scale: 0.75 + (index % 2) * 0.35 }));
@@ -30,12 +29,11 @@ export class UnderwaterScene implements PixelScene {
   private farDecor = new Graphics();
   private midground = new Graphics();
   private nearDecor = new Graphics();
-  private particles = new Graphics();
   private foreground = new Graphics();
 
-  constructor() { this.container.addChild(this.backdrop, this.farDecor, this.midground, this.nearDecor, this.particles, this.foreground); }
+  constructor() { this.container.addChild(this.backdrop, this.farDecor, this.midground, this.nearDecor, this.foreground); }
 
-  update({ width, height, globalProgress, progress, time, pointerX, pointerY, particleScale, reducedMotion }: SceneFrame) {
+  update({ width, height, globalProgress, progress, time, pointerX, particleScale, reducedMotion }: SceneFrame) {
     const bedY = height * 0.88;
     const state = getUnderwaterState(globalProgress);
     const parallax = STORY_CONFIG.underwater.parallax;
@@ -105,18 +103,6 @@ export class UnderwaterScene implements PixelScene {
       const x = wrap(index / Math.max(1, rockCount - 1) * width + 18 - nearShift * parallax.near.terrain + 32, width + 64) - 32;
       drawRock(this.nearDecor, x, bedY + 13, 13 + index % 4 * 7, index % 5 === 0 ? 0x6b3858 : 0x163b4a);
       if (index % 4 === 0) drawCoral(this.nearDecor, x + 20, bedY + 8, 0.55 + (index % 3) * 0.12, index % 2 ? 0xc95a67 : 0xff806e);
-    }
-
-    this.particles.clear();
-    const count = Math.round(bubblePool.length * particleScale);
-    const bubbleSpeed = 1 + state.preheat * preheatConfig.bubbleSpeedBoost;
-    for (let index = 0; index < count; index += 1) {
-      const bubble = bubblePool[index];
-      const y = wrap(bubble.y - animationTime * bubble.speed * bubbleSpeed - progress * parallax.near.bubbles, 1);
-      const avoid = Math.max(0, 1 - Math.abs(y - pointerY) * 7);
-      const x = bubble.x * width + (bubble.x > pointerX ? 1 : -1) * avoid * 10 + Math.sin(animationTime + bubble.phase) * 2 + currentDrift * (0.05 + bubble.x * 0.06);
-      this.particles.circle(Math.round(x), Math.round(y * height), bubble.size).stroke({ width: 1.2, color: 0x89f0d7, alpha: 0.35 + (index % 4) * 0.08 });
-      if (index % 9 === 0) this.particles.rect(Math.round(x + 8), Math.round(y * height - 3), 2, 2).fill({ color: 0x89f0d7, alpha: 0.65 });
     }
 
     this.foreground.clear();

@@ -2,7 +2,7 @@ import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useCallback, useEffect, useRef, useState, type CSSProperties, type PointerEvent as ReactPointerEvent } from "react";
 import { SITE_CONFIG, sitePath } from "../config/site.config";
-import { STORY_CONFIG, getDiveState } from "../config/story.config";
+import { STORY_CONFIG, getDiveState, getOceanSpaceMorphState } from "../config/story.config";
 import { SceneController, detectQuality } from "../interactive/SceneController";
 import { DEMO_TYPE_LABELS, PROGRAM_STATUS_LABELS, type ArticleSummary, type ProgramSummary } from "../types/content";
 
@@ -24,12 +24,18 @@ export function ImmersiveHome({ articles, programs }: { articles: ArticleSummary
   const updateProgress = useCallback((progress: number) => {
     const nextPhase = phaseFor(progress);
     const dive = getDiveState(progress);
+    const morph = getOceanSpaceMorphState(progress);
     const root = storyRef.current;
     root?.style.setProperty("--story-progress", String(progress));
     root?.style.setProperty("--dive-progress", String(dive.overall));
     root?.style.setProperty("--waterline-y", String(dive.surfaceY));
     root?.style.setProperty("--waterline-opacity", String(dive.surfaceOpacity));
     root?.style.setProperty("--refraction-strength", String(dive.refraction));
+    root?.style.setProperty("--program-exit-opacity", String(1 - morph.programsExit));
+    root?.style.setProperty("--program-exit-y", `${Math.round(morph.programsExit * -72)}px`);
+    root?.style.setProperty("--about-enter-opacity", String(morph.aboutEnter));
+    root?.style.setProperty("--about-enter-y", `${Math.round((1 - morph.aboutEnter) * 56)}px`);
+    root?.toggleAttribute("data-programs-exited", morph.programsExit >= 0.995);
     root?.setAttribute("data-phase", nextPhase);
     document.body.dataset.storyPhase = nextPhase;
     controllerRef.current?.update(progress);

@@ -150,7 +150,7 @@ BASE_PATH=/pixel-walk-audit
 
 DOM 内容层继续保持在 Canvas 之上以保证正文、链接和降级内容可用，但内容层必须遵守场景安全区：陆地 Hero 使用响应式顶部安全偏移；文章标题、路牌组顶部、卡片高度、错层距离和路牌柱长度使用一组 CSS 安全区参数，为位于 `0.73 × viewportHeight` 地面线附近的旅行者保留走廊。`≤980px` 时三张路牌切换为容器内横向轨道并隐藏装饰柱，不制造页面级横向溢出。Programs 标题、三张档案终端和总入口使用顺序文档流与显式 gap，不再使用按索引错开的 sticky 堆栈。非 canonical 的 `?motion=full` 会恢复标准场景阶段高度，但复用同一套无碰撞内容布局。
 
-当前实现按绝对进度确定性重绘。M4 已完成 50%→30% 的深海倒放，M4.5 已完成 38%→30% 的陆海翻涌倒放和 Reduced Motion 往返帧一致性验收。需求更正后的 M4.5 还负责取消背景世界旋转：`SceneController` 在海空过渡期间强制 `world.rotation = 0`，原先按正弦曲线计算的桌面/移动端最大旋转已删除。M5 的完整粒子形态转换、反向倒放及 76%/80% 关键帧仍待独立验收，不应由 M4/M4.5 的结果外推。
+当前实现按绝对进度确定性重绘。M4 已完成 50%→30% 的深海倒放，M4.5 已完成 38%→30% 的陆海翻涌倒放和 Reduced Motion 往返帧一致性验收。需求更正后的 M4.5 还负责取消背景世界旋转：`SceneController` 全程强制 `world.rotation = 0`，原先按正弦曲线计算的桌面/移动端最大旋转已删除。M5 继续沿用固定方向约束，并把海空气泡、星点与流星改为同一个固定种子粒子池；所有形态、位置、Programs 退出和 About 进入均由绝对 `globalProgress` 计算，82%→64% 同页倒放可恢复深海状态而不重新随机。
 
 陆地世界的视差参数统一位于 `STORY_CONFIG.overworld.parallax`。配置通过 `maxTravel` 和远景、中景、近景、前景四层强度表达整体深度关系，并集中维护山、云、丘陵、路径、花朵和尘粒的层内倍率；`OverworldScene` 不再保存未说明的视差系数。四层有效位移保持在迁移前约 `0.07 / 0.19 / 0.40 / 0.54` 的范围，浏览器 0%、25% 与反向回滚验收未发现明显视觉退化。
 
@@ -162,8 +162,12 @@ M4/M4.5 的细分时间线、陆海翻涌参数、深海层级和尾段预热统
 - `STORY_CONFIG.dive.waves` 分别维护远浪、中浪、前浪的幅度、波长、相位、速度、透明度、像素步长、块大小、垂直偏移、浪峰块数量和泡沫权重；`DiveTransition` 为三层浪复用独立 Graphics，不与 M5 的 `OceanToSpaceTransition` 共用实现；
 - `DiveTransition` 使用 96 项固定泡沫数据池与单一复用 Graphics，向前和向后滚动均只由绝对进度重绘；375px 使用 `0.72` 细节倍率、`0.38` 泡沫倍率并取消薄雾，Reduced Motion 只绘制单层静态像素浪幕；
 - `SceneController` 在完全入水阶段对陆地容器应用冷色 tint、低对比透明度、向上位移和轻微缩小，所有值只由全局进度计算，向上滚动时原路恢复；
-- `STORY_CONFIG.underwater.parallax` 明确区分远景、中景、近景、前景，`UnderwaterScene` 不再保存未说明的深海视差位移；鱼群、水母与气泡使用模块级固定池，逐帧只重绘已有 Graphics；
-- `0.640–0.660` 只执行 M4 预热：水流、海草和气泡轻量增强，鱼群逐渐离开，光束轻微倾斜；`OceanToSpaceTransition` 仍从 `0.660` 开始，本轮没有扩展 M5；
+- `STORY_CONFIG.underwater.parallax` 明确区分远景、中景、近景、前景，`UnderwaterScene` 不再保存未说明的深海视差位移；鱼群与水母使用模块级固定池，气泡则由跨 M4/M5/M6 的统一 `MorphParticle` 池持有；
+- `STORY_CONFIG.oceanToSpace` 集中维护 `0.640–0.800` 的 preheat、bubbleDensity、brighten、bubbleToStar、starToMeteor 和 settleSpace 六段时间线，以及 180 项粒子上限、密度、流数量、流星比例、尾迹和颜色参数；`getOceanSpaceMorphState()` 是 Canvas 与 DOM 的共同纯函数；
+- `src/interactive/transitions/morphParticles.ts` 使用固定种子 `0x50495845` 一次性生成 180 项 `MorphParticle`；每项同时保存 ocean、star、meteor 目标与稳定身份。`UnderwaterScene` 不再持有独立 88 项气泡池，`SpaceScene` 不再持有独立 240 项星点或程序化流星；
+- `OceanToSpaceTransition` 复用五个 `Graphics` 绘制颜色、银河、流引导、尾迹和统一粒子，不按帧创建粒子对象。桌面使用三股上升流、最大 `5.5%` 流星；375px 使用两股流、`0.86` 粒子密度倍率和最大 `2.2%` 流星；Reduced Motion 不绘制流引导与流星；
+- M4.5 的三层浪由 `DiveTransition` 独立负责并在入水前结束，M5 不再持有旧的三层浪、独立泡沫种子或银河线实现。水下光束只以像素块坐标与透明度连续成为银河，不旋转世界、场景或粒子容器；
+- `ImmersiveHome` 读取同一 morph 状态写入 Programs/About 的透明度和局部位移变量；Programs 完全退出后只切换 `visibility` 与 `pointer-events`，不改变文档流高度，因此没有内容突跳；
 - Programs 档案由真实 DOM 承载，首页卡片显示状态、演示类型、技术栈、当前限制和链接，保持“本人编写的程序”语义；
 - 非 canonical 的验收参数 `?motion=full` 和 `?canvas=fallback` 分别用于在系统 Reduced Motion 环境验证标准动效，以及稳定复现 Canvas 初始化失败边界；`?motion=full` 在桌面恢复 `160/190/300/210vh` 四段高度，在 375px 恢复 `130/170/230/120vh`，同时保持 Programs 内容为非 sticky 顺序流；它们不新增路由、不进入 Sitemap，也不改变默认用户行为。
 
@@ -182,14 +186,17 @@ npm run build:sites
 
 2026-07-18 内容层碰撞回归修复后再次执行相同门禁：Astro Check 仍为 0 errors / 0 warnings / 0 hints，lint 通过，静态输出与源码边界测试增至 10 项且全部通过；生产构建仍为 15 个 HTML，纯静态服务器验证 15/15 个主/兼容页面为 HTTP 200、未知路由为 HTTP 404，`dist/server` 仍不存在。新增测试锁定 Hero 与文章路牌安全区、短视口和窄屏路牌降级、旅行者路径不变、Programs 非 sticky 顺序流及 `?motion=full` 的桌面/移动端阶段高度。
 
+2026-07-18 M5 正式验收继续执行相同门禁：Astro Check 为 0 errors / 0 warnings / 0 hints，lint 通过，测试增至 11 项且 11/11 通过，`npm run build:sites` 成功；`dist/` 仍为 15 个 HTML，静态服务器验证 15/15 路由为 HTTP 200、未知路由为 HTTP 404、`dist/server` 不存在。新增回归测试锁定统一固定粒子池、M5 无 `Math.random`、深海与星空不再持有独立气泡/星点/流星池、旧 M5 三层浪已移除，以及世界方向固定为 0°。
+
+M5 浏览器验收在 1280×720 下逐一命中 64%、66%、69%、72%、75.5%、78.5%、80% 和 82%，并在同一页面完成 82%→64% 倒放；375×812 的 72%/78.5% 无横向溢出并降低流星比例；Reduced Motion 的 78.5% 取消流星和时间抖动；Programs 与 About 链接均可见、可用、可聚焦。最终代码的新页面及五次海空往返后的浏览器 warn/error 均为空，DOM 节点数、Canvas 数和 story root 数在五次循环中分别恒为 `260/1/1`。
+
 浏览器在 1280×720 标准动效下逐一验证 31.5%、32.8%、34.2%、35.0%、35.8%、36.8% 和 38.0%，并完成 38%→30% 倒放；在 375×812 下复验 31.5%、35.8%、38.0%、无正向横向溢出和链接可用；Reduced Motion 的 35.8% 间隔 700ms 两帧摘要及 38%→30%→35.8% 往返帧摘要一致；Canvas 强制降级时文章与 Programs DOM 仍完整。文章入口指针点击进入真实详情，Programs 导航指针点击进入 `/programs`，二者均 `tabIndex=0` 且可获得焦点；标准、Reduced Motion、移动端和降级状态的浏览器 warn/error 均为空。
 
 ## 11. 已知未完成项
 
 - DemoRegistry 与程序演示隔离层尚未实现；
 - 当前 `static-embedded` 只提供静态说明；真正的独立演示容器和按需加载由 M7 跟踪；
-- M5 的完整反向滚动、76% 和 80% 过渡帧缺独立浏览器证据；
-- M5 仍有局部时序、跨形态粒子复用和对象池目标，但不得重新引入任何背景世界旋转；M3 陆地视差、M4 下潜/深海与 M4.5 陆海翻涌及固定世界方向已经完成正式验收。
+- M3 陆地视差、M4 下潜/深海、M4.5 陆海翻涌与 M5 气泡到繁星/流星均已完成正式验收；M6 现有星空主体尚需按独立里程碑执行正式状态对账与验收。
 
 ## 12. 架构变化流程
 

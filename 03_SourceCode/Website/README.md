@@ -73,12 +73,13 @@ draft: false
 - `src/components/ImmersiveHome.tsx`：滚动绑定、DOM 叙事层、进度导航和降级状态。
 - `src/interactive/SceneController.ts`：Pixi 生命周期、DPR、可见性、WebGL 丢失与场景混合。
 - `src/interactive/scenes/OverworldScene.ts`：六层陆地景深、双层云、远山、树林、道路和前景。
-- `src/interactive/scenes/DiveTransition.ts`：多谐波水面、反射带、水位上升与气泡。
+- `src/interactive/transitions/DiveTransition.ts`：M4.5 三层像素浪、泡沫幕、反射带与连续入水。
 - `src/interactive/scenes/UnderwaterScene.ts`：光束、鱼群、遗迹、水母、海草和前景遮挡。
-- `src/interactive/scenes/OceanToSpaceTransition.ts`：三层浪花、泡沫到星点的形态连续过渡。
-- `src/interactive/scenes/SpaceScene.ts`：星云、三层星野、星座、行星、浮岛与流星。
+- `src/interactive/transitions/morphParticles.ts`：固定种子的统一 `MorphParticle` 池与气泡/星点/流星三态目标。
+- `src/interactive/transitions/OceanToSpaceTransition.ts`：定向气泡流、同粒子形变、像素流星尾迹与光束到银河过渡。
+- `src/interactive/scenes/SpaceScene.ts`：星空底色、星云、星座、行星与信号站；M5/M6 星点和流星继续由统一粒子过渡层持有。
 
-场景使用原创程序化像素图形，没有引入第三方受版权限制素材。桌面端保留深海到太空的背景旋转，前景内容保持正向；移动端限制旋转幅度，`prefers-reduced-motion` 下改为静态分区与淡入淡出。
+场景使用原创程序化像素图形，没有引入第三方受版权限制素材。桌面端、移动端和 `prefers-reduced-motion` 模式下的 Canvas 世界、正文与固定 UI 始终保持水平，海洋到星空只通过颜色、光束、透明度和粒子形态平滑过渡，不使用任何角度的世界旋转、翻转或倾斜。
 
 ## 静态部署
 
@@ -103,4 +104,4 @@ BASE_PATH=/<repository>
 
 ## 仍可继续精修
 
-当前已完成第二轮的核心视觉升级与海洋到太空的基线过渡。后续若继续做第三轮，重点是细化约 66%–80% 区间的波峰节奏、泡沫到星点的造型对应和最终素材替换；MDX 自定义交互组件、代码 token 高亮、RSS、音频与视频也尚未加入。
+当前已完成第二轮核心视觉升级、M4.5 陆海三层浪与 M5 气泡到繁星/流星的统一粒子过渡。后续重点是 M6 星空世界的独立正式验收与最终素材替换；MDX 自定义交互组件、代码 token 高亮、RSS、音频与视频也尚未加入。

@@ -410,8 +410,13 @@ canvas {
 
 .story-stage--hero { height: 180vh; min-height: 1100px; }
 .story-stage--articles { height: 200vh; min-height: 1260px; }
-.story-stage--programs { height: 310vh; min-height: 1960px; color: var(--sea-text); }
-.story-stage--space { height: 210vh; min-height: 1320px; color: var(--space-text); }
+.story-stage--programs { height: 310vh; min-height: 1960px; color: var(--sea-text); opacity: var(--program-exit-opacity, 1); transform: translateY(var(--program-exit-y, 0)); }
+.story-stage--space { height: 210vh; min-height: 1320px; color: var(--space-text); opacity: var(--about-enter-opacity, 1); transform: translateY(var(--about-enter-y, 0)); }
+
+.immersive-home[data-programs-exited] .story-stage--programs {
+  visibility: hidden;
+  pointer-events: none;
+}
 
 .story-panel {
   border: 4px solid currentColor;
