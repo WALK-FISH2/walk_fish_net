@@ -197,6 +197,40 @@ Canvas 世界方向始终为 0°
 反向滚动可以恢复深海
 ```
 
+## M5.5：星空、海浪与气泡视觉抛光
+
+阶段状态：`[x]` 已于 2026-07-18 完成正式验收；未重做 M5，未改变既有章节高度与进度语义。
+
+- [x] `M5.5-01` 审查星空 section、滚动容器、视差层、固定流星、行星光环、三层浪花和 scroll transform（实施前代码与素材审查已汇报）
+- [x] `M5.5-02` 将六张参考素材处理为裁切后的透明生产 sprite，并记录来源与处理方式（代码/文件证据：`scripts/process-m55-assets.py`、`assets/reference/m5-5/README.md`、6 个 `src/assets/m5-5/*.png`；构建输出 6 个哈希 PNG）
+- [x] `M5.5-03` 保留固定流星数量、位置和视差关系，统一修正为左上到右下且拖尾位于左上（代码证据：只修改 `OceanToSpaceTransition` 的 Y 方向与尾迹符号；桌面 82% 视觉证据全部头部位于轨迹右下）
+- [x] `M5.5-04` 新增与 scroll progress 解耦的独立高速流星 overlay（代码证据：`MeteorOverlay.tsx` 不读取 global/scroll progress；CSS 为 fixed/transform none；浏览器 82% 观察到活动实例）
+- [x] `M5.5-05` 完成动态流星的星空激活、页面隐藏暂停、重复进入防重和卸载 cleanup（代码证据：visibility/media/effect cleanup 清除 timer、RAF 和实例；浏览器 82%→72%→82% 为 running `true→false→true`，始终 1 个 overlay/2 个 Canvas）
+- [x] `M5.5-06` 重做右上行星核心、内光、外扩散、环境散射及前后分层行星环（代码证据：`STORY_CONFIG.m55.planetHalo` 与 `drawPlanet()`；桌面和 375px 星空截图确认遮挡层次）
+- [x] `M5.5-07` 使用生产 sprite 抛光远景、中景、前景三层浪花并保持原滚动区间（代码证据：`m55WaveAssets.ts` 与三个独立 TilingSprite；区间仍为 `0.300–0.380`；桌面约 35% 与 375px 约 34% 视觉验收）
+- [x] `M5.5-08` 使用横向泡沫带和水下竖向气泡簇改善空间分布及横向接缝（代码/浏览器证据：两条独立泡沫带贴合浪尖和接缝，气泡簇位于 waterY 以下；桌面/移动端没有空白接缝或横向溢出）
+- [x] `M5.5-09` 验证桌面、375px、Reduced Motion、章节往返、控制台和动画生命周期（浏览器证据：1280×720、375×812、系统 Reduced Motion；375px overflow 为 `-15px`；Reduced Motion 星空 running=false/count=0；warn/error 为空）
+- [x] `M5.5-10` 完成 Astro Check、ESLint、测试、生产构建和静态路由验证（命令证据：Astro Check 0/0/0、ESLint 通过、12/12 测试、`build:sites` 通过；15/15 路由 HTTP 200、未知路由 404、`dist/server` 不存在）
+
+M5.5 Definition of Done：
+
+```text
+M5 基线功能和章节节奏无回归
+固定流星全部朝右下
+动态流星少量、偶发、快速且不读取滚动位置
+动态流星只在星空区运行并完整清理
+行星光环具有清楚的多层和前后遮挡
+三层浪花与气泡使用透明生产 sprite 且无明显接缝
+```
+
+M5.5 正式验收证据：
+
+- M5 回归：`sections.dive [0.3,0.38]`、`oceanToSpace [0.66,0.8]`、`space [0.8,1]` 与所有 stage 高度未修改；M5 统一 MorphParticle 池和世界 0°测试继续通过；
+- 动态层：桌面参数为最多 2 颗、`5–14s` 间隔、`300–900ms` 生命周期、`24–36°` 朝右下；375px 最多 1 颗；独立 fixed Canvas 位于 Pixi 场景之上、DOM 内容之下；
+- 素材层：生产 PNG 从 `10.44kB` 到 `21.35kB`，均由源码 import 进入 Astro 哈希产物；TilingSprite 使用 `48px` overscan，画面左右没有露空；
+- 浏览器：桌面约 35%/82%、动态流星实例、82%→72%→82% 生命周期、375px 浪花/星空和 Reduced Motion 80% 均已截图检查；控制台 warn/error 为空；
+- 工程：`npm run check`、`npm run lint`、`npm test`、`npm run build:sites` 全部退出码 0，生产输出仍为 15 个静态 HTML。
+
 ## M6：星空世界
 
 - [x] `M6-01` 深色星空色板（代码证据：`src/interactive/scenes/SpaceScene.ts` 的深色渐变）

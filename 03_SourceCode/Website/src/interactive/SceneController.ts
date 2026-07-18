@@ -35,6 +35,11 @@ export class SceneController {
       this.app.destroy(false, { children: true, texture: false, textureSource: false });
       return;
     }
+    await this.diveTransition.loadAssets();
+    if (this.destroyed) {
+      this.app.destroy(false, { children: true, texture: false, textureSource: false });
+      return;
+    }
     this.initialized = true;
     const overworld = new OverworldScene();
     const underwater = new UnderwaterScene();

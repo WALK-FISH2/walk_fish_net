@@ -304,3 +304,58 @@ test("keeps the traveler corridor and Programs archive free of content collision
   assert.doesNotMatch(css, /\.porthole\s*\{\s*position:\s*sticky/);
   assert.doesNotMatch(css, /--porthole-index\) \* (?:6|8)vh/);
 });
+
+test("implements M5.5 polish without changing the M5 progress contract", async () => {
+  const [storyConfig, homeComponent, meteorOverlay, oceanTransition, diveTransition, waveAssets, pixelDraw, css] = await Promise.all([
+    readFile(new URL("src/config/story.config.ts", root), "utf8"),
+    readFile(new URL("src/components/ImmersiveHome.tsx", root), "utf8"),
+    readFile(new URL("src/components/MeteorOverlay.tsx", root), "utf8"),
+    readFile(new URL("src/interactive/transitions/OceanToSpaceTransition.ts", root), "utf8"),
+    readFile(new URL("src/interactive/transitions/DiveTransition.ts", root), "utf8"),
+    readFile(new URL("src/interactive/transitions/m55WaveAssets.ts", root), "utf8"),
+    readFile(new URL("src/interactive/pixel/draw.ts", root), "utf8"),
+    readFile(new URL("src/styles/global.css", root), "utf8"),
+  ]);
+
+  for (const invariant of [
+    "dive: [0.3, 0.38]",
+    "oceanToSpace: [0.66, 0.8]",
+    "space: [0.8, 1]",
+    "intervalMs: { min: 5000, max: 14000 }",
+    "durationMs: { min: 300, max: 900 }",
+    "maxActive: { desktop: 2, mobile: 1 }",
+  ]) assert.ok(storyConfig.includes(invariant), invariant);
+
+  assert.match(oceanTransition, /yBeforeMeteor \+ particle\.meteorDirectionY \* travel/);
+  assert.match(oceanTransition, /y - particle\.meteorDirectionY \* distance/);
+  assert.match(homeComponent, /<MeteorOverlay active=\{phase === "space" && !canvasFailed\}/);
+  assert.doesNotMatch(meteorOverlay, /globalProgress|scrollProgress|ScrollTrigger/);
+  assert.match(meteorOverlay, /visibilitychange/);
+  assert.match(meteorOverlay, /prefers-reduced-motion: reduce/);
+  assert.match(meteorOverlay, /clearTimeout\(timerId\)/);
+  assert.match(meteorOverlay, /cancelAnimationFrame\(animationFrameId\)/);
+  assert.match(meteorOverlay, /meteors = \[\]/);
+  assert.match(css, /\.story-canvas,\s*\.meteor-overlay,\s*\.canvas-fallback\s*\{[\s\S]*?position:\s*fixed/);
+
+  assert.match(diveTransition, /loadM55WaveTextures/);
+  assert.match(diveTransition, /new TilingSprite/);
+  assert.match(diveTransition, /spriteConfig\.back/);
+  assert.match(diveTransition, /spriteConfig\.mid/);
+  assert.match(diveTransition, /spriteConfig\.foreground/);
+  assert.match(waveAssets, /wave-front\.png/);
+  assert.match(waveAssets, /foam-band-front\.png/);
+  assert.match(waveAssets, /bubble-clusters\.png/);
+  for (const asset of [
+    "wave-front.png",
+    "wave-mid.png",
+    "wave-back.png",
+    "foam-band-front.png",
+    "foam-band-mid.png",
+    "bubble-clusters.png",
+  ]) await access(new URL(`src/assets/m5-5/${asset}`, root));
+
+  assert.match(pixelDraw, /planetHalo/);
+  assert.match(pixelDraw, /rearRingAlpha/);
+  assert.match(pixelDraw, /frontRingAlpha/);
+  assert.match(pixelDraw, /Core body covers the middle of the rear ring/);
+});

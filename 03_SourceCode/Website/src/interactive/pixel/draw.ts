@@ -1,4 +1,5 @@
 import { Graphics } from "pixi.js";
+import { STORY_CONFIG } from "../../config/story.config";
 
 export function drawPixelCloud(g: Graphics, x: number, y: number, scale: number, color = 0xfff6dd, shadow = 0xd7e8df) {
   const s = Math.max(1, Math.round(scale));
@@ -95,10 +96,48 @@ export function drawPixelStar(g: Graphics, x: number, y: number, size: number, c
 }
 
 export function drawPlanet(g: Graphics, x: number, y: number, radius: number) {
+  const halo = STORY_CONFIG.m55.planetHalo;
+  const ringRadiusX = radius * halo.ringXScale;
+  const ringRadiusY = radius * halo.ringYScale;
+  const ringY = y + radius * 0.1;
+  const ringWidth = Math.max(2, radius * halo.ringWidthRatio);
+
+  // Pixel scatter and two differently sized light fields establish depth
+  // without a blur filter or duplicated planet texture.
+  const scatterRadius = radius * halo.scatterScale;
+  for (let index = 0; index < 8; index += 1) {
+    const angle = index / 8 * Math.PI * 2;
+    const block = Math.max(2, Math.round(radius * (index % 2 === 0 ? 0.08 : 0.055)));
+    g.rect(
+      Math.round(x + Math.cos(angle) * scatterRadius - block / 2),
+      Math.round(y + Math.sin(angle) * scatterRadius * 0.72 - block / 2),
+      block,
+      block,
+    ).fill({ color: index % 2 === 0 ? 0x5e8cff : 0xc16de0, alpha: halo.scatterAlpha });
+  }
+  g.circle(x, y, radius * halo.outerScale).fill({ color: 0x5b4cb5, alpha: halo.outerAlpha })
+    .circle(x, y, radius * halo.innerScale).fill({ color: 0x5e8cff, alpha: halo.innerAlpha })
+    .ellipse(x, ringY, ringRadiusX, ringRadiusY)
+    .stroke({ width: ringWidth, color: 0xaaa8cc, alpha: halo.rearRingAlpha });
+
+  // Core body covers the middle of the rear ring.
   g.circle(x, y, radius).fill(0x312b76)
     .circle(x - radius * 0.24, y - radius * 0.2, radius * 0.72).fill(0x5e8cff)
     .circle(x - radius * 0.36, y - radius * 0.34, radius * 0.18).fill(0xc16de0)
-    .ellipse(x, y + radius * 0.1, radius * 1.55, radius * 0.34).stroke({ width: Math.max(2, radius * 0.08), color: 0xfff3c4, alpha: 0.7 });
+    .circle(x + radius * 0.28, y + radius * 0.18, radius * 0.14).fill({ color: 0x181443, alpha: 0.6 });
+
+  // Redraw only the lower half in front, creating an explicit back/body/front
+  // relationship while keeping the ring aligned to the pixel grid.
+  const ringSteps = 18;
+  g.moveTo(Math.round(x - ringRadiusX), Math.round(ringY));
+  for (let step = 1; step <= ringSteps; step += 1) {
+    const angle = Math.PI - step / ringSteps * Math.PI;
+    g.lineTo(
+      Math.round(x + Math.cos(angle) * ringRadiusX),
+      Math.round(ringY + Math.sin(angle) * ringRadiusY),
+    );
+  }
+  g.stroke({ width: ringWidth, color: 0xfff3c4, alpha: halo.frontRingAlpha });
 }
 
 export function drawFloatingIsland(g: Graphics, x: number, y: number, scale = 1) {

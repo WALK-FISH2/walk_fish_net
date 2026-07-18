@@ -373,6 +373,7 @@ canvas {
 }
 
 .story-canvas,
+.meteor-overlay,
 .canvas-fallback {
   position: fixed;
   inset: 0;
@@ -383,6 +384,11 @@ canvas {
 
 .story-canvas {
   pointer-events: none;
+}
+
+.meteor-overlay {
+  pointer-events: none;
+  image-rendering: pixelated;
 }
 
 .canvas-fallback {

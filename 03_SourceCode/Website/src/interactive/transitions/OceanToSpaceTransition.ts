@@ -92,7 +92,7 @@ export class OceanToSpaceTransition {
       const travel = (mobile ? config.particles.meteorTravel.mobile : config.particles.meteorTravel.desktop)
         * width * Math.pow(meteorProgress, 1.35);
       const x = xBeforeMeteor + particle.meteorDirectionX * travel;
-      const y = yBeforeMeteor - particle.meteorDirectionY * travel;
+      const y = yBeforeMeteor + particle.meteorDirectionY * travel;
 
       if (meteorProgress > 0.001) {
         this.drawMeteorTail(particle, x, y, meteorProgress, mobile, reveal);
@@ -169,7 +169,7 @@ export class OceanToSpaceTransition {
       const block = step < 3 ? 4 : 3;
       this.meteorTrails.rect(
         Math.round(x - particle.meteorDirectionX * distance),
-        Math.round(y + particle.meteorDirectionY * distance),
+        Math.round(y - particle.meteorDirectionY * distance),
         block * 2,
         block,
       ).fill({ color: config.colors.star, alpha: tailAlpha });

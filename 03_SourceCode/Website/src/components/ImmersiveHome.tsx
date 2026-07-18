@@ -5,6 +5,7 @@ import { SITE_CONFIG, sitePath } from "../config/site.config";
 import { STORY_CONFIG, getDiveState, getOceanSpaceMorphState } from "../config/story.config";
 import { SceneController, detectQuality } from "../interactive/SceneController";
 import { DEMO_TYPE_LABELS, PROGRAM_STATUS_LABELS, type ArticleSummary, type ProgramSummary } from "../types/content";
+import { MeteorOverlay } from "./MeteorOverlay";
 
 type Phase = "land" | "sea" | "space";
 function phaseFor(progress: number): Phase { return progress < 0.38 ? "land" : progress < 0.8 ? "sea" : "space"; }
@@ -110,6 +111,7 @@ export function ImmersiveHome({ articles, programs }: { articles: ArticleSummary
         <button type="button" onClick={() => setSkipped(true)}>跳过动画</button>
       </div>
       <canvas ref={canvasRef} className="story-canvas pixel-art" aria-hidden="true" />
+      <MeteorOverlay active={phase === "space" && !canvasFailed} forceFullMotion={forceFullMotion} />
       <div className="canvas-fallback" aria-hidden="true" />
       <div className="waterline-dom-effect" aria-hidden="true"><span /><i /></div>
 

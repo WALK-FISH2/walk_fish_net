@@ -1,5 +1,6 @@
-import { Container, Graphics } from "pixi.js";
-import { STORY_CONFIG, clamp, getDiveState, getUnderwaterState, mixColor } from "../../config/story.config";
+import { Container, Graphics, TilingSprite, type Texture } from "pixi.js";
+import { STORY_CONFIG, clamp, getDiveState, getUnderwaterState, lerp, mixColor } from "../../config/story.config";
+import { loadM55WaveTextures } from "./m55WaveAssets";
 
 type WaveLayerConfig = {
   readonly amplitude: number;
@@ -25,6 +26,16 @@ type FoamParticle = {
   readonly opacity: number;
   readonly layer: 0 | 1 | 2;
   readonly phase: number;
+};
+
+type TilingMotionConfig = {
+  readonly heightRatio: { readonly desktop: number; readonly mobile: number };
+  readonly anchorY: number;
+  readonly driftPxPerSecond: number;
+  readonly phase: number;
+  readonly alpha: number;
+  readonly bobPx?: number;
+  readonly bobSpeed?: number;
 };
 
 const bubblePool = Array.from({ length: 34 }, (_, index) => ({
@@ -108,18 +119,97 @@ function drawReducedWaveCurtain(graphics: Graphics, width: number, height: numbe
   graphics.stroke({ width: 5, color: 0xe8ffff, alpha: 0.76 * alpha });
 }
 
+function createTilingSprite(texture: Texture) {
+  return new TilingSprite({ texture, width: 1, height: 1, roundPixels: true });
+}
+
+function updateTilingSprite(
+  sprite: TilingSprite,
+  width: number,
+  height: number,
+  baseY: number,
+  presence: number,
+  time: number,
+  mobile: boolean,
+  config: TilingMotionConfig,
+) {
+  const overscan = STORY_CONFIG.m55.waveSprites.overscanPx;
+  const displayHeight = Math.max(24, height * (mobile ? config.heightRatio.mobile : config.heightRatio.desktop));
+  const textureScale = displayHeight / Math.max(1, sprite.texture.height);
+  const bob = Math.sin(time * (config.bobSpeed ?? 0) + config.phase * Math.PI * 2) * (config.bobPx ?? 0);
+  sprite.setSize(width + overscan * 2, displayHeight);
+  sprite.position.set(-overscan, Math.round(baseY - displayHeight * config.anchorY + bob));
+  sprite.tileScale.set(textureScale);
+  sprite.tilePosition.set(
+    Math.round(config.phase * sprite.texture.width * textureScale + time * config.driftPxPerSecond),
+    0,
+  );
+  sprite.alpha = clamp(presence) * config.alpha;
+  sprite.visible = sprite.alpha > 0.001;
+}
+
 export class DiveTransition {
   container = new Container();
   private water = new Graphics();
   private farWave = new Graphics();
+  private farWaveSprites = new Container();
   private midWave = new Graphics();
+  private midWaveSprites = new Container();
   private foregroundWave = new Graphics();
+  private foregroundWaveSprites = new Container();
+  private bubbleClusterSprites = new Container();
+  private foamBandSprites = new Container();
   private mist = new Graphics();
   private foam = new Graphics();
   private bubbles = new Graphics();
+  private spriteSet?: {
+    far: TilingSprite;
+    mid: TilingSprite;
+    foreground: TilingSprite;
+    foamFront: TilingSprite;
+    foamMid: TilingSprite;
+    bubbleClusters: TilingSprite;
+  };
+  private destroyed = false;
 
   constructor() {
-    this.container.addChild(this.water, this.farWave, this.midWave, this.foregroundWave, this.mist, this.foam, this.bubbles);
+    this.container.addChild(
+      this.water,
+      this.farWave,
+      this.farWaveSprites,
+      this.midWave,
+      this.midWaveSprites,
+      this.bubbleClusterSprites,
+      this.foregroundWave,
+      this.foregroundWaveSprites,
+      this.foamBandSprites,
+      this.mist,
+      this.foam,
+      this.bubbles,
+    );
+  }
+
+  async loadAssets() {
+    try {
+      const textures = await loadM55WaveTextures();
+      if (this.destroyed) return;
+      const far = createTilingSprite(textures.waveBack);
+      const mid = createTilingSprite(textures.waveMid);
+      const foreground = createTilingSprite(textures.waveFront);
+      const foamFront = createTilingSprite(textures.foamBandFront);
+      const foamMid = createTilingSprite(textures.foamBandMid);
+      const bubbleClusters = createTilingSprite(textures.bubbleClusters);
+      this.farWaveSprites.addChild(far);
+      this.midWaveSprites.addChild(mid);
+      this.foregroundWaveSprites.addChild(foreground);
+      this.foamBandSprites.addChild(foamMid, foamFront);
+      this.bubbleClusterSprites.addChild(bubbleClusters);
+      this.spriteSet = { far, mid, foreground, foamFront, foamMid, bubbleClusters };
+    } catch {
+      // The deterministic Graphics baseline remains as the visual fallback if
+      // an authored sprite cannot be decoded on a particular device.
+      this.spriteSet = undefined;
+    }
   }
 
   update(width: number, height: number, globalProgress: number, time: number, particleScale: number, reducedMotion: boolean) {
@@ -154,9 +244,20 @@ export class DiveTransition {
     this.bubbles.clear();
 
     if (reducedMotion) {
+      this.farWaveSprites.visible = false;
+      this.midWaveSprites.visible = false;
+      this.foregroundWaveSprites.visible = false;
+      this.foamBandSprites.visible = false;
+      this.bubbleClusterSprites.visible = false;
       drawReducedWaveCurtain(this.midWave, width, height, waterY, surfaceAlpha);
       return;
     }
+
+    this.farWaveSprites.visible = true;
+    this.midWaveSprites.visible = true;
+    this.foregroundWaveSprites.visible = true;
+    this.foamBandSprites.visible = true;
+    this.bubbleClusterSprites.visible = true;
 
     const waves = STORY_CONFIG.dive.waves;
     const settleFade = 1 - transition.underwaterSettle;
@@ -168,13 +269,27 @@ export class DiveTransition {
     const midBaseY = waterY + height * (waves.mid.verticalOffset + (1 - midEntrance) * 0.04);
     const frontBaseY = transition.frontWaveY * height;
 
-    drawPixelWaveLayer(this.farWave, width, height, farBaseY, animationTime, farPresence, waves.far, detailScale);
-    drawPixelWaveLayer(this.midWave, width, height, midBaseY, animationTime, midPresence, waves.mid, detailScale);
-    drawPixelWaveLayer(this.foregroundWave, width, height, frontBaseY, animationTime, frontPresence, waves.foreground, detailScale);
+    const spriteConfig = STORY_CONFIG.m55.waveSprites;
+    if (this.spriteSet) {
+      this.farWave.rect(0, farBaseY, width, Math.max(0, height - farBaseY + 24))
+        .fill({ color: waves.far.color, alpha: waves.far.alpha * farPresence * 0.15 });
+      this.midWave.rect(0, midBaseY, width, Math.max(0, height - midBaseY + 24))
+        .fill({ color: waves.mid.color, alpha: waves.mid.alpha * midPresence * 0.2 });
+      this.foregroundWave.rect(0, frontBaseY, width, Math.max(0, height - frontBaseY + 24))
+        .fill({ color: waves.foreground.color, alpha: waves.foreground.alpha * frontPresence * 0.24 });
+      updateTilingSprite(this.spriteSet.far, width, height, farBaseY, farPresence, animationTime, isMobile, spriteConfig.back);
+      updateTilingSprite(this.spriteSet.mid, width, height, midBaseY, midPresence, animationTime, isMobile, spriteConfig.mid);
+      updateTilingSprite(this.spriteSet.foreground, width, height, frontBaseY, frontPresence, animationTime, isMobile, spriteConfig.foreground);
+    } else {
+      drawPixelWaveLayer(this.farWave, width, height, farBaseY, animationTime, farPresence, waves.far, detailScale);
+      drawPixelWaveLayer(this.midWave, width, height, midBaseY, animationTime, midPresence, waves.mid, detailScale);
+      drawPixelWaveLayer(this.foregroundWave, width, height, frontBaseY, animationTime, frontPresence, waves.foreground, detailScale);
+    }
 
     const foamVisibility = Math.max(transition.waveBreak * 0.42, transition.seamCover) * settleFade;
     const foamQualityScale = isMobile ? STORY_CONFIG.dive.foam.mobileScale : 1;
-    const foamCount = Math.round(foamPool.length * particleScale * foamQualityScale);
+    const supplementalFoamScale = this.spriteSet ? spriteConfig.supplementalFoamScale : 1;
+    const foamCount = Math.round(foamPool.length * particleScale * foamQualityScale * supplementalFoamScale);
     const layerBases = [farBaseY, midBaseY, frontBaseY] as const;
     const layerConfigs = [waves.far, waves.mid, waves.foreground] as const;
     const coverCenterY = height * 0.48;
@@ -204,6 +319,14 @@ export class DiveTransition {
       }
     }
 
+    if (this.spriteSet) {
+      const seamMix = Math.sqrt(transition.seamCover);
+      const frontFoamY = lerp(frontBaseY, coverCenterY, seamMix);
+      const midFoamY = lerp(midBaseY, coverCenterY, seamMix * 0.78);
+      updateTilingSprite(this.spriteSet.foamFront, width, height, frontFoamY, foamVisibility, animationTime, isMobile, spriteConfig.foamFront);
+      updateTilingSprite(this.spriteSet.foamMid, width, height, midFoamY, foamVisibility * (isMobile ? 0.72 : 1), animationTime, isMobile, spriteConfig.foamMid);
+    }
+
     if (!isMobile && transition.seamCover > 0.01) {
       for (let index = 0; index < 9; index += 1) {
         const widthRatio = 0.12 + index % 4 * 0.045;
@@ -214,7 +337,8 @@ export class DiveTransition {
       }
     }
 
-    const bubbleCount = Math.round(bubblePool.length * particleScale * clamp((submerged - 0.42) * 2.1));
+    const supplementalBubbleScale = this.spriteSet ? spriteConfig.supplementalBubbleScale : 1;
+    const bubbleCount = Math.round(bubblePool.length * particleScale * supplementalBubbleScale * clamp((submerged - 0.42) * 2.1));
     for (let index = 0; index < bubbleCount; index += 1) {
       const bubble = bubblePool[index];
       const y = ((bubble.y - animationTime * bubble.speed - dive.overall * 0.2) % 1 + 1) % 1;
@@ -222,9 +346,28 @@ export class DiveTransition {
       const py = waterY + y * Math.max(0, height - waterY);
       this.bubbles.circle(px, py, bubble.size).stroke({ width: 1, color: 0xe5faff, alpha: 0.5 });
     }
+
+    if (this.spriteSet) {
+      const clusterConfig = spriteConfig.bubbleClusters;
+      const clusterPresence = clamp((submerged - 0.3) * 1.9) * (1 - transition.surfaceRetreat * 0.54);
+      const displayHeight = Math.max(32, height * (isMobile ? clusterConfig.heightRatio.mobile : clusterConfig.heightRatio.desktop));
+      const textureScale = displayHeight / Math.max(1, this.spriteSet.bubbleClusters.texture.height);
+      const overscan = spriteConfig.overscanPx;
+      const waterDepth = Math.max(0, height - Math.max(0, waterY));
+      this.spriteSet.bubbleClusters.setSize(width + overscan * 2, Math.min(displayHeight, waterDepth));
+      this.spriteSet.bubbleClusters.position.set(-overscan, Math.max(0, waterY) + Math.max(12, height * 0.05));
+      this.spriteSet.bubbleClusters.tileScale.set(textureScale);
+      this.spriteSet.bubbleClusters.tilePosition.set(
+        Math.round(width * 0.07 - animationTime * clusterConfig.driftPxPerSecond),
+        Math.round(-animationTime * clusterConfig.driftPxPerSecond),
+      );
+      this.spriteSet.bubbleClusters.alpha = clusterPresence * clusterConfig.alpha;
+      this.spriteSet.bubbleClusters.visible = clusterPresence > 0.001 && waterDepth > 16;
+    }
   }
 
   destroy() {
+    this.destroyed = true;
     this.container.destroy({ children: true });
   }
 }
