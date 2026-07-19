@@ -1,6 +1,6 @@
 # 任务清单 Tasks
 
-更新时间：2026-07-17
+更新时间：2026-07-19
 
 ```text
 [ ] 未开始
@@ -226,7 +226,7 @@ M5 基线功能和章节节奏无回归
 M5.5 正式验收证据：
 
 - M5 回归：`sections.dive [0.3,0.38]`、`oceanToSpace [0.66,0.8]`、`space [0.8,1]` 与所有 stage 高度未修改；M5 统一 MorphParticle 池和世界 0°测试继续通过；
-- 动态层：桌面参数为最多 2 颗、`5–14s` 间隔、`300–900ms` 生命周期、`24–36°` 朝右下；375px 最多 1 颗；独立 fixed Canvas 位于 Pixi 场景之上、DOM 内容之下；
+- 动态层：桌面参数为最多 2 颗、经项目所有者于 2026-07-19 实际试用确认的 `1–3s` 间隔、`300–900ms` 生命周期、`24–36°` 朝右下；375px 最多 1 颗；独立 fixed Canvas 位于 Pixi 场景之上、DOM 内容之下；
 - 素材层：生产 PNG 从 `10.44kB` 到 `21.35kB`，均由源码 import 进入 Astro 哈希产物；TilingSprite 使用 `48px` overscan，画面左右没有露空；
 - 浏览器：桌面约 35%/82%、动态流星实例、82%→72%→82% 生命周期、375px 浪花/星空和 Reduced Motion 80% 均已截图检查；控制台 warn/error 为空；
 - 工程：`npm run check`、`npm run lint`、`npm test`、`npm run build:sites` 全部退出码 0，生产输出仍为 15 个静态 HTML。

@@ -1,6 +1,6 @@
 # 技术架构 Architecture
 
-版本：1.7.0
+版本：1.7.1
 
 状态：当前已验证架构
 
@@ -166,7 +166,7 @@ M4/M4.5 的细分时间线、陆海翻涌参数、深海层级和尾段预热统
 - `STORY_CONFIG.oceanToSpace` 集中维护 `0.640–0.800` 的 preheat、bubbleDensity、brighten、bubbleToStar、starToMeteor 和 settleSpace 六段时间线，以及 180 项粒子上限、密度、流数量、流星比例、尾迹和颜色参数；`getOceanSpaceMorphState()` 是 Canvas 与 DOM 的共同纯函数；
 - `src/interactive/transitions/morphParticles.ts` 使用固定种子 `0x50495845` 一次性生成 180 项 `MorphParticle`；每项同时保存 ocean、star、meteor 目标与稳定身份。`UnderwaterScene` 不再持有独立 88 项气泡池，`SpaceScene` 不再持有独立 240 项星点或程序化流星；
 - `OceanToSpaceTransition` 复用五个 `Graphics` 绘制颜色、银河、流引导、尾迹和统一粒子，不按帧创建粒子对象。桌面使用三股上升流、最大 `5.5%` 流星；375px 使用两股流、`0.86` 粒子密度倍率和最大 `2.2%` 流星；Reduced Motion 不绘制流引导与流星；
-- M5.5 保留上述固定流星的数量、身份、终点和原视差关系，只把最终轨迹修正为左上到右下、拖尾放在头部左上。独立 `MeteorOverlay` 是位于 Pixi Canvas 之上、DOM 内容之下的 fixed Canvas；它只接收 `phase === "space"` 激活布尔值，不接收或读取滚动进度。参数集中为 `5–14s` 间隔、`300–900ms` 生命周期、桌面最多 2 颗、移动端最多 1 颗；离开星空、页面隐藏、Reduced Motion 或组件 cleanup 都会清除 timer、RAF 和活动实例；
+- M5.5 保留上述固定流星的数量、身份、终点和原视差关系，只把最终轨迹修正为左上到右下、拖尾放在头部左上。独立 `MeteorOverlay` 是位于 Pixi Canvas 之上、DOM 内容之下的 fixed Canvas；它只接收 `phase === "space"` 激活布尔值，不接收或读取滚动进度。参数集中为经所有者实际试用确认的 `1–3s` 间隔、`300–900ms` 生命周期、桌面最多 2 颗、移动端最多 1 颗；离开星空、页面隐藏、Reduced Motion 或组件 cleanup 都会清除 timer、RAF 和活动实例；
 - 右上行星仍由 `drawPlanet()` 在 `SpaceScene.nearDecor` 中绘制，但 M5.5 将其拆为像素环境散射、外扩散层、内亮层、后半环、核心主体和前半环。各层读取 `STORY_CONFIG.m55.planetHalo`，不使用大范围 blur，也不新增 DOM 装饰层；
 - M4.5 的三层浪由 `DiveTransition` 独立负责并在入水前结束，M5 不再持有旧的三层浪、独立泡沫种子或银河线实现。水下光束只以像素块坐标与透明度连续成为银河，不旋转世界、场景或粒子容器；
 - `ImmersiveHome` 读取同一 morph 状态写入 Programs/About 的透明度和局部位移变量；Programs 完全退出后只切换 `visibility` 与 `pointer-events`，不改变文档流高度，因此没有内容突跳；

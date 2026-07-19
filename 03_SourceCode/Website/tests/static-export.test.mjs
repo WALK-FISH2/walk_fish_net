@@ -321,7 +321,7 @@ test("implements M5.5 polish without changing the M5 progress contract", async (
     "dive: [0.3, 0.38]",
     "oceanToSpace: [0.66, 0.8]",
     "space: [0.8, 1]",
-    "intervalMs: { min: 5000, max: 14000 }",
+    "intervalMs: { min: 1000, max: 3000 }",
     "durationMs: { min: 300, max: 900 }",
     "maxActive: { desktop: 2, mobile: 1 }",
   ]) assert.ok(storyConfig.includes(invariant), invariant);
