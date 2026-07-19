@@ -274,4 +274,5 @@ M5.5 正式验收证据：
 - [ ] `M9-04` 检查素材许可和秘密
 - [ ] `M9-05` sitemap、robots、Open Graph
 - [ ] `M9-06` GitHub Pages 和 Cloudflare Pages
+  - Cloudflare Pages 的项目专用操作文档已补充至 `docs/engineering/cloudflare-deployment.md`；真实 Production 部署、公开域名与线上验收尚未执行，因此本任务保持 `[ ]`。
 - [ ] `M9-07` 更新 README、CHANGELOG 和发布检查表

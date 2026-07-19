@@ -203,7 +203,7 @@ export const STORY_CONFIG = {
   },
   m55: {
     dynamicMeteors: {
-      intervalMs: { min: 5000, max: 14000 },
+      intervalMs: { min: 1000, max: 3000 }, //流星出现频率时间范围
       durationMs: { min: 300, max: 900 },
       angleDeg: { min: 24, max: 36 },
       speedPxPerSecond: { min: 1050, max: 1750 },

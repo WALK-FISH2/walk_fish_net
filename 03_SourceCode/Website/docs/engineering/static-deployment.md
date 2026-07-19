@@ -98,6 +98,8 @@ npm run build
 
 ## 8. Cloudflare Pages
 
+完整的项目专用上线步骤、环境变量、域名、验收、回滚和故障排查见：[`cloudflare-deployment.md`](./cloudflare-deployment.md)。
+
 - Build command：`npm run build`；
 - Output directory：`dist`；
 - Root directory：网站项目根目录；
