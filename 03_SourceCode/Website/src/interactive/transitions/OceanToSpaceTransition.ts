@@ -10,6 +10,7 @@ const LIGHT_BANDS = [
   { start: 0.34, width: 0.075, phase: 1.7, color: 0x5b4cb5 },
   { start: 0.62, width: 0.11, phase: 3.1, color: 0xc16de0 },
 ] as const;
+const METEOR_TAIL_OVERLAP_RADIUS = 10;
 
 function wrap(value: number) {
   return ((value % 1) + 1) % 1;
@@ -63,6 +64,7 @@ export class OceanToSpaceTransition {
 
     this.meteorTrails.clear();
     this.particles.clear();
+    const renderedMeteorTails: Array<{ x: number; y: number }> = [];
     for (let index = 0; index < activeCount; index += 1) {
       const particle = MORPH_PARTICLES[index];
       const reveal = smoothstep(clamp((densityCeiling - particle.revealAt) / 0.08));
@@ -95,7 +97,11 @@ export class OceanToSpaceTransition {
       const y = yBeforeMeteor + particle.meteorDirectionY * travel;
 
       if (meteorProgress > 0.001) {
-        this.drawMeteorTail(particle, x, y, meteorProgress, mobile, reveal);
+        const overlapsRenderedTail = renderedMeteorTails.some((tail) => Math.hypot(tail.x - x, tail.y - y) < METEOR_TAIL_OVERLAP_RADIUS);
+        if (!overlapsRenderedTail) {
+          this.drawMeteorTail(particle, x, y, meteorProgress, mobile, reveal);
+          renderedMeteorTails.push({ x, y });
+        }
       }
       this.drawParticle(particle, x, y, morph, state.brighten, meteorProgress, reveal, time, reducedMotion);
     }
