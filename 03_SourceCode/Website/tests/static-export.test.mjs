@@ -8,6 +8,11 @@ import {
   urlWithoutMotionOverride,
   writeSavedMotionPreference,
 } from "../src/lib/motionPreference.ts";
+import {
+  clampStoryProgress,
+  storyProgressForScrollY,
+  storyScrollYForProgress,
+} from "../src/lib/storyScroll.ts";
 
 const root = new URL("../", import.meta.url);
 const primaryRoutes = [
@@ -186,7 +191,7 @@ test("centralizes the reversible M4 dive timeline and underwater layers", async 
   assert.match(homeComponent, /--waterline-y/);
   assert.match(homeComponent, /DEMO_TYPE_LABELS\[program\.demoType\]/);
   assert.match(homeComponent, /useMotionPreference\(\)/);
-  assert.match(homeComponent, /preservedProgress[\s\S]*?ScrollTrigger\.refresh\(\)/);
+  assert.match(homeComponent, /preservedProgress[\s\S]*?trigger\.refresh\(\)/);
   assert.match(homeComponent, /get\("canvas"\) === "fallback"/);
   assert.match(css, /top:\s*calc\(var\(--waterline-y/);
   assert.match(css, /height:\s*64px/);
@@ -395,7 +400,7 @@ test("resolves and persists the M6 motion preference contract", async () => {
   assert.equal(writeSavedMotionPreference(blockedStorage, "full"), false);
   assert.equal(urlWithoutMotionOverride("https://example.com/?motion=reduce&canvas=fallback#test"), "/?canvas=fallback#test");
 
-  const [homeComponent, hook, control, meteorOverlay, sceneController, css, layout] = await Promise.all([
+  const [homeComponent, hook, control, meteorOverlay, sceneController, css, layout, storyConfig] = await Promise.all([
     readFile(new URL("src/components/ImmersiveHome.tsx", root), "utf8"),
     readFile(new URL("src/hooks/useMotionPreference.ts", root), "utf8"),
     readFile(new URL("src/components/MotionModeControl.tsx", root), "utf8"),
@@ -403,6 +408,7 @@ test("resolves and persists the M6 motion preference contract", async () => {
     readFile(new URL("src/interactive/SceneController.ts", root), "utf8"),
     readFile(new URL("src/styles/global.css", root), "utf8"),
     readFile(new URL("src/layouts/BaseLayout.astro", root), "utf8"),
+    readFile(new URL("src/config/story.config.ts", root), "utf8"),
   ]);
 
   assert.match(layout, /MOTION_STORAGE_KEY/);
@@ -413,11 +419,42 @@ test("resolves and persists the M6 motion preference contract", async () => {
   assert.match(control, /aria-pressed=\{reduced\}/);
   assert.match(control, /系统建议简化动画/);
   assert.match(homeComponent, /data-motion-source=\{motionPreference\.source\}/);
-  assert.match(homeComponent, /ScrollTrigger\.refresh\(\)[\s\S]*?window\.scrollTo/);
+  assert.match(homeComponent, /scrollTriggerRef/);
+  assert.match(homeComponent, /trigger\.start/);
+  assert.match(homeComponent, /trigger\.end/);
+  assert.match(homeComponent, /motionRestoreRevisionRef/);
+  assert.match(homeComponent, /data-motion-restoring/);
+  assert.match(homeComponent, /end:\s*\(\)\s*=>\s*`\+=\$\{Math\.max\(1, story\.offsetHeight - window\.innerHeight\)\}`/);
+  assert.match(homeComponent, /invalidateOnRefresh:\s*true/);
+  assert.match(homeComponent, /storyScrollYForProgress\(bounds, preservedProgress\)/);
+  assert.doesNotMatch(homeComponent, /document\.documentElement\.scrollHeight[\s\S]*?preservedProgress/);
+  assert.match(homeComponent, /articles\.slice\(0, 2\)/);
+  assert.match(homeComponent, /programs\.slice\(0, 2\)/);
   assert.match(meteorOverlay, /\[active, reducedMotion\]/);
   assert.doesNotMatch(meteorOverlay, /matchMedia/);
   assert.match(sceneController, /detectQuality\(reducedMotion = false\)/);
   assert.doesNotMatch(sceneController, /detectQuality\(\)[\s\S]*?matchMedia/);
   assert.match(css, /\.motion-mode-control button:focus-visible/);
+  assert.match(css, /\.constellation-links\s*\{[\s\S]*?display:\s*grid[\s\S]*?gap:\s*8px/);
+  assert.match(css, /\.constellation-links\s*\{[\s\S]*?z-index:\s*4/);
+  assert.match(css, /\.constellation-star span\s*\{[\s\S]*?opacity:\s*1/);
+  assert.match(css, /@media \(max-width:\s*767px\)[\s\S]*?\.constellation-links\s*\{\s*position:\s*relative/);
+  assert.match(css, /@media \(max-width:\s*767px\)[\s\S]*?\.signal-station\s*\{\s*position:\s*relative;\s*top:\s*auto/);
+  assert.match(storyConfig, /maxSettleFrames:\s*12/);
+  assert.match(storyConfig, /requiredStableFrames:\s*4/);
+  assert.match(storyConfig, /progressTolerance:\s*0\.01/);
   assert.doesNotMatch(css, /@media \(prefers-reduced-motion:\s*reduce\)/);
+});
+
+test("maps M6 motion-mode restoration through the active story bounds", () => {
+  const bounds = { start: 120, end: 8120 };
+  for (const progress of [0.64, 0.72, 0.76, 0.79, 0.8, 0.82, 0.9, 1]) {
+    const scrollY = storyScrollYForProgress(bounds, progress);
+    assert.ok(Math.abs(storyProgressForScrollY(bounds, scrollY) - progress) < 1e-9);
+  }
+  assert.equal(storyScrollYForProgress(bounds, -1), bounds.start);
+  assert.equal(storyScrollYForProgress(bounds, 2), bounds.end);
+  assert.equal(storyProgressForScrollY(bounds, bounds.end + 200), 1);
+  assert.equal(storyProgressForScrollY({ start: 5, end: 5 }, 5), 0);
+  assert.equal(clampStoryProgress(0.5), 0.5);
 });

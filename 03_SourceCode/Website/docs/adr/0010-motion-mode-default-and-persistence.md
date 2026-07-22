@@ -56,3 +56,24 @@ M6 实施统一的 `full | reduce` 动效模式：
 - 简化选择刷新及 `/articles/` 往返后仍解析为 `reduce/saved`；URL 覆盖解析为 `url`，从控件切换后只移除 `motion` 并保留其他查询参数；
 - 星空 80.0073% 处完整↔简化双向切换进度差为 0；动态流星 `true→false→true`，overlay/Canvas 数量恒为 1/2；
 - 375×812 下两种模式均无正向横向溢出，控件与阶段导航不重叠；Canvas fallback 保留主内容，浏览器 warn/error 为空。
+
+## 2026-07-22 Owner Clarification and Reopened Verification
+
+项目所有者在生产环境补充了两项证据：完整→简化后偶发停在深海到星空之间且无法继续向下；产品默认改为完整动画后，旧 Reduced Motion 体验中常显的左侧四项星座标题在完整模式退化为 hover/focus 才可见。
+
+ADR 的默认值、优先级与持久化决定不变，但第 8 条“保持当前进度与内容”细化为：
+
+1. 模式切换以活动故事 ScrollTrigger 的实测 start/end 为进度坐标系，不以可能包含其他布局的页面总高度替代；
+2. 切换后必须可继续滚到 `globalProgress >= 0.999 / phase=space` 并反向回到 0%，物理底部不得停在 sea/transition；
+3. 连续切换时旧恢复事务必须失效，只有最后一次切换可以写入滚动位置；
+4. 产品默认完整动画不得降低核心内容可发现性。四项文章/Program 星座标题在完整与简化模式均默认常显，hover/focus 只增强反馈。
+
+原 80.0073% 单点切换证据不能覆盖上述偶发回归，因此当时重新打开 M6-13 与 M6-15。
+
+## 2026-07-22 Final Verification
+
+项目所有者确认细化需求后已完成实现。活动 ScrollTrigger 的 end 改为按当前 story 实际高度动态计算；模式切换事务等待布局连续 4 帧稳定，最多观察 12 帧，再刷新唯一触发器并按 start/end 恢复进度。事务 revision 使旧 RAF 和旧坐标失效，进度复核容差为 `0.01`。
+
+浏览器矩阵覆盖 64%、72%、76%、79%、80%、82%、90%，full→reduce 与 reduce→full 最大误差为 `0.0002`；每点均可到 `progress=1 / phase=space` 并回到 0。连续 5 轮快速切换后仍为预期模式和 `0.8001`，误差 0。桌面与 375px 的四项星座标题均常显，移动端信号站与列表重叠为 0；Canvas fallback、键盘焦点、Program 详情链接和新建标签页控制台均通过。
+
+Astro Check、ESLint、14/14 测试和 Sites 生产构建均通过，静态输出仍为 15 个 HTML。M6-13～M6-19 恢复完成状态，本 ADR 的决定不再处于重新验收中。

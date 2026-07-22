@@ -278,6 +278,14 @@ export const STORY_CONFIG = {
       overscanPx: 48,
     },
   },
+  m6: {
+    motionRestore: {
+      maxSettleFrames: 12,
+      requiredStableFrames: 4,
+      boundsTolerancePx: 0.5,
+      progressTolerance: 0.01,
+    },
+  },
   quality: {
     high: { particles: 220, dpr: 2 },
     medium: { particles: 130, dpr: 1.5 },

@@ -18,6 +18,12 @@ TypeScript、ESLint、内容 schema、Markdown 链接和资源引用。
 
 首页滚动、反向滚动、节点导航、文章搜索、程序筛选、程序演示、详情刷新、404、移动端、键盘和动效模式。M6 动效模式至少覆盖：普通网址首次完整、手动切换、刷新保持、站内跳转保持、`?motion=full`/`?motion=reduce` 临时覆盖且不污染保存值、系统 Reduced Motion 建议、存储不可用、Canvas fallback，以及连续切换后无重复 RAF/timer/监听器。
 
+M6 回归矩阵必须在 64%、72%、76%、79%、80%、82%、90% 执行 full→reduce 与 reduce→full。每次记录切换前后 progress、ScrollTrigger start/end、scrollY、scrollMax、phase，并继续向下到 100%、再向上回到 0%。硬性断言为：进度误差 `<= 0.01`；物理底部时 progress `>= 0.999` 且 phase 为 space；连续 5 轮切换后只有一个有效恢复事务、一个 ScrollTrigger、一个 MeteorOverlay 和预期 Canvas 数量。
+
+星空视觉/交互回归同时断言：四个 `.constellation-star` 均存在、标题计算后可见且 opacity 为 1；完整/简化模式都采用桌面左侧纵向列表；375px 进入文档流且无横向溢出；四个链接可点击、可 Tab 聚焦并到达两篇文章与两个 Program 的正确路由。截图至少包括完整模式 90%、简化模式 90% 和 375px 90%。
+
+2026-07-22 M6 最终执行结果：七点双向矩阵最大误差 `0.0002`；每点均完成 100%/0% 往返；5 轮快速切换误差 0；桌面、375px、系统 Reduced Motion 建议、完整/简化、Canvas fallback、阶段节点、Program 链接焦点/导航和新建标签页控制台通过。自动化测试为 14/14，生产构建生成 15 个静态 HTML。
+
 ## 2. 视觉测试点
 
 截图：

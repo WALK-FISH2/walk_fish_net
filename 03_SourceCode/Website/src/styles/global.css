@@ -1656,16 +1656,21 @@ body[data-story-phase="space"] .site-nav--floating::after {
 
 .constellation-links {
   position: absolute;
+  z-index: 4;
   inset: 62vh 0 auto 0;
-  height: 320px;
+  display: grid;
+  width: max-content;
+  max-width: min(360px, 42vw);
+  height: auto;
+  gap: 8px;
   pointer-events: none;
 }
 .constellation-star {
-  position: absolute;
+  position: relative;
   z-index: 3;
-  display: grid;
-  gap: 10px;
-  justify-items: center;
+  display: flex;
+  align-items: center;
+  gap: 12px;
   color: var(--space-text);
   pointer-events: auto;
   font: 700 0.65rem var(--font-pixel);
@@ -1679,35 +1684,21 @@ body[data-story-phase="space"] .site-nav--floating::after {
   transition: transform 160ms steps(3), box-shadow 160ms steps(3);
 }
 .constellation-star span {
-  max-width: 170px;
+  max-width: 300px;
   padding: 7px 9px;
   border: 1px solid var(--space-purple);
   background: rgba(5, 4, 17, 0.84);
-  opacity: 0;
-  transform: translateY(5px);
+  opacity: 1;
+  transform: translateX(0);
   transition: opacity 120ms linear, transform 120ms steps(2);
 }
 .constellation-star:hover i,
 .constellation-star:focus i { transform: rotate(135deg) scale(1.35); box-shadow: 0 0 0 6px rgba(193, 109, 224, 0.18), 0 0 28px var(--space-nebula); }
 .constellation-star:hover span,
-.constellation-star:focus span { opacity: 1; transform: translateY(0); }
-.constellation-star--1 { left: 8%; top: 50px; }
-.constellation-star--2 { left: 31%; top: 170px; }
-.constellation-star--3 { right: 29%; top: 92px; }
-.constellation-star--4 { right: 7%; top: 210px; }
+.constellation-star:focus-visible span { transform: translateX(4px); }
 .constellation-star::after {
-  position: absolute;
-  top: 6px;
-  left: 13px;
-  width: 18vw;
-  height: 1px;
-  background: linear-gradient(90deg, rgba(170, 168, 204, 0.45), transparent);
-  content: "";
-  transform: rotate(18deg);
-  transform-origin: left;
-  pointer-events: none;
+  display: none;
 }
-.constellation-star--4::after { display: none; }
 
 .story-progress { isolation: isolate; }
 .story-progress__rail {
@@ -1799,9 +1790,9 @@ body[data-story-phase="space"] .motion-mode-control button span { color: var(--s
   .road-sign--arrow { padding-right: 34px; }
   .porthole--probe, .porthole--capsule { width: 100%; margin-right: 0; grid-template-columns: 1fr; clip-path: none; }
   .porthole--probe .porthole__glass { width: 100%; height: 116px; transform: none; }
-  .signal-station { top: 17vh; width: 100%; }
+  .signal-station { position: relative; top: auto; width: 100%; }
   .signal-station__satellite { display: none; }
-  .constellation-links { position: absolute; top: auto; bottom: 160px; display: grid; height: auto; gap: 8px; }
+  .constellation-links { position: relative; inset: auto; width: 100%; max-width: none; margin-top: 45px; }
   .constellation-star { position: relative; inset: auto; display: flex; align-items: center; justify-items: start; gap: 13px; padding: 8px 10px; border-left: 2px solid var(--space-purple); background: rgba(5, 4, 17, 0.72); }
   .constellation-star i { width: 8px; height: 8px; }
   .constellation-star span { max-width: none; padding: 0; border: 0; background: transparent; opacity: 1; transform: none; }

@@ -5,6 +5,7 @@ import { SITE_CONFIG, sitePath } from "../config/site.config";
 import { STORY_CONFIG, getDiveState, getOceanSpaceMorphState } from "../config/story.config";
 import { useMotionPreference } from "../hooks/useMotionPreference";
 import { SceneController, detectQuality } from "../interactive/SceneController";
+import { storyScrollYForProgress, type StoryScrollBounds } from "../lib/storyScroll";
 import { DEMO_TYPE_LABELS, PROGRAM_STATUS_LABELS, type ArticleSummary, type ProgramSummary } from "../types/content";
 import { MeteorOverlay } from "./MeteorOverlay";
 import { MotionModeControl } from "./MotionModeControl";
@@ -18,7 +19,10 @@ export function ImmersiveHome({ articles, programs }: { articles: ArticleSummary
   const controllerRef = useRef<SceneController | null>(null);
   const phaseRef = useRef<Phase>("land");
   const progressRef = useRef(0);
+  const scrollTriggerRef = useRef<ReturnType<typeof ScrollTrigger.create> | null>(null);
   const motionRestoreFrameRef = useRef(0);
+  const motionRestoreRevisionRef = useRef(0);
+  const pendingRestoreProgressRef = useRef<number | null>(null);
   const reducedMotionRef = useRef(false);
   const [phase, setPhase] = useState<Phase>("land");
   const [ready, setReady] = useState(false);
@@ -46,6 +50,7 @@ export function ImmersiveHome({ articles, programs }: { articles: ArticleSummary
     root?.style.setProperty("--program-exit-y", `${Math.round(morph.programsExit * -72)}px`);
     root?.style.setProperty("--about-enter-opacity", String(morph.aboutEnter));
     root?.style.setProperty("--about-enter-y", `${Math.round((1 - morph.aboutEnter) * 56)}px`);
+    root?.setAttribute("data-story-progress", progress.toFixed(4));
     root?.toggleAttribute("data-programs-exited", morph.programsExit >= 0.995);
     root?.setAttribute("data-phase", nextPhase);
     document.body.dataset.storyPhase = nextPhase;
@@ -78,7 +83,19 @@ export function ImmersiveHome({ articles, programs }: { articles: ArticleSummary
       })();
     }
     gsap.registerPlugin(ScrollTrigger);
-    const trigger = ScrollTrigger.create({ trigger: story, start: "top top", end: "bottom bottom", scrub: true, onUpdate: (self) => updateProgress(self.progress) });
+    const trigger = ScrollTrigger.create({
+      trigger: story,
+      start: "top top",
+      end: () => `+=${Math.max(1, story.offsetHeight - window.innerHeight)}`,
+      invalidateOnRefresh: true,
+      scrub: true,
+      onRefresh: (self) => {
+        story.dataset.storyScrollStart = self.start.toFixed(2);
+        story.dataset.storyScrollEnd = self.end.toFixed(2);
+      },
+      onUpdate: (self) => updateProgress(self.progress),
+    });
+    scrollTriggerRef.current = trigger;
     const onResize = () => {
       cancelAnimationFrame(resizeFrame);
       resizeFrame = requestAnimationFrame(() => { controller.resize(window.innerWidth, window.innerHeight, window.devicePixelRatio); ScrollTrigger.refresh(); });
@@ -87,6 +104,7 @@ export function ImmersiveHome({ articles, programs }: { articles: ArticleSummary
     return () => {
       disposed = true;
       cancelAnimationFrame(resizeFrame);
+      if (scrollTriggerRef.current === trigger) scrollTriggerRef.current = null;
       trigger.kill();
       window.removeEventListener("resize", onResize);
       controller.destroy();
@@ -102,29 +120,107 @@ export function ImmersiveHome({ articles, programs }: { articles: ArticleSummary
     controller?.setReducedMotion(reducedMotion);
   }, [motionPreference.ready, reducedMotion]);
 
-  useEffect(() => () => window.cancelAnimationFrame(motionRestoreFrameRef.current), []);
+  useEffect(() => () => {
+    motionRestoreRevisionRef.current += 1;
+    window.cancelAnimationFrame(motionRestoreFrameRef.current);
+    storyRef.current?.removeAttribute("data-motion-restoring");
+  }, []);
+
+  const activeStoryBounds = (): StoryScrollBounds | null => {
+    const trigger = scrollTriggerRef.current;
+    if (!trigger || !Number.isFinite(trigger.start) || !Number.isFinite(trigger.end)) return null;
+    return { start: trigger.start, end: trigger.end };
+  };
+
+  const measuredStoryBounds = (): StoryScrollBounds | null => {
+    const story = storyRef.current;
+    if (!story) return null;
+    const start = window.scrollY + story.getBoundingClientRect().top;
+    return { start, end: start + Math.max(1, story.offsetHeight - window.innerHeight) };
+  };
 
   const jumpTo = (progress: number) => {
     const story = storyRef.current;
     if (!story) return;
-    window.scrollTo({ top: story.offsetTop + (story.offsetHeight - window.innerHeight) * progress, behavior: reducedMotionRef.current ? "auto" : "smooth" });
+    const bounds = activeStoryBounds();
+    const top = bounds
+      ? storyScrollYForProgress(bounds, progress)
+      : story.offsetTop + (story.offsetHeight - window.innerHeight) * progress;
+    window.scrollTo({ top, behavior: reducedMotionRef.current ? "auto" : "smooth" });
   };
-  const toggleMotion = () => {
-    const preservedProgress = progressRef.current;
-    motionPreference.toggle();
-    window.cancelAnimationFrame(motionRestoreFrameRef.current);
+
+  const restoreMotionProgress = (
+    preservedProgress: number,
+    revision: number,
+    previousLayoutBounds: StoryScrollBounds | null = null,
+    remainingFrames: number = STORY_CONFIG.m6.motionRestore.maxSettleFrames,
+    stableFrames = 0,
+  ) => {
     motionRestoreFrameRef.current = window.requestAnimationFrame(() => {
+      if (revision !== motionRestoreRevisionRef.current) return;
+      const trigger = scrollTriggerRef.current;
+      const layoutBounds = measuredStoryBounds();
+      if (!trigger || !layoutBounds) {
+        pendingRestoreProgressRef.current = null;
+        storyRef.current?.removeAttribute("data-motion-restoring");
+        return;
+      }
+
+      const layoutStable = previousLayoutBounds !== null
+        && Math.abs(layoutBounds.start - previousLayoutBounds.start) <= STORY_CONFIG.m6.motionRestore.boundsTolerancePx
+        && Math.abs(layoutBounds.end - previousLayoutBounds.end) <= STORY_CONFIG.m6.motionRestore.boundsTolerancePx;
+      const nextStableFrames = layoutStable ? stableFrames + 1 : 0;
+
+      if (nextStableFrames < STORY_CONFIG.m6.motionRestore.requiredStableFrames && remainingFrames > 1) {
+        restoreMotionProgress(preservedProgress, revision, layoutBounds, remainingFrames - 1, nextStableFrames);
+        return;
+      }
+
+      trigger.refresh();
+      const bounds = activeStoryBounds();
+      if (!bounds) {
+        pendingRestoreProgressRef.current = null;
+        storyRef.current?.removeAttribute("data-motion-restoring");
+        return;
+      }
+
+      const triggerMatchesLayout = Math.abs(bounds.start - layoutBounds.start) <= STORY_CONFIG.m6.motionRestore.boundsTolerancePx
+        && Math.abs(bounds.end - layoutBounds.end) <= STORY_CONFIG.m6.motionRestore.boundsTolerancePx;
+      if (!triggerMatchesLayout && remainingFrames > 1) {
+        restoreMotionProgress(preservedProgress, revision, layoutBounds, remainingFrames - 1, 0);
+        return;
+      }
+
+      window.scrollTo({ top: storyScrollYForProgress(bounds, preservedProgress), behavior: "auto" });
       motionRestoreFrameRef.current = window.requestAnimationFrame(() => {
-        ScrollTrigger.refresh();
-        motionRestoreFrameRef.current = window.requestAnimationFrame(() => {
-          if (!storyRef.current) return;
-          const top = Math.max(0, document.documentElement.scrollHeight - window.innerHeight) * preservedProgress;
-          window.scrollTo({ top, behavior: "auto" });
-          ScrollTrigger.update();
-          updateProgress(preservedProgress);
-        });
+        if (revision !== motionRestoreRevisionRef.current) return;
+        ScrollTrigger.update();
+        if (Math.abs(trigger.progress - preservedProgress) > STORY_CONFIG.m6.motionRestore.progressTolerance) {
+          trigger.refresh();
+          const refreshedBounds = activeStoryBounds();
+          if (refreshedBounds) {
+            window.scrollTo({ top: storyScrollYForProgress(refreshedBounds, preservedProgress), behavior: "auto" });
+            ScrollTrigger.update();
+          }
+        }
+        updateProgress(trigger.progress);
+        pendingRestoreProgressRef.current = null;
+        storyRef.current?.removeAttribute("data-motion-restoring");
       });
     });
+  };
+
+  const toggleMotion = () => {
+    const preservedProgress = pendingRestoreProgressRef.current
+      ?? scrollTriggerRef.current?.progress
+      ?? progressRef.current;
+    const revision = motionRestoreRevisionRef.current + 1;
+    motionRestoreRevisionRef.current = revision;
+    pendingRestoreProgressRef.current = preservedProgress;
+    storyRef.current?.setAttribute("data-motion-restoring", "");
+    motionPreference.toggle();
+    window.cancelAnimationFrame(motionRestoreFrameRef.current);
+    restoreMotionProgress(preservedProgress, revision);
   };
   const pointerMove = (event: ReactPointerEvent<HTMLDivElement>) => controllerRef.current?.setPointer(event.clientX / window.innerWidth, event.clientY / window.innerHeight);
   const loadingVisible = !ready && !skipped;
