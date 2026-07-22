@@ -1,0 +1,16 @@
+cd D:\Work\walk_fish_net\03_SourceCode\Website
+
+npx --yes npm@10.9.2 install --package-lock-only --include=optional
+
+npx --yes npm@10.9.2 ci
+
+npm run check
+npm run lint
+npm test
+npm run buildgit status --short
+git add package-lock.json
+git commit -m "fix: synchronize npm lockfile for Cloudflare"
+git push origin main
+
+
+
