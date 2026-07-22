@@ -4,6 +4,7 @@ import { drawFloatingIsland, drawPixelStar, drawPlanet } from "../pixel/draw";
 import type { PixelScene, SceneFrame } from "./types";
 
 const nebulaSeeds = Array.from({ length: 38 }, (_, index) => ({ x: ((index * 73) % 101) / 100, y: ((index * 41) % 97) / 96, size: 12 + index % 7 * 5 }));
+const CONSTELLATION_LINE_ENDPOINT_GAP = 10;
 
 export class SpaceScene implements PixelScene {
   container = new Container();
@@ -50,7 +51,16 @@ export class SpaceScene implements PixelScene {
       drawPixelStar(this.midground, x * width, y * height, 3, 0xfff3c4, 0.9);
       if (index > 0) {
         const previous = constellation[index - 1];
-        this.midground.moveTo(previous[0] * width, previous[1] * height).lineTo(x * width, y * height).stroke({ width: 1, color: 0xaaa8cc, alpha: 0.32 });
+        const startX = previous[0] * width;
+        const startY = previous[1] * height;
+        const endX = x * width;
+        const endY = y * height;
+        const distance = Math.hypot(endX - startX, endY - startY);
+        const gapRatio = Math.min(CONSTELLATION_LINE_ENDPOINT_GAP / distance, 0.25);
+        this.midground
+          .moveTo(startX + (endX - startX) * gapRatio, startY + (endY - startY) * gapRatio)
+          .lineTo(endX - (endX - startX) * gapRatio, endY - (endY - startY) * gapRatio)
+          .stroke({ width: 1, color: 0xaaa8cc, alpha: 0.32 });
       }
     });
 
