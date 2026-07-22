@@ -1,6 +1,6 @@
 # 任务清单 Tasks
 
-更新时间：2026-07-19
+更新时间：2026-07-22
 
 ```text
 [ ] 未开始
@@ -233,6 +233,8 @@ M5.5 正式验收证据：
 
 ## M6：星空世界
 
+阶段状态：`[x]` 已于 2026-07-22 完成扩展范围正式验收，星空基线与统一动效模式入口均已验证。
+
 - [x] `M6-01` 深色星空色板（代码证据：`src/interactive/scenes/SpaceScene.ts` 的深色渐变）
 - [x] `M6-02` 三层星点、星云和银河（代码证据：三层固定种子星点、星云种子和银河）
 - [x] `M6-03` 流星与星座（代码证据：流星、星座连线与星体绘制）
@@ -240,6 +242,16 @@ M5.5 正式验收证据：
 - [x] `M6-05` 文章与程序星座入口（代码与构建证据：首页星座链接已改为 Programs，目标详情页均生成并返回 HTTP 200）
 - [x] `M6-06` 页脚和重启旅程（代码证据：旅程末尾 footer/reset 控件及重置处理）
 - [x] `M6-07` 90% 截图验收（浏览器证据：上一轮 `desktop-90.png`）
+- [x] `M6-08` 动效模式需求与决策入档（文档证据：`spec.md`、`plan.md`、`architecture.md`、交互/视觉/验收/测试文档及 ADR 0010；仅完成文档，本项不代表运行代码已修改）
+- [x] `M6-09` 普通网址默认完整动画（代码/浏览器证据：`BaseLayout.astro` 在交互代码前写入 `full/default`；系统实际命中 Reduced Motion 时，裸地址仍解析为 `full/default`，不再依赖 `?motion=full`）
+- [x] `M6-10` fixed UI 完整/简化动画开关（代码/浏览器证据：`MotionModeControl.tsx` 使用原生 `button`、`aria-pressed`、明确动态名称、44px 触控目标和 `:focus-visible`；系统 Reduced Motion 下显示“系统建议简化动画”）
+- [x] `M6-11` 主动选择持久化与初始化前解析（代码/浏览器证据：head 内联脚本在 React/Pixi 启动前读取 `pixel-walk:motion-preference`；选择简化后刷新及 `/articles/` 往返仍为 `reduce/saved`）
+- [x] `M6-12` 统一模式优先级（单元/浏览器证据：第 13 项测试覆盖 URL > 保存值 > `full` 默认值、未知参数和存储失败；`?motion=full&canvas=fallback` 解析为 `full/url`，控件切换后 URL 仅移除 `motion` 并保留 `canvas=fallback`）
+- [x] `M6-13` 模式切换与生命周期协调（代码/浏览器证据：完整↔简化在星空处均保持 `80.0073%`，动态流星 `true→false→true`，始终 1 个 overlay/2 个 Canvas；GSAP refresh 后下一帧恢复等价坐标，无重复实例）
+- [x] `M6-14` 单元/集成测试（命令证据：`npm test` 13/13 通过；新增测试覆盖默认值、查询参数、持久化、存储失败、系统建议、URL 清理和 RAF/timer cleanup 源码边界）
+- [x] `M6-15` 正式验收（浏览器/命令证据：1280×720、375×812、系统 Reduced Motion、URL 覆盖、刷新/站内跳转、Canvas fallback、固定控件无重叠及控制台均通过；375px overflow 为 `-15px`；Astro Check 0/0/0、ESLint 通过、15/15 静态页面 HTTP 200）
+
+M6 范围扩展说明：原 `M6-01`～`M6-07` 的星空基线保持不变；`M6-08`～`M6-15` 已完成统一动效模式决策、实现与正式验收。M3～M5.5 区间、场景方向、内容模型和路由均未改变。
 
 ## M7：程序演示系统
 

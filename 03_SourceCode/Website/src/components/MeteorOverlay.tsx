@@ -16,7 +16,7 @@ function between(min: number, max: number) {
   return min + Math.random() * (max - min);
 }
 
-export function MeteorOverlay({ active, forceFullMotion }: { active: boolean; forceFullMotion: boolean }) {
+export function MeteorOverlay({ active, reducedMotion }: { active: boolean; reducedMotion: boolean }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
@@ -25,7 +25,6 @@ export function MeteorOverlay({ active, forceFullMotion }: { active: boolean; fo
     if (!canvas || !context) return;
 
     const config = STORY_CONFIG.m55.dynamicMeteors;
-    const media = window.matchMedia("(prefers-reduced-motion: reduce)");
     let disposed = false;
     let running = false;
     let timerId = 0;
@@ -36,7 +35,7 @@ export function MeteorOverlay({ active, forceFullMotion }: { active: boolean; fo
 
     const isMobile = () => viewportWidth < 768;
     const maximumActive = () => isMobile() ? config.maxActive.mobile : config.maxActive.desktop;
-    const motionReduced = () => media.matches && !forceFullMotion;
+    const motionReduced = () => reducedMotion;
 
     const resizeCanvas = () => {
       viewportWidth = window.innerWidth;
@@ -154,12 +153,10 @@ export function MeteorOverlay({ active, forceFullMotion }: { active: boolean; fo
     };
 
     const onVisibilityChange = () => synchronize();
-    const onMotionChange = () => synchronize();
     const onResize = () => resizeCanvas();
 
     resizeCanvas();
     document.addEventListener("visibilitychange", onVisibilityChange);
-    media.addEventListener("change", onMotionChange);
     window.addEventListener("resize", onResize);
     synchronize();
 
@@ -167,10 +164,9 @@ export function MeteorOverlay({ active, forceFullMotion }: { active: boolean; fo
       disposed = true;
       stop();
       document.removeEventListener("visibilitychange", onVisibilityChange);
-      media.removeEventListener("change", onMotionChange);
       window.removeEventListener("resize", onResize);
     };
-  }, [active, forceFullMotion]);
+  }, [active, reducedMotion]);
 
   return <canvas ref={canvasRef} className="meteor-overlay pixel-art" aria-hidden="true" data-running="false" data-meteor-count="0" />;
 }

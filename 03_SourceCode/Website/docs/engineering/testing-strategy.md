@@ -8,7 +8,7 @@ TypeScript、ESLint、内容 schema、Markdown 链接和资源引用。
 
 ### 单元测试
 
-`localProgress`、阶段判定、画质选择、Reduced Motion、内容排序、Program schema、DemoRegistry 和旧路由映射。
+`localProgress`、阶段判定、画质选择、动效模式优先级、Reduced Motion、偏好持久化与存储失败降级、内容排序、Program schema、DemoRegistry 和旧路由映射。
 
 ### 集成测试
 
@@ -16,7 +16,7 @@ TypeScript、ESLint、内容 schema、Markdown 链接和资源引用。
 
 ### E2E
 
-首页滚动、反向滚动、节点导航、文章搜索、程序筛选、程序演示、详情刷新、404、移动端、键盘和 Reduced Motion。
+首页滚动、反向滚动、节点导航、文章搜索、程序筛选、程序演示、详情刷新、404、移动端、键盘和动效模式。M6 动效模式至少覆盖：普通网址首次完整、手动切换、刷新保持、站内跳转保持、`?motion=full`/`?motion=reduce` 临时覆盖且不污染保存值、系统 Reduced Motion 建议、存储不可用、Canvas fallback，以及连续切换后无重复 RAF/timer/监听器。
 
 ## 2. 视觉测试点
 
@@ -46,4 +46,4 @@ TypeScript、ESLint、内容 schema、Markdown 链接和资源引用。
 
 ## 5. 完成证据
 
-记录日期、工作树状态、命令、退出码、浏览器、视口、Reduced Motion 和失败截图。
+记录日期、工作树状态、命令、退出码、浏览器、视口、系统 Reduced Motion、最终解析模式、偏好来源（URL/本地/默认）、切换前后活动循环数量和失败截图。

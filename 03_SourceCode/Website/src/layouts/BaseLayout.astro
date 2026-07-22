@@ -1,6 +1,7 @@
 ---
 import "../styles/global.css";
 import { SITE_CONFIG, sitePath } from "../config/site.config";
+import { MOTION_STORAGE_KEY } from "../lib/motionPreference";
 
 interface Props {
   title?: string;
@@ -20,11 +21,35 @@ const {
 const fullTitle = title === SITE_CONFIG.title ? title : `${title} · ${SITE_CONFIG.name}`;
 const canonical = new URL(sitePath(canonicalPath), Astro.site ?? Astro.url.origin);
 const ogImage = new URL(sitePath("/og-v2.png"), Astro.site ?? Astro.url.origin);
+const motionStorageKey = MOTION_STORAGE_KEY;
 ---
 
 <!doctype html>
-<html lang="zh-CN">
+<html lang="zh-CN" data-motion-mode="full" data-motion-source="default" data-system-motion="no-preference">
   <head>
+    <script is:inline define:vars={{ motionStorageKey }}>
+      (() => {
+        const params = new URLSearchParams(window.location.search);
+        const queryMode = params.get("motion");
+        let mode = queryMode === "full" || queryMode === "reduce" ? queryMode : null;
+        let source = mode ? "url" : "default";
+        if (!mode) {
+          try {
+            const savedMode = window.localStorage.getItem(motionStorageKey);
+            if (savedMode === "full" || savedMode === "reduce") {
+              mode = savedMode;
+              source = "saved";
+            }
+          } catch {
+            // Storage is optional; the product default remains usable.
+          }
+        }
+        const systemReduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+        document.documentElement.dataset.motionMode = mode || "full";
+        document.documentElement.dataset.motionSource = source;
+        document.documentElement.dataset.systemMotion = systemReduced ? "reduce" : "no-preference";
+      })();
+    </script>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="generator" content={Astro.generator} />

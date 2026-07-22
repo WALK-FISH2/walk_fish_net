@@ -1,11 +1,13 @@
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
-import { useCallback, useEffect, useRef, useState, type CSSProperties, type PointerEvent as ReactPointerEvent } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type PointerEvent as ReactPointerEvent } from "react";
 import { SITE_CONFIG, sitePath } from "../config/site.config";
 import { STORY_CONFIG, getDiveState, getOceanSpaceMorphState } from "../config/story.config";
+import { useMotionPreference } from "../hooks/useMotionPreference";
 import { SceneController, detectQuality } from "../interactive/SceneController";
 import { DEMO_TYPE_LABELS, PROGRAM_STATUS_LABELS, type ArticleSummary, type ProgramSummary } from "../types/content";
 import { MeteorOverlay } from "./MeteorOverlay";
+import { MotionModeControl } from "./MotionModeControl";
 
 type Phase = "land" | "sea" | "space";
 function phaseFor(progress: number): Phase { return progress < 0.38 ? "land" : progress < 0.8 ? "sea" : "space"; }
@@ -15,14 +17,22 @@ export function ImmersiveHome({ articles, programs }: { articles: ArticleSummary
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const controllerRef = useRef<SceneController | null>(null);
   const phaseRef = useRef<Phase>("land");
+  const progressRef = useRef(0);
+  const motionRestoreFrameRef = useRef(0);
   const reducedMotionRef = useRef(false);
   const [phase, setPhase] = useState<Phase>("land");
   const [ready, setReady] = useState(false);
   const [skipped, setSkipped] = useState(false);
   const [canvasFailed, setCanvasFailed] = useState(false);
-  const [forceFullMotion, setForceFullMotion] = useState(false);
+  const motionPreference = useMotionPreference();
+  const reducedMotion = motionPreference.mode === "reduce";
+
+  useLayoutEffect(() => {
+    reducedMotionRef.current = reducedMotion;
+  }, [reducedMotion]);
 
   const updateProgress = useCallback((progress: number) => {
+    progressRef.current = progress;
     const nextPhase = phaseFor(progress);
     const dive = getDiveState(progress);
     const morph = getOceanSpaceMorphState(progress);
@@ -44,22 +54,14 @@ export function ImmersiveHome({ articles, programs }: { articles: ArticleSummary
   }, []);
 
   useEffect(() => {
+    if (!motionPreference.ready) return;
     let disposed = false;
     let resizeFrame = 0;
     const canvas = canvasRef.current;
     const story = storyRef.current;
     if (!canvas || !story) return;
     const acceptanceParams = new URLSearchParams(window.location.search);
-    const forceFullMotionMode = acceptanceParams.get("motion") === "full";
     const forceCanvasFallback = acceptanceParams.get("canvas") === "fallback";
-    queueMicrotask(() => {
-      if (disposed) return;
-      setForceFullMotion(forceFullMotionMode);
-      if (forceFullMotionMode) resizeFrame = requestAnimationFrame(() => ScrollTrigger.refresh());
-    });
-    const media = window.matchMedia("(prefers-reduced-motion: reduce)");
-    const initialReducedMotion = media.matches && !forceFullMotionMode;
-    reducedMotionRef.current = initialReducedMotion;
     const controller = new SceneController(() => setCanvasFailed(true));
     controllerRef.current = controller;
     if (forceCanvasFallback) {
@@ -67,10 +69,10 @@ export function ImmersiveHome({ articles, programs }: { articles: ArticleSummary
     } else {
       void (async () => {
         try {
-          controller.setQuality(detectQuality());
+          controller.setQuality(detectQuality(reducedMotionRef.current));
           await controller.init(canvas);
           if (disposed) return controller.destroy();
-          controller.setReducedMotion(initialReducedMotion);
+          controller.setReducedMotion(reducedMotionRef.current);
           setReady(true);
         } catch { if (!disposed) { setCanvasFailed(true); setReady(true); } }
       })();
@@ -81,37 +83,61 @@ export function ImmersiveHome({ articles, programs }: { articles: ArticleSummary
       cancelAnimationFrame(resizeFrame);
       resizeFrame = requestAnimationFrame(() => { controller.resize(window.innerWidth, window.innerHeight, window.devicePixelRatio); ScrollTrigger.refresh(); });
     };
-    const onMotion = (event: MediaQueryListEvent) => { const reduced = event.matches && !forceFullMotionMode; reducedMotionRef.current = reduced; controller.setReducedMotion(reduced); };
     window.addEventListener("resize", onResize);
-    media.addEventListener("change", onMotion);
     return () => {
       disposed = true;
       cancelAnimationFrame(resizeFrame);
       trigger.kill();
       window.removeEventListener("resize", onResize);
-      media.removeEventListener("change", onMotion);
       controller.destroy();
       delete document.body.dataset.storyPhase;
     };
-  }, [updateProgress]);
+  }, [motionPreference.ready, updateProgress]);
+
+  useLayoutEffect(() => {
+    if (!motionPreference.ready) return;
+    reducedMotionRef.current = reducedMotion;
+    const controller = controllerRef.current;
+    controller?.setQuality(detectQuality(reducedMotion));
+    controller?.setReducedMotion(reducedMotion);
+  }, [motionPreference.ready, reducedMotion]);
+
+  useEffect(() => () => window.cancelAnimationFrame(motionRestoreFrameRef.current), []);
 
   const jumpTo = (progress: number) => {
     const story = storyRef.current;
     if (!story) return;
     window.scrollTo({ top: story.offsetTop + (story.offsetHeight - window.innerHeight) * progress, behavior: reducedMotionRef.current ? "auto" : "smooth" });
   };
+  const toggleMotion = () => {
+    const preservedProgress = progressRef.current;
+    motionPreference.toggle();
+    window.cancelAnimationFrame(motionRestoreFrameRef.current);
+    motionRestoreFrameRef.current = window.requestAnimationFrame(() => {
+      motionRestoreFrameRef.current = window.requestAnimationFrame(() => {
+        ScrollTrigger.refresh();
+        motionRestoreFrameRef.current = window.requestAnimationFrame(() => {
+          if (!storyRef.current) return;
+          const top = Math.max(0, document.documentElement.scrollHeight - window.innerHeight) * preservedProgress;
+          window.scrollTo({ top, behavior: "auto" });
+          ScrollTrigger.update();
+          updateProgress(preservedProgress);
+        });
+      });
+    });
+  };
   const pointerMove = (event: ReactPointerEvent<HTMLDivElement>) => controllerRef.current?.setPointer(event.clientX / window.innerWidth, event.clientY / window.innerHeight);
   const loadingVisible = !ready && !skipped;
 
   return (
-    <div ref={storyRef} className={`immersive-home ${canvasFailed ? "immersive-home--fallback" : ""} ${forceFullMotion ? "immersive-home--force-motion" : ""}`} data-phase={phase} style={{ "--story-height": `${STORY_CONFIG.scrollHeightVh}vh`, "--full-story-height": `${STORY_CONFIG.scrollHeightVh}vh` } as CSSProperties} onPointerMove={pointerMove}>
+    <div ref={storyRef} className={`immersive-home ${canvasFailed ? "immersive-home--fallback" : ""} ${reducedMotion ? "immersive-home--reduced-motion" : "immersive-home--full-motion"}`} data-phase={phase} data-motion-mode={motionPreference.mode} data-motion-source={motionPreference.source} data-system-motion={motionPreference.systemPrefersReduced ? "reduce" : "no-preference"} style={{ "--story-height": `${STORY_CONFIG.scrollHeightVh}vh`, "--full-story-height": `${STORY_CONFIG.scrollHeightVh}vh` } as CSSProperties} onPointerMove={pointerMove}>
       <div className={`world-loader ${loadingVisible ? "" : "world-loader--done"}`} aria-hidden={!loadingVisible}>
         <div className="loader-mark" aria-hidden="true"><span /><span /><span /></div><p>正在生成世界……</p><strong>LOADING WORLD 02</strong>
         <div className="loader-track" role="progressbar" aria-label="世界加载进度" aria-valuemin={0} aria-valuemax={100} aria-valuenow={ready ? 100 : 0}><span style={{ width: ready ? "100%" : "16%" }} /></div>
         <button type="button" onClick={() => setSkipped(true)}>跳过动画</button>
       </div>
       <canvas ref={canvasRef} className="story-canvas pixel-art" aria-hidden="true" />
-      <MeteorOverlay active={phase === "space" && !canvasFailed} forceFullMotion={forceFullMotion} />
+      <MeteorOverlay active={phase === "space" && !canvasFailed} reducedMotion={reducedMotion} />
       <div className="canvas-fallback" aria-hidden="true" />
       <div className="waterline-dom-effect" aria-hidden="true"><span /><i /></div>
 
@@ -121,6 +147,7 @@ export function ImmersiveHome({ articles, programs }: { articles: ArticleSummary
           <button key={id} className={phase === id ? "is-active" : ""} type="button" onClick={() => jumpTo(progress)} aria-current={phase === id ? "step" : undefined}><span aria-hidden="true" />{label}<small>{id === "land" ? "01" : id === "sea" ? "02" : "03"}</small></button>
         ))}
       </nav>
+      <MotionModeControl mode={motionPreference.mode} source={motionPreference.source} systemPrefersReduced={motionPreference.systemPrefersReduced} onToggle={toggleMotion} />
 
       <main id="main-content" className="story-content">
         <section className="story-stage story-stage--hero" aria-labelledby="home-title">

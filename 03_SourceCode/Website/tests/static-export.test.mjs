@@ -1,6 +1,13 @@
 import assert from "node:assert/strict";
 import { access, readFile, readdir } from "node:fs/promises";
 import test from "node:test";
+import {
+  MOTION_STORAGE_KEY,
+  readSavedMotionPreference,
+  resolveMotionPreference,
+  urlWithoutMotionOverride,
+  writeSavedMotionPreference,
+} from "../src/lib/motionPreference.ts";
 
 const root = new URL("../", import.meta.url);
 const primaryRoutes = [
@@ -90,18 +97,21 @@ test("static output has no Node server runtime and sitemap favors canonical rout
   assert.match(robots, /Sitemap:/);
 });
 
-test("keeps content, SEO, reduced-motion, and migrated source boundaries", async () => {
-  const [home, program, css, contentConfig] = await Promise.all([
+test("keeps content, SEO, motion modes, and migrated source boundaries", async () => {
+  const [home, program, css, contentConfig, baseLayout] = await Promise.all([
     readFile(new URL("dist/index.html", root), "utf8"),
     readFile(new URL("dist/programs/tidy-desk/index.html", root), "utf8"),
     readFile(new URL("src/styles/global.css", root), "utf8"),
     readFile(new URL("src/content.config.ts", root), "utf8"),
+    readFile(new URL("src/layouts/BaseLayout.astro", root), "utf8"),
   ]);
   assert.match(home, /aria-label="旅程阶段"/);
   assert.match(home, /\/programs\/tidy-desk\//);
   assert.match(program, /rel="canonical"[^>]+\/programs\/tidy-desk\//);
   assert.match(program, /og:image/);
-  assert.match(css, /prefers-reduced-motion:\s*reduce/);
+  assert.match(css, /html\[data-motion-mode="reduce"\]/);
+  assert.match(baseLayout, /prefers-reduced-motion: reduce/);
+  assert.match(baseLayout, /data-motion-mode="full"/);
   assert.match(contentConfig, /const programs = defineCollection/);
   assert.doesNotMatch(contentConfig, /const projects = defineCollection/);
   await access(new URL("src/content/programs/tidy-desk.md", root));
@@ -175,12 +185,12 @@ test("centralizes the reversible M4 dive timeline and underwater layers", async 
   assert.doesNotMatch(underwaterScene, /progress\s*\*\s*(?:35|60|90|170)/);
   assert.match(homeComponent, /--waterline-y/);
   assert.match(homeComponent, /DEMO_TYPE_LABELS\[program\.demoType\]/);
-  assert.match(homeComponent, /get\("motion"\) === "full"/);
-  assert.match(homeComponent, /forceFullMotionMode[\s\S]*?ScrollTrigger\.refresh\(\)/);
+  assert.match(homeComponent, /useMotionPreference\(\)/);
+  assert.match(homeComponent, /preservedProgress[\s\S]*?ScrollTrigger\.refresh\(\)/);
   assert.match(homeComponent, /get\("canvas"\) === "fallback"/);
   assert.match(css, /top:\s*calc\(var\(--waterline-y/);
   assert.match(css, /height:\s*64px/);
-  assert.match(css, /immersive-home--force-motion/);
+  assert.match(css, /html\[data-motion-mode="reduce"\]/);
 });
 
 test("implements isolated reversible M4.5 pixel waves and pooled foam", async () => {
@@ -292,15 +302,15 @@ test("keeps the traveler corridor and Programs archive free of content collision
   assert.match(css, /@media \(min-width:\s*981px\) and \(max-height:\s*820px\)[\s\S]*?--road-sign-min-height:\s*190px[\s\S]*?--road-sign-post-height:\s*28px/);
   assert.match(css, /@media \(max-width:\s*980px\)[\s\S]*?grid-auto-flow:\s*column[\s\S]*?\.road-sign__post\s*\{\s*display:\s*none;/);
   assert.match(css, /@media \(max-width:\s*980px\) and \(max-height:\s*700px\)[\s\S]*?min-height:\s*190px/);
-  assert.match(css, /\.immersive-home--force-motion \.road-signs\s*\{\s*position:\s*sticky;\s*top:\s*var\(--road-sign-safe-top\)/);
+  assert.match(css, /\.road-signs\s*\{[\s\S]*?position:\s*sticky;[\s\S]*?top:\s*var\(--road-sign-safe-top\)/);
   assert.doesNotMatch(css, /\.road-signs\s*\{\s*position:\s*sticky;\s*top:\s*(?:37|38)vh/);
 
   assert.match(css, /\.story-stage--programs \.stage-copy\s*\{\s*position:\s*relative;\s*top:\s*auto;/);
   assert.match(css, /\.portholes\s*\{\s*display:\s*grid;\s*gap:\s*var\(--program-card-gap\);/);
   assert.match(css, /\.porthole\s*\{\s*position:\s*relative;\s*top:\s*auto;/);
-  assert.match(css, /\.immersive-home--force-motion \.porthole\s*\{\s*position:\s*relative;\s*top:\s*auto;\s*margin-bottom:\s*0;/);
-  assert.match(css, /\.immersive-home--force-motion \.story-stage--programs\s*\{\s*height:\s*300vh;\s*min-height:\s*1900px;/);
-  assert.match(css, /@media \(max-width:\s*767px\) and \(prefers-reduced-motion:\s*reduce\)[\s\S]*?--story-height:\s*650vh/);
+  assert.match(css, /html\[data-motion-mode="reduce"\] \.porthole\s*\{\s*margin-bottom:\s*0;/);
+  assert.match(css, /\.story-stage--programs\s*\{\s*height:\s*300vh;\s*min-height:\s*1900px;/);
+  assert.match(css, /html\[data-motion-mode="reduce"\] \.immersive-home\s*\{\s*--story-height:\s*auto !important;/);
   assert.doesNotMatch(css, /\.porthole\s*\{\s*position:\s*sticky/);
   assert.doesNotMatch(css, /--porthole-index\) \* (?:6|8)vh/);
 });
@@ -331,7 +341,8 @@ test("implements M5.5 polish without changing the M5 progress contract", async (
   assert.match(homeComponent, /<MeteorOverlay active=\{phase === "space" && !canvasFailed\}/);
   assert.doesNotMatch(meteorOverlay, /globalProgress|scrollProgress|ScrollTrigger/);
   assert.match(meteorOverlay, /visibilitychange/);
-  assert.match(meteorOverlay, /prefers-reduced-motion: reduce/);
+  assert.match(meteorOverlay, /reducedMotion:\s*boolean/);
+  assert.match(meteorOverlay, /motionReduced = \(\) => reducedMotion/);
   assert.match(meteorOverlay, /clearTimeout\(timerId\)/);
   assert.match(meteorOverlay, /cancelAnimationFrame\(animationFrameId\)/);
   assert.match(meteorOverlay, /meteors = \[\]/);
@@ -358,4 +369,55 @@ test("implements M5.5 polish without changing the M5 progress contract", async (
   assert.match(pixelDraw, /rearRingAlpha/);
   assert.match(pixelDraw, /frontRingAlpha/);
   assert.match(pixelDraw, /Core body covers the middle of the rear ring/);
+});
+
+test("resolves and persists the M6 motion preference contract", async () => {
+  assert.deepEqual(resolveMotionPreference("", null), { mode: "full", source: "default" });
+  assert.deepEqual(resolveMotionPreference("", "reduce"), { mode: "reduce", source: "saved" });
+  assert.deepEqual(resolveMotionPreference("?motion=full", "reduce"), { mode: "full", source: "url" });
+  assert.deepEqual(resolveMotionPreference("?motion=reduce", "full"), { mode: "reduce", source: "url" });
+  assert.deepEqual(resolveMotionPreference("?motion=unknown", "reduce"), { mode: "reduce", source: "saved" });
+
+  const values = new Map();
+  const storage = {
+    getItem: (key) => values.get(key) ?? null,
+    setItem: (key, value) => values.set(key, value),
+  };
+  assert.equal(writeSavedMotionPreference(storage, "reduce"), true);
+  assert.equal(values.get(MOTION_STORAGE_KEY), "reduce");
+  assert.equal(readSavedMotionPreference(storage), "reduce");
+
+  const blockedStorage = {
+    getItem: () => { throw new Error("blocked"); },
+    setItem: () => { throw new Error("blocked"); },
+  };
+  assert.equal(readSavedMotionPreference(blockedStorage), null);
+  assert.equal(writeSavedMotionPreference(blockedStorage, "full"), false);
+  assert.equal(urlWithoutMotionOverride("https://example.com/?motion=reduce&canvas=fallback#test"), "/?canvas=fallback#test");
+
+  const [homeComponent, hook, control, meteorOverlay, sceneController, css, layout] = await Promise.all([
+    readFile(new URL("src/components/ImmersiveHome.tsx", root), "utf8"),
+    readFile(new URL("src/hooks/useMotionPreference.ts", root), "utf8"),
+    readFile(new URL("src/components/MotionModeControl.tsx", root), "utf8"),
+    readFile(new URL("src/components/MeteorOverlay.tsx", root), "utf8"),
+    readFile(new URL("src/interactive/SceneController.ts", root), "utf8"),
+    readFile(new URL("src/styles/global.css", root), "utf8"),
+    readFile(new URL("src/layouts/BaseLayout.astro", root), "utf8"),
+  ]);
+
+  assert.match(layout, /MOTION_STORAGE_KEY/);
+  assert.match(layout, /queryMode === "full" \|\| queryMode === "reduce"/);
+  assert.match(hook, /resolveMotionPreference/);
+  assert.match(hook, /history\.replaceState/);
+  assert.match(hook, /writeSavedMotionPreference/);
+  assert.match(control, /aria-pressed=\{reduced\}/);
+  assert.match(control, /系统建议简化动画/);
+  assert.match(homeComponent, /data-motion-source=\{motionPreference\.source\}/);
+  assert.match(homeComponent, /ScrollTrigger\.refresh\(\)[\s\S]*?window\.scrollTo/);
+  assert.match(meteorOverlay, /\[active, reducedMotion\]/);
+  assert.doesNotMatch(meteorOverlay, /matchMedia/);
+  assert.match(sceneController, /detectQuality\(reducedMotion = false\)/);
+  assert.doesNotMatch(sceneController, /detectQuality\(\)[\s\S]*?matchMedia/);
+  assert.match(css, /\.motion-mode-control button:focus-visible/);
+  assert.doesNotMatch(css, /@media \(prefers-reduced-motion:\s*reduce\)/);
 });

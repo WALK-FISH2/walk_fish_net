@@ -65,7 +65,12 @@ export class SceneController {
   }
   update(progress: number) { this.progress = Math.min(1, Math.max(0, progress)); this.renderFrame(); }
   setQuality(level: QualityLevel) { this.quality = level; this.renderFrame(); }
-  setReducedMotion(reduced: boolean) { this.reducedMotion = reduced; if (reduced) this.app.ticker.stop(); else this.app.ticker.start(); this.renderFrame(); }
+  setReducedMotion(reduced: boolean) {
+    this.reducedMotion = reduced;
+    if (!this.initialized || this.destroyed) return;
+    if (reduced) this.app.ticker.stop(); else if (!document.hidden) this.app.ticker.start();
+    this.renderFrame();
+  }
   setPointer(x: number, y: number) { this.pointerX = x; this.pointerY = y; }
 
   destroy() {
@@ -116,8 +121,8 @@ export class SceneController {
   private handleVisibility = () => { if (document.hidden) this.app.ticker.stop(); else if (!this.reducedMotion) this.app.ticker.start(); };
 }
 
-export function detectQuality(): QualityLevel {
-  if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return "low";
+export function detectQuality(reducedMotion = false): QualityLevel {
+  if (reducedMotion) return "low";
   const cores = navigator.hardwareConcurrency ?? 4;
   const touch = navigator.maxTouchPoints > 0;
   if (window.innerWidth < 768 || cores <= 4) return "low";
