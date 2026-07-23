@@ -1,6 +1,6 @@
 import { Container, Graphics } from "pixi.js";
 import { mixColor, STORY_CONFIG } from "../../config/story.config";
-import { drawFlower, drawMountain, drawPixelCloud, drawTower, drawTraveler, drawTree } from "../pixel/draw";
+import { drawFlower, drawMountain, drawPixelCloud, drawTower, drawTree } from "../pixel/draw";
 import type { PixelScene, SceneFrame } from "./types";
 
 const dustSeeds = Array.from({ length: 42 }, (_, index) => ({
@@ -25,7 +25,7 @@ export class OverworldScene implements PixelScene {
 
   update({ width, height, progress, time, particleScale }: SceneFrame) {
     const groundY = Math.round(height * 0.73);
-    const { parallax, traveler } = STORY_CONFIG.overworld;
+    const { parallax } = STORY_CONFIG.overworld;
     const maxTravel = progress * width * parallax.maxTravel;
     const farShift = maxTravel * parallax.far.strength;
     const midShift = maxTravel * parallax.mid.strength;
@@ -84,9 +84,6 @@ export class OverworldScene implements PixelScene {
       const x = ((index * 83 - nearShift * parallax.near.flowers) % (width + 80) + width + 80) % (width + 80) - 40;
       drawFlower(this.nearDecor, x, groundY + 12, index % 2 ? 0xf45b5b : 0xffd25a, index % 4 === 0 ? 1.5 : 1);
     }
-
-    const travelerX = Math.round(width * traveler.start + progress * width * traveler.travel);
-    drawTraveler(this.nearDecor, travelerX, groundY + 7, Math.round(Math.sin(time * 5 + progress * 20) * 2), 1);
 
     this.particles.clear();
     const count = Math.round(dustSeeds.length * particleScale);

@@ -288,6 +288,41 @@ M6.1 Definition of Done：
 M4～M6 基线、Program 语义与路由无回归
 ```
 
+## M6.2：跨世界小章鱼主题角色
+
+阶段状态：`[x]` 已完成实现与正式验收（2026-07-23）。
+
+- [x] `M6.2-01` 审查当前角色与素材基线（代码/文件证据：当前只有 `drawTraveler()` 与 `OverworldScene` 陆地小人；深海/星空无统一角色；`assets/reference/m6-2/` 已提供 `octopus1.png` 普通、`octopus2.png` 潜水、`octopus3.png` 宇航员三张参考图）
+- [x] `M6.2-02` 完成需求确认和文档入档（文档证据：`spec.md`、`plan.md`、`architecture.md`、交互/视觉/验收/测试文档及 `docs/product/m6-2-octopus-traveler-spec.md`；本项不代表运行代码已修改）
+- [x] `M6.2-03` 将三张参考图处理为透明、裁切、视觉中心和基线统一的生产素材（文件证据：`assets/reference/m6-2/generated-alpha/`、`scripts/process-m62-assets.mjs` 和 `src/assets/m6-2/`；三张运行时 PNG 均为 `384×384` 透明画布，源码只 import `src/assets`）
+- [x] `M6.2-04` 在集中配置中定义三种形态、全局进度范围、桌面/移动端尺寸、跳跃、路径、亮度、层级、DVD 速度和安全边界（代码证据：`STORY_CONFIG.m62`）
+- [x] `M6.2-05` 建立可测试的单一角色叙事状态模型（代码证据：`getOctopusTravelerState(progress, mobile)` 统一派生 form、主坐标、opacity、brightness 和星空可见度；仍复用首页唯一 ScrollTrigger）
+- [x] `M6.2-06` 用普通小章鱼替换陆地小人（代码证据：旧 `drawTraveler()` 和 `OverworldScene` 调用已移除；浏览器 0%/25% 验证横向行程与 CSS 待机浮动）
+- [x] `M6.2-07` 完成 `0.300–0.368` 向上跃起、落入现有浪花、泡沫遮挡换装和反向恢复（浏览器证据：30%、32.8%、35.5%、36.8%、38% 及 38%→30%；没有新增浪花组件）
+- [x] `M6.2-08` 完成潜水小章鱼右上到左下、轻微浮动和尾段下潜（浏览器证据：38%、50%、62%、66% 及 66%→62% 反向升起）
+- [x] `M6.2-09` 完成宇航员从屏幕下方升入、独立 DVD 漂浮和视口边界反弹（代码证据：`AstronautOctopus.tsx` 的独立 RAF；浏览器 80%/81.5%/83%/90% 验证入场、移动和碰边改向）
+- [x] `M6.2-10` 完成宇航员部分回滚分支（浏览器证据：90%→81.5%→90% 中 `entry-count=1`，mode 持续为 `bouncing`，坐标继续变化，opacity/brightness 先降低后恢复）
+- [x] `M6.2-11` 完成宇航员完全退出分支（浏览器证据：回到 80% 后 `running=false`；再次 80%→81.5%→83% 时 `entry-count=2`，从屏幕下方入场且只有一个活动实例）
+- [x] `M6.2-12` 建立装饰 < 宇航员 < 正文/fixed UI 层级（样式证据：信号装饰 `z-index: 2`、宇航员 `3`、星空卡片 `4`；三个角色均 `aria-hidden`、`pointer-events: none`）
+- [x] `M6.2-13` 完成 375px、简化动画、Canvas fallback 与生命周期降级（浏览器证据：375×812 无页面级横向溢出；reduce 下 bob 为 `none`、宇航员 `mode=reduced/running=false`；Canvas fallback 内容和 Program 链接存在；代码清理 visibility/resize/RAF）
+- [x] `M6.2-14` 增加状态边界、双分支回滚、生产素材接入、层级、生命周期和原区间不变的回归测试（测试证据：`tests/static-export.test.mjs`，17/17 通过）
+- [x] `M6.2-15` 完成关键进度和双分支浏览器验收（浏览器证据：1280×720、1920×1080、375×812；0%、25%、30%、32.8%、35.5%、36.8%、38%、50%、62%、66%、80%、81.5%、83%、90%；1920 和 375 页面级横向溢出均为 0）
+- [x] `M6.2-16` 完成正式验收（命令证据：`npm run check` 45 文件 0 errors/warnings/hints；`npm run lint` 通过；`npm test` 17/17；生产构建生成 15 个静态 HTML；11 个主路由与 4 个 `/projects` 兼容路由读取通过；干净页面控制台 warn/error 为空）
+
+M6.2 Definition of Done：
+
+```text
+普通、潜水、宇航员三种生产形态连续串联三个世界
+普通小章鱼跃入现有浪花，泡沫遮挡换装且可反向
+潜水小章鱼右上到左下并在尾段下潜，反向可升起
+宇航员只从屏幕下方升入并进行单一 DVD 边界反弹
+部分回滚继续反弹并变暗，返回向下时同轨迹恢复
+完全消失后清理，再次进入时从下方重新入场
+角色在星球/信号站装饰前、文字和交互内容后
+移动端、简化动画、Canvas fallback 与生命周期稳定
+M3～M6.1、Programs、路由、静态输出和世界 0°无回归
+```
+
 ## M7：程序演示系统
 
 - [ ] `M7-01` DemoRegistry

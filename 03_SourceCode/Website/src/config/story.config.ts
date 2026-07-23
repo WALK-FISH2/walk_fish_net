@@ -36,10 +36,6 @@ export const STORY_CONFIG = {
         strength: 1,
       },
     },
-    traveler: {
-      start: 0.13,
-      travel: 0.46,
-    },
   },
   dive: {
     timeline: {
@@ -296,6 +292,86 @@ export const STORY_CONFIG = {
       },
     },
   },
+  m62: {
+    timeline: {
+      land: [0, 0.3],
+      leap: [0.3, 0.328],
+      drop: [0.328, 0.355],
+      waveCover: [0.355, 0.368],
+      diverEnter: [0.368, 0.38],
+      diverTravel: [0.38, 0.62],
+      diverExit: [0.62, 0.66],
+      astronautGate: [0.8, 0.83],
+    },
+    land: {
+      startX: 0.13,
+      endX: 0.59,
+      groundY: 0.73,
+      leapApexX: 0.64,
+      waveEntryX: 0.67,
+      leapApexY: 0.48,
+      waveEntryY: 0.64,
+      coveredY: 0.76,
+    },
+    diver: {
+      enterX: 0.72,
+      enterY: 0.72,
+      startX: 0.82,
+      startY: 0.2,
+      endX: 0.22,
+      endY: 0.68,
+      exitY: 1.16,
+    },
+    mobile: {
+      land: {
+        leapApexX: 0.9,
+        waveEntryX: 0.82,
+        leapApexY: 0.55,
+      },
+      diver: {
+        enterX: 0.76,
+        enterY: 0.7,
+        startX: 0.86,
+        startY: 0.24,
+        endX: 0.28,
+        endY: 0.64,
+        exitY: 1.12,
+        travelXDelay: 0.55,
+      },
+    },
+    sizes: {
+      desktop: {
+        landPx: 72,
+        diverPx: 118,
+        astronautPx: 132,
+      },
+      mobile: {
+        landPx: 58,
+        diverPx: 88,
+        astronautPx: 94,
+      },
+    },
+    bob: {
+      landPx: 2,
+      diverPx: 4,
+      durationMs: 1600,
+    },
+    astronaut: {
+      entryX: 0.68,
+      entryY: 0.68,
+      speedPxPerSecond: {
+        desktop: { x: 86, y: 68 },
+        mobile: { x: 52, y: 44 },
+      },
+      boundsPx: {
+        desktop: { top: 96, right: 88, bottom: 82, left: 18 },
+        mobile: { top: 84, right: 18, bottom: 118, left: 10 },
+      },
+      dimBrightness: 0.38,
+      dimSaturation: 0.58,
+      dprCap: 1.5,
+    },
+  },
   quality: {
     high: { particles: 220, dpr: 2 },
     medium: { particles: 130, dpr: 1.5 },
@@ -439,6 +515,81 @@ export function getProgramsArchiveState(progress: number) {
     titleOpacity: 1 - titleExitProgress,
     titleRisePx: Math.round(titleExitProgress * config.titleRisePx),
     titleColor: mixColor(config.titleColor.sea, config.titleColor.night, titleExitProgress),
+  };
+}
+
+export type OctopusForm = "land" | "diver" | "astronaut" | "hidden";
+
+export function getOctopusTravelerState(progress: number, mobile = false) {
+  const timeline = STORY_CONFIG.m62.timeline;
+  const land = STORY_CONFIG.m62.land;
+  const diver = STORY_CONFIG.m62.diver;
+  const landPath = mobile ? { ...land, ...STORY_CONFIG.m62.mobile.land } : land;
+  const diverPath = mobile ? { ...diver, ...STORY_CONFIG.m62.mobile.diver } : diver;
+  const astronautVisibility = smoothstep(mapProgress(progress, timeline.astronautGate));
+  let form: OctopusForm = "hidden";
+  let worldX: number = land.startX;
+  let worldY: number = land.groundY;
+  let landOpacity: number = 0;
+  let diverOpacity: number = 0;
+
+  if (progress <= timeline.land[1]) {
+    const local = smoothstep(mapProgress(progress, timeline.land));
+    form = "land";
+    worldX = lerp(land.startX, land.endX, local);
+    worldY = land.groundY;
+    landOpacity = 1;
+  } else if (progress <= timeline.leap[1]) {
+    const local = smoothstep(mapProgress(progress, timeline.leap));
+    form = "land";
+    worldX = lerp(land.endX, landPath.leapApexX, local);
+    worldY = lerp(land.groundY, landPath.leapApexY, local);
+    landOpacity = 1;
+  } else if (progress <= timeline.drop[1]) {
+    const local = smoothstep(mapProgress(progress, timeline.drop));
+    form = "land";
+    worldX = lerp(landPath.leapApexX, landPath.waveEntryX, local);
+    worldY = lerp(landPath.leapApexY, land.waveEntryY, local);
+    landOpacity = 1;
+  } else if (progress <= timeline.waveCover[1]) {
+    const local = smoothstep(mapProgress(progress, timeline.waveCover));
+    form = "land";
+    worldX = landPath.waveEntryX;
+    worldY = lerp(land.waveEntryY, land.coveredY, local);
+    landOpacity = 1 - local;
+  } else if (progress <= timeline.diverEnter[1]) {
+    const local = smoothstep(mapProgress(progress, timeline.diverEnter));
+    form = "diver";
+    worldX = lerp(diverPath.enterX, diverPath.startX, local);
+    worldY = lerp(diverPath.enterY, diverPath.startY, local);
+    diverOpacity = local;
+  } else if (progress <= timeline.diverTravel[1]) {
+    const local = smoothstep(mapProgress(progress, timeline.diverTravel));
+    const horizontal = mobile
+      ? smoothstep(mapProgress(local, [STORY_CONFIG.m62.mobile.diver.travelXDelay, 1]))
+      : local;
+    form = "diver";
+    worldX = lerp(diverPath.startX, diverPath.endX, horizontal);
+    worldY = lerp(diverPath.startY, diverPath.endY, local);
+    diverOpacity = 1;
+  } else if (progress <= timeline.diverExit[1]) {
+    const local = smoothstep(mapProgress(progress, timeline.diverExit));
+    form = "diver";
+    worldX = diverPath.endX;
+    worldY = lerp(diverPath.endY, diverPath.exitY, local);
+    diverOpacity = 1 - smoothstep(mapProgress(local, [0.72, 1]));
+  } else if (astronautVisibility > 0) {
+    form = "astronaut";
+  }
+
+  return {
+    form,
+    worldX,
+    worldY,
+    landOpacity,
+    diverOpacity,
+    astronautVisibility,
+    aboveContent: progress > timeline.land[1] && progress <= timeline.drop[1],
   };
 }
 

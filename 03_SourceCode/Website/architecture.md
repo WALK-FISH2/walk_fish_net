@@ -1,8 +1,8 @@
 # 技术架构 Architecture
 
-版本：1.9.5
+版本：1.11.0
 
-状态：M6 与 M6.1 已完成
+状态：M6、M6.1 与 M6.2 已完成实现和正式验收
 
 对账日期：2026-07-23
 验证基线：Sites 源码仓库的 `3cd17db` 是“迁移到静态 Astro 世界”的提交，包含 Astro 配置、`src/pages/`、内容集合和静态导出测试。本地 Vibe Coding 文档最初位于另一条 Git 历史，因此首次对账时无法解析该提交；发布准备阶段只读获取 Sites 历史后已完成核对。本文结论同时采用 `3cd17db`、当前实现、实际构建和静态服务器结果。
@@ -211,6 +211,47 @@ M6 回归修复的实际架构：
 
 标题专属退场由 `story.config.ts` 的 `m61.programsArchive` 集中定义，并由 `getProgramsArchiveState(globalProgress)` 纯函数派生颜色、opacity 与最多 `12px` 上移；React 只写 CSS 变量，不新增 ScrollTrigger、pin 或卡片局部状态。桌面 43%～64% 与 61%→43% 反向矩阵、375px、简化动画、Canvas fallback、真实 Program 链接和全部质量门禁均已通过。详细规格见 `docs/product/m6-1-underwater-programs-layout-spec.md`。
 
+### M6.2 实际架构：单一角色状态、分层渲染
+
+M6.2 已使用一个集中配置与一个角色叙事状态模型实现。`STORY_CONFIG.m62` 保存区间、主路径、桌面/移动端尺寸、浮动、宇航员速度、安全边界和暗化参数；`getOctopusTravelerState(progress, mobile)` 是唯一的滚动状态派生函数：
+
+```text
+globalProgress
+→ land / jump / wave-cover / diver / dive-out / hidden / astronaut-gate
+→ form、主坐标、scale、opacity、brightness/tint、可见度与生命周期门
+```
+
+渲染承载分为两类，但共享上述滚动状态，不形成第二套角色叙事状态机：
+
+- 普通与潜水形态由 `ImmersiveHome.tsx` 的 `.octopus-world-layer` 固定 DOM 装饰层承载，生产 PNG 通过 Astro/Vite 源码 import；旧 `drawTraveler()` 及 `OverworldScene` 的程序化小人绘制已移除；
+- 该世界层默认与 Canvas 同处 `z-index: 1`，位于 Hero、文章路牌和 Programs 正文后方；仅在 `0.300–0.355` 跳跃和入浪阶段临时提升到 `z-index: 3`，让角色在现有浪花前可见，随后由原 M4.5 泡沫遮挡完成换装；
+- 宇航员由 `AstronautOctopus.tsx` 的 fixed DOM 装饰层承载；信号站天线/卫星和星球装饰为 `z-index: 2`，宇航员为 `3`，`.constellation-card` 为 `4`，导航、按钮和 fixed UI 继续位于交互上层；
+- 全部角色层均为 `pointer-events: none`、`aria-hidden`，正文继续由真实 DOM 承载。
+
+时间行为与滚动状态分离：
+
+- 首页继续只有一个 ScrollTrigger；其 `globalProgress` 只决定三种形态、主路径、可见度和亮度；
+- 陆地/深海待机浮动由 CSS keyframes 叠加在滚动决定的主路径上，不反写滚动坐标；
+- 宇航员 DVD 漂浮不读取 `globalProgress` 计算每帧坐标，只读取星空可见度门决定激活、变暗和清理；
+- 从稳定星空向上回滚且尚未完全消失时，宇航员保留当前坐标、速度和单一 RAF，继续边界反弹，同时按滚动进度降低 brightness/tint 与 opacity；
+- 在完全消失前重新向下时，同一实例和轨迹恢复正常颜色与可见度，不执行入场；
+- 到达完全不可见边界后才清理循环；之后重新进入星空时，宇航员从屏幕下方升入，再建立一套新的单一漂浮循环；
+- 页面隐藏时暂停，恢复时按当前门状态继续；resize 重新计算安全边界并夹取坐标；模式切换和组件卸载清理 RAF 与 visibility/resize 监听器，不影响 M5.5 的独立 `MeteorOverlay` 生命周期。
+
+素材链为：
+
+```text
+项目所有者参考图
+→ assets/reference/m6-2/generated-alpha/ 透明作者素材
+→ scripts/process-m62-assets.mjs
+→ src/assets/m6-2/*.png（384×384 透明生产画布）
+→ Astro/Vite 哈希资源
+```
+
+运行时不读取 `assets/reference/`。简化动画关闭小章鱼持续浮动和宇航员 DVD 反弹，但保留三种形态与必要的进度驱动切换。375px 使用 `58/88/94px` 的普通/潜水/宇航员尺寸、延迟横向穿越和移动端安全反弹边界。Canvas fallback 继续由 DOM 展示当前章节角色和全部核心内容，不新增滚动监听器。
+
+M6.2 没有改变现有五段全局进度、唯一 ScrollTrigger、M4.5 浪花、M5/M5.5、section 高度、Programs、路由和世界 `0°`。详细规格和验收证据见 `docs/product/m6-2-octopus-traveler-spec.md`、`tasks.md` 与 `docs/engineering/adjustment_record.md`。
+
 ## 10. 验证门禁
 
 本次 M4.5 验收实际执行：
@@ -247,7 +288,9 @@ M5.5 浏览器验收覆盖 1280×720 的约 35% 三层浪和 82% 星空、1920×
 - DemoRegistry 与程序演示隔离层尚未实现；
 - 当前 `static-embedded` 只提供静态说明；真正的独立演示容器和按需加载由 M7 跟踪；
 - M3 陆地视差、M4 下潜/深海、M4.5 陆海翻涌、M5 气泡到繁星/流星、M5.5 视觉抛光和 M6 星空/动效模式均已完成正式验收；
-- M6.1 已完成实现与正式验收；下一执行阶段为 M7 程序演示系统。
+- M6.1 已完成实现与正式验收；
+- M6.2 已完成三张生产素材、统一角色状态、跨世界动画、降级与正式验收；
+- 下一产品阶段为 M7 程序演示系统。
 
 ## 12. 架构变化流程
 

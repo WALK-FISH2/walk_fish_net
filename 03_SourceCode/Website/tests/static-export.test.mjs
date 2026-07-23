@@ -13,7 +13,7 @@ import {
   storyProgressForScrollY,
   storyScrollYForProgress,
 } from "../src/lib/storyScroll.ts";
-import { getProgramsArchiveState } from "../src/config/story.config.ts";
+import { getOctopusTravelerState, getProgramsArchiveState } from "../src/config/story.config.ts";
 
 const root = new URL("../", import.meta.url);
 const primaryRoutes = [
@@ -298,7 +298,7 @@ test("keeps the traveler corridor and Programs archive free of content collision
   assert.match(css, /--hero-safe-top:\s*max\(88px,\s*12vh\)/);
   assert.match(css, /\.hero-copy\s*\{[\s\S]*?top:\s*var\(--hero-safe-top\)/);
   assert.match(css, /@media \(max-width:\s*767px\)[\s\S]*?--hero-safe-top:\s*max\(76px,\s*8vh\)/);
-  assert.match(storyConfig, /traveler:\s*\{\s*start:\s*0\.13,\s*travel:\s*0\.46/);
+  assert.match(storyConfig, /land:\s*\{[\s\S]*?startX:\s*0\.13,[\s\S]*?endX:\s*0\.59/);
   assert.match(css, /--road-sign-safe-top:\s*28vh/);
   assert.match(css, /--road-sign-min-height:\s*250px/);
   assert.match(css, /--road-sign-stagger:\s*12px/);
@@ -348,6 +348,111 @@ test("derives the M6.1 Programs title fade reversibly from global progress", () 
     titleRisePx: 12,
     titleColor: 0x181443,
   });
+});
+
+test("derives all M6.2 octopus narrative forms reversibly from one progress model", () => {
+  assert.deepEqual(getOctopusTravelerState(0), {
+    form: "land",
+    worldX: 0.13,
+    worldY: 0.73,
+    landOpacity: 1,
+    diverOpacity: 0,
+    astronautVisibility: 0,
+    aboveContent: false,
+  });
+
+  const leapApex = getOctopusTravelerState(0.328);
+  assert.equal(leapApex.form, "land");
+  assert.equal(leapApex.worldY, 0.48);
+  assert.equal(leapApex.landOpacity, 1);
+  assert.equal(leapApex.aboveContent, true);
+
+  const waveCover = getOctopusTravelerState(0.368);
+  assert.equal(waveCover.form, "land");
+  assert.equal(waveCover.worldY, 0.76);
+  assert.equal(waveCover.landOpacity, 0);
+
+  const underwaterStart = getOctopusTravelerState(0.38);
+  assert.equal(underwaterStart.form, "diver");
+  assert.equal(underwaterStart.worldX, 0.82);
+  assert.ok(Math.abs(underwaterStart.worldY - 0.2) < 1e-9);
+  assert.equal(underwaterStart.diverOpacity, 1);
+
+  const programs = getOctopusTravelerState(0.5);
+  assert.equal(programs.form, "diver");
+  assert.ok(Math.abs(programs.worldX - 0.52) < 1e-9);
+  assert.ok(Math.abs(programs.worldY - 0.44) < 1e-9);
+
+  const oceanExit = getOctopusTravelerState(0.66);
+  assert.equal(oceanExit.form, "diver");
+  assert.equal(oceanExit.worldY, 1.16);
+  assert.equal(oceanExit.diverOpacity, 0);
+  assert.equal(getOctopusTravelerState(0.7).form, "hidden");
+  assert.equal(getOctopusTravelerState(0.8).astronautVisibility, 0);
+  assert.ok(Math.abs(getOctopusTravelerState(0.815).astronautVisibility - 0.5) < 1e-9);
+  assert.equal(getOctopusTravelerState(0.83).astronautVisibility, 1);
+  assert.deepEqual(getOctopusTravelerState(0.815), getOctopusTravelerState(0.815));
+
+  const mobileLeapApex = getOctopusTravelerState(0.328, true);
+  assert.equal(mobileLeapApex.worldX, 0.9);
+  assert.equal(mobileLeapApex.worldY, 0.55);
+  const mobilePrograms = getOctopusTravelerState(0.5, true);
+  assert.ok(Math.abs(mobilePrograms.worldX - 0.86) < 1e-9);
+  assert.ok(Math.abs(mobilePrograms.worldY - 0.44) < 1e-9);
+});
+
+test("implements M6.2 production sprites, layering, and one cleaned-up astronaut loop", async () => {
+  const [storyConfig, homeComponent, astronaut, overworldScene, pixelDraw, css, assetScript] = await Promise.all([
+    readFile(new URL("src/config/story.config.ts", root), "utf8"),
+    readFile(new URL("src/components/ImmersiveHome.tsx", root), "utf8"),
+    readFile(new URL("src/components/AstronautOctopus.tsx", root), "utf8"),
+    readFile(new URL("src/interactive/scenes/OverworldScene.ts", root), "utf8"),
+    readFile(new URL("src/interactive/pixel/draw.ts", root), "utf8"),
+    readFile(new URL("src/styles/global.css", root), "utf8"),
+    readFile(new URL("scripts/process-m62-assets.mjs", root), "utf8"),
+  ]);
+
+  for (const invariant of [
+    "overworld: [0, 0.3]",
+    "dive: [0.3, 0.38]",
+    "underwater: [0.38, 0.66]",
+    "oceanToSpace: [0.66, 0.8]",
+    "space: [0.8, 1]",
+    "astronautGate: [0.8, 0.83]",
+  ]) assert.ok(storyConfig.includes(invariant), invariant);
+
+  assert.match(storyConfig, /export function getOctopusTravelerState/);
+  assert.match(homeComponent, /getOctopusTravelerState\(progress,\s*window\.innerWidth <= 767\)/);
+  assert.match(homeComponent, /octopus-world-sprite--land/);
+  assert.match(homeComponent, /octopus-world-sprite--diver/);
+  assert.match(homeComponent, /<AstronautOctopus/);
+  assert.match(homeComponent, /data-octopus-above-content/);
+  assert.doesNotMatch(overworldScene, /drawTraveler/);
+  assert.doesNotMatch(pixelDraw, /export function drawTraveler/);
+
+  assert.match(astronaut, /window\.requestAnimationFrame\(tick\)/);
+  assert.match(astronaut, /window\.cancelAnimationFrame\(animationFrameId\)/);
+  assert.match(astronaut, /document\.addEventListener\("visibilitychange"/);
+  assert.match(astronaut, /document\.removeEventListener\("visibilitychange"/);
+  assert.match(astronaut, /window\.removeEventListener\("resize"/);
+  assert.match(astronaut, /if \(mode === "hidden" \|\| mode === "reduced"\) startEntry\(\)/);
+  assert.match(astronaut, /visibility <= 0\.001/);
+  assert.doesNotMatch(astronaut, /addEventListener\("scroll"/);
+  assert.doesNotMatch(astronaut, /ScrollTrigger/);
+
+  assert.match(css, /\.octopus-world-layer\s*\{[\s\S]*?z-index:\s*1;[\s\S]*?pointer-events:\s*none/);
+  assert.match(css, /\.immersive-home\[data-octopus-above-content\] \.octopus-world-layer\s*\{[\s\S]*?z-index:\s*3/);
+  assert.match(css, /\.octopus-astronaut\s*\{[\s\S]*?position:\s*fixed;[\s\S]*?z-index:\s*3;[\s\S]*?pointer-events:\s*none/);
+  assert.match(css, /\.signal-station \.constellation-card\s*\{[\s\S]*?z-index:\s*4/);
+  assert.match(css, /html\[data-motion-mode="reduce"\] \.octopus-world-sprite img\s*\{\s*animation:\s*none/);
+  assert.match(assetScript, /kernel:\s*sharp\.kernel\.nearest/);
+  assert.match(assetScript, /CANVAS_SIZE = 384/);
+
+  for (const asset of [
+    "octopus-land.png",
+    "octopus-diver.png",
+    "octopus-astronaut.png",
+  ]) await access(new URL(`src/assets/m6-2/${asset}`, root));
 });
 
 test("implements M5.5 polish without changing the M5 progress contract", async () => {

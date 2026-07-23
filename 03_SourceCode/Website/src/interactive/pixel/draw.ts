@@ -46,19 +46,6 @@ export function drawFlower(g: Graphics, x: number, groundY: number, color: numbe
     .rect(x, groundY - 17 * s, 3 * s, 3 * s).fill(0xfff3c4);
 }
 
-export function drawTraveler(g: Graphics, x: number, groundY: number, bob = 0, facing = 1) {
-  const y = groundY - 51 + bob;
-  g.rect(x + 9, y, 24, 6).fill(0xa8463d)
-    .rect(x + 13, y - 5, 16, 6).fill(0xf45b5b)
-    .rect(x + 12, y + 6, 19, 15).fill(0xffd25a)
-    .rect(x + (facing > 0 ? 26 : 13), y + 10, 4, 4).fill(0x18233b)
-    .rect(x + 8, y + 21, 27, 22).fill(0x344c7d)
-    .rect(x + 4, y + 25, 8, 18).fill(0xf45b5b)
-    .rect(x + 8, y + 43, 10, 8).fill(0x18233b)
-    .rect(x + 27, y + 43, 10, 8).fill(0x18233b)
-    .rect(x + 35, y + 28, 8, 5).fill(0x75533d);
-}
-
 export function drawFish(g: Graphics, x: number, y: number, scale: number, direction: 1 | -1, color: number, alpha = 1) {
   const s = scale * direction;
   g.moveTo(x - 15 * s, y).lineTo(x, y - 8 * scale).lineTo(x + 18 * s, y).lineTo(x, y + 8 * scale).fill({ color, alpha })

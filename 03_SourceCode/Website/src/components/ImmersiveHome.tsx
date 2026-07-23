@@ -1,12 +1,15 @@
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useCallback, useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type PointerEvent as ReactPointerEvent } from "react";
+import diverOctopusUrl from "../assets/m6-2/octopus-diver.png";
+import landOctopusUrl from "../assets/m6-2/octopus-land.png";
 import { SITE_CONFIG, sitePath } from "../config/site.config";
-import { STORY_CONFIG, getDiveState, getOceanSpaceMorphState, getProgramsArchiveState } from "../config/story.config";
+import { STORY_CONFIG, getDiveState, getOceanSpaceMorphState, getOctopusTravelerState, getProgramsArchiveState } from "../config/story.config";
 import { useMotionPreference } from "../hooks/useMotionPreference";
 import { SceneController, detectQuality } from "../interactive/SceneController";
 import { storyScrollYForProgress, type StoryScrollBounds } from "../lib/storyScroll";
 import { DEMO_TYPE_LABELS, PROGRAM_STATUS_LABELS, type ArticleSummary, type ProgramSummary } from "../types/content";
+import { AstronautOctopus } from "./AstronautOctopus";
 import { MeteorOverlay } from "./MeteorOverlay";
 import { MotionModeControl } from "./MotionModeControl";
 
@@ -19,6 +22,7 @@ export function ImmersiveHome({ articles, programs }: { articles: ArticleSummary
   const controllerRef = useRef<SceneController | null>(null);
   const phaseRef = useRef<Phase>("land");
   const progressRef = useRef(0);
+  const astronautUpdateRef = useRef<(progress: number) => void>(() => {});
   const scrollTriggerRef = useRef<ReturnType<typeof ScrollTrigger.create> | null>(null);
   const motionRestoreFrameRef = useRef(0);
   const motionRestoreRevisionRef = useRef(0);
@@ -41,6 +45,7 @@ export function ImmersiveHome({ articles, programs }: { articles: ArticleSummary
     const dive = getDiveState(progress);
     const morph = getOceanSpaceMorphState(progress);
     const programsArchive = getProgramsArchiveState(progress);
+    const octopus = getOctopusTravelerState(progress, window.innerWidth <= 767);
     const root = storyRef.current;
     root?.style.setProperty("--story-progress", String(progress));
     root?.style.setProperty("--dive-progress", String(dive.overall));
@@ -55,11 +60,18 @@ export function ImmersiveHome({ articles, programs }: { articles: ArticleSummary
     root?.style.setProperty("--program-title-exit-color", `#${programsArchive.titleColor.toString(16).padStart(6, "0")}`);
     root?.style.setProperty("--about-enter-opacity", String(morph.aboutEnter));
     root?.style.setProperty("--about-enter-y", `${Math.round((1 - morph.aboutEnter) * 56)}px`);
+    root?.style.setProperty("--octopus-world-x", `${octopus.worldX * 100}%`);
+    root?.style.setProperty("--octopus-world-y", `${octopus.worldY * 100}%`);
+    root?.style.setProperty("--octopus-land-opacity", String(octopus.landOpacity));
+    root?.style.setProperty("--octopus-diver-opacity", String(octopus.diverOpacity));
     root?.setAttribute("data-story-progress", progress.toFixed(4));
+    root?.setAttribute("data-octopus-form", octopus.form);
+    root?.toggleAttribute("data-octopus-above-content", octopus.aboveContent);
     root?.toggleAttribute("data-programs-exited", morph.programsExit >= 0.995);
     root?.setAttribute("data-phase", nextPhase);
     document.body.dataset.storyPhase = nextPhase;
     controllerRef.current?.update(progress);
+    astronautUpdateRef.current(progress);
     if (phaseRef.current !== nextPhase) { phaseRef.current = nextPhase; setPhase(nextPhase); }
   }, []);
 
@@ -101,6 +113,7 @@ export function ImmersiveHome({ articles, programs }: { articles: ArticleSummary
       onUpdate: (self) => updateProgress(self.progress),
     });
     scrollTriggerRef.current = trigger;
+    updateProgress(trigger.progress);
     const onResize = () => {
       cancelAnimationFrame(resizeFrame);
       resizeFrame = requestAnimationFrame(() => { controller.resize(window.innerWidth, window.innerHeight, window.devicePixelRatio); ScrollTrigger.refresh(); });
@@ -231,7 +244,28 @@ export function ImmersiveHome({ articles, programs }: { articles: ArticleSummary
   const loadingVisible = !ready && !skipped;
 
   return (
-    <div ref={storyRef} className={`immersive-home ${canvasFailed ? "immersive-home--fallback" : ""} ${reducedMotion ? "immersive-home--reduced-motion" : "immersive-home--full-motion"}`} data-phase={phase} data-motion-mode={motionPreference.mode} data-motion-source={motionPreference.source} data-system-motion={motionPreference.systemPrefersReduced ? "reduce" : "no-preference"} style={{ "--story-height": `${STORY_CONFIG.scrollHeightVh}vh`, "--full-story-height": `${STORY_CONFIG.scrollHeightVh}vh` } as CSSProperties} onPointerMove={pointerMove}>
+    <div
+      ref={storyRef}
+      className={`immersive-home ${canvasFailed ? "immersive-home--fallback" : ""} ${reducedMotion ? "immersive-home--reduced-motion" : "immersive-home--full-motion"}`}
+      data-phase={phase}
+      data-motion-mode={motionPreference.mode}
+      data-motion-source={motionPreference.source}
+      data-system-motion={motionPreference.systemPrefersReduced ? "reduce" : "no-preference"}
+      style={{
+        "--story-height": `${STORY_CONFIG.scrollHeightVh}vh`,
+        "--full-story-height": `${STORY_CONFIG.scrollHeightVh}vh`,
+        "--octopus-land-size": `${STORY_CONFIG.m62.sizes.desktop.landPx}px`,
+        "--octopus-diver-size": `${STORY_CONFIG.m62.sizes.desktop.diverPx}px`,
+        "--octopus-astronaut-size": `${STORY_CONFIG.m62.sizes.desktop.astronautPx}px`,
+        "--octopus-mobile-land-size": `${STORY_CONFIG.m62.sizes.mobile.landPx}px`,
+        "--octopus-mobile-diver-size": `${STORY_CONFIG.m62.sizes.mobile.diverPx}px`,
+        "--octopus-mobile-astronaut-size": `${STORY_CONFIG.m62.sizes.mobile.astronautPx}px`,
+        "--octopus-land-bob": `${STORY_CONFIG.m62.bob.landPx}px`,
+        "--octopus-diver-bob": `${STORY_CONFIG.m62.bob.diverPx}px`,
+        "--octopus-bob-duration": `${STORY_CONFIG.m62.bob.durationMs}ms`,
+      } as CSSProperties}
+      onPointerMove={pointerMove}
+    >
       <div className={`world-loader ${loadingVisible ? "" : "world-loader--done"}`} aria-hidden={!loadingVisible}>
         <div className="loader-mark" aria-hidden="true"><span /><span /><span /></div><p>正在生成世界……</p><strong>LOADING WORLD 02</strong>
         <div className="loader-track" role="progressbar" aria-label="世界加载进度" aria-valuemin={0} aria-valuemax={100} aria-valuenow={ready ? 100 : 0}><span style={{ width: ready ? "100%" : "16%" }} /></div>
@@ -240,6 +274,14 @@ export function ImmersiveHome({ articles, programs }: { articles: ArticleSummary
       <canvas ref={canvasRef} className="story-canvas pixel-art" aria-hidden="true" />
       <MeteorOverlay active={phase === "space" && !canvasFailed} reducedMotion={reducedMotion} />
       <div className="canvas-fallback" aria-hidden="true" />
+      <div className="octopus-world-layer" aria-hidden="true">
+        <span className="octopus-world-sprite octopus-world-sprite--land">
+          <img className="pixel-art" src={landOctopusUrl.src} width={384} height={384} alt="" draggable={false} />
+        </span>
+        <span className="octopus-world-sprite octopus-world-sprite--diver">
+          <img className="pixel-art" src={diverOctopusUrl.src} width={384} height={384} alt="" draggable={false} />
+        </span>
+      </div>
       <div className="waterline-dom-effect" aria-hidden="true"><span /><i /></div>
 
       <nav className="story-progress" aria-label="旅程阶段">
@@ -289,6 +331,7 @@ export function ImmersiveHome({ articles, programs }: { articles: ArticleSummary
         <section className="story-stage story-stage--space" aria-labelledby="space-about-title">
           <div className="signal-station">
             <span className="signal-station__antenna" aria-hidden="true" /><span className="signal-station__satellite" aria-hidden="true" />
+            <AstronautOctopus progressRef={progressRef} updateRef={astronautUpdateRef} reducedMotion={reducedMotion} />
             <div className="constellation-card story-panel"><p className="eyebrow">SIGNAL 03 · PLAYER ONLINE</p><h2 id="space-about-title">海的另一面，是还没命名的星空。</h2><p>我关注软件开发、交互与可视化，也喜欢记录一件东西从想法到能用之间发生了什么。</p><div className="skill-orbit" aria-label="关注方向"><span>TypeScript</span><span>Web</span><span>Canvas</span><span>Tools</span></div><div className="hero-actions"><a className="pixel-button pixel-button--primary" href={sitePath("/about/")}>关于我</a><a className="pixel-button" href={`mailto:${SITE_CONFIG.email}`}>发个信号</a></div></div>
           </div>
           <div className="constellation-links" aria-label="星座内容入口">
