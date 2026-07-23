@@ -286,6 +286,16 @@ export const STORY_CONFIG = {
       progressTolerance: 0.01,
     },
   },
+  m61: {
+    programsArchive: {
+      titleFade: [0.59, 0.64],
+      titleRisePx: 12,
+      titleColor: {
+        sea: 0xe5faff,
+        night: 0x181443,
+      },
+    },
+  },
   quality: {
     high: { particles: 220, dpr: 2 },
     medium: { particles: 130, dpr: 1.5 },
@@ -417,6 +427,18 @@ export function getOceanSpaceMorphState(progress: number) {
     nebula: smoothstep(mapProgress(progress, [timeline.bubbleToStar[0], timeline.settleSpace[1]])),
     programsExit: smoothstep(mapProgress(progress, [timeline.brighten[0], timeline.starToMeteor[1]])),
     aboutEnter: settleSpace,
+  };
+}
+
+export function getProgramsArchiveState(progress: number) {
+  const config = STORY_CONFIG.m61.programsArchive;
+  const titleExitProgress = smoothstep(mapProgress(progress, config.titleFade));
+
+  return {
+    titleExitProgress,
+    titleOpacity: 1 - titleExitProgress,
+    titleRisePx: Math.round(titleExitProgress * config.titleRisePx),
+    titleColor: mixColor(config.titleColor.sea, config.titleColor.night, titleExitProgress),
   };
 }
 

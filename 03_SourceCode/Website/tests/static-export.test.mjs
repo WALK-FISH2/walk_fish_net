@@ -13,6 +13,7 @@ import {
   storyProgressForScrollY,
   storyScrollYForProgress,
 } from "../src/lib/storyScroll.ts";
+import { getProgramsArchiveState } from "../src/config/story.config.ts";
 
 const root = new URL("../", import.meta.url);
 const primaryRoutes = [
@@ -310,14 +311,43 @@ test("keeps the traveler corridor and Programs archive free of content collision
   assert.match(css, /\.road-signs\s*\{[\s\S]*?position:\s*sticky;[\s\S]*?top:\s*var\(--road-sign-safe-top\)/);
   assert.doesNotMatch(css, /\.road-signs\s*\{\s*position:\s*sticky;\s*top:\s*(?:37|38)vh/);
 
-  assert.match(css, /\.story-stage--programs \.stage-copy\s*\{\s*position:\s*relative;\s*top:\s*auto;/);
+  assert.match(css, /html\[data-motion-mode="full"\] \.story-stage--programs \.programs-copy\s*\{[\s\S]*?position:\s*sticky;[\s\S]*?top:\s*var\(--program-title-safe-top\)/);
+  assert.match(css, /grid-template-columns:\s*var\(--program-title-lane-width\) minmax\(0,\s*1fr\)/);
+  assert.match(css, /\.story-stage--programs \.portholes\s*\{[\s\S]*?grid-column:\s*2;[\s\S]*?justify-items:\s*end;/);
+  assert.match(css, /@media \(max-width:\s*1199px\)[\s\S]*?\.story-stage--programs \.programs-copy\s*\{[\s\S]*?position:\s*relative;[\s\S]*?opacity:\s*1;/);
   assert.match(css, /\.portholes\s*\{\s*display:\s*grid;\s*gap:\s*var\(--program-card-gap\);/);
   assert.match(css, /\.porthole\s*\{\s*position:\s*relative;\s*top:\s*auto;/);
   assert.match(css, /html\[data-motion-mode="reduce"\] \.porthole\s*\{\s*margin-bottom:\s*0;/);
   assert.match(css, /\.story-stage--programs\s*\{\s*height:\s*300vh;\s*min-height:\s*1900px;/);
   assert.match(css, /html\[data-motion-mode="reduce"\] \.immersive-home\s*\{\s*--story-height:\s*auto !important;/);
   assert.doesNotMatch(css, /\.porthole\s*\{\s*position:\s*sticky/);
+  assert.doesNotMatch(css, /\.porthole\s*\{\s*position:\s*fixed/);
   assert.doesNotMatch(css, /--porthole-index\) \* (?:6|8)vh/);
+});
+
+test("derives the M6.1 Programs title fade reversibly from global progress", () => {
+  const beforeFade = getProgramsArchiveState(0.59);
+  const middleFade = getProgramsArchiveState(0.615);
+  const afterFade = getProgramsArchiveState(0.64);
+  const reverseMiddle = getProgramsArchiveState(0.615);
+
+  assert.deepEqual(beforeFade, {
+    titleExitProgress: 0,
+    titleOpacity: 1,
+    titleRisePx: 0,
+    titleColor: 0xe5faff,
+  });
+  assert.equal(middleFade.titleExitProgress, 0.5);
+  assert.equal(middleFade.titleOpacity, 0.5);
+  assert.equal(middleFade.titleRisePx, 6);
+  assert.equal(middleFade.titleColor, 0x7f87a1);
+  assert.deepEqual(reverseMiddle, middleFade);
+  assert.deepEqual(afterFade, {
+    titleExitProgress: 1,
+    titleOpacity: 0,
+    titleRisePx: 12,
+    titleColor: 0x181443,
+  });
 });
 
 test("implements M5.5 polish without changing the M5 progress contract", async () => {

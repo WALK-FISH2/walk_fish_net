@@ -12,8 +12,8 @@ export function MotionModeControl({ mode, source, systemPrefersReduced, onToggle
   const showSystemSuggestion = systemPrefersReduced && !reduced;
 
   return (
-    <div className="motion-mode-control" data-motion-source={source}>
-      {showSystemSuggestion ? <small role="status">系统建议简化动画</small> : null}
+    <div className="motion-mode-control" data-motion-source={source} data-system-reduced-suggestion={showSystemSuggestion || undefined}>
+      {/* {showSystemSuggestion ? <small role="status">系统建议简化动画</small> : null} */}
       <button
         type="button"
         aria-pressed={reduced}

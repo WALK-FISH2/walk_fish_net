@@ -2,7 +2,7 @@ import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useCallback, useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type PointerEvent as ReactPointerEvent } from "react";
 import { SITE_CONFIG, sitePath } from "../config/site.config";
-import { STORY_CONFIG, getDiveState, getOceanSpaceMorphState } from "../config/story.config";
+import { STORY_CONFIG, getDiveState, getOceanSpaceMorphState, getProgramsArchiveState } from "../config/story.config";
 import { useMotionPreference } from "../hooks/useMotionPreference";
 import { SceneController, detectQuality } from "../interactive/SceneController";
 import { storyScrollYForProgress, type StoryScrollBounds } from "../lib/storyScroll";
@@ -40,6 +40,7 @@ export function ImmersiveHome({ articles, programs }: { articles: ArticleSummary
     const nextPhase = phaseFor(progress);
     const dive = getDiveState(progress);
     const morph = getOceanSpaceMorphState(progress);
+    const programsArchive = getProgramsArchiveState(progress);
     const root = storyRef.current;
     root?.style.setProperty("--story-progress", String(progress));
     root?.style.setProperty("--dive-progress", String(dive.overall));
@@ -48,6 +49,10 @@ export function ImmersiveHome({ articles, programs }: { articles: ArticleSummary
     root?.style.setProperty("--refraction-strength", String(dive.refraction));
     root?.style.setProperty("--program-exit-opacity", String(1 - morph.programsExit));
     root?.style.setProperty("--program-exit-y", `${Math.round(morph.programsExit * -72)}px`);
+    root?.style.setProperty("--program-title-exit-progress", String(programsArchive.titleExitProgress));
+    root?.style.setProperty("--program-title-exit-opacity", String(programsArchive.titleOpacity));
+    root?.style.setProperty("--program-title-exit-y", `${-programsArchive.titleRisePx}px`);
+    root?.style.setProperty("--program-title-exit-color", `#${programsArchive.titleColor.toString(16).padStart(6, "0")}`);
     root?.style.setProperty("--about-enter-opacity", String(morph.aboutEnter));
     root?.style.setProperty("--about-enter-y", `${Math.round((1 - morph.aboutEnter) * 56)}px`);
     root?.setAttribute("data-story-progress", progress.toFixed(4));
@@ -269,7 +274,7 @@ export function ImmersiveHome({ articles, programs }: { articles: ArticleSummary
         </section>
 
         <section className="story-stage story-stage--programs" aria-labelledby="featured-programs-title">
-          <div className="stage-copy stage-copy--light"><p className="eyebrow">DEPTH 3800 · PROGRAM ARCHIVE</p><h2 id="featured-programs-title">沉在海里的程序档案</h2><p>我本人编写的工具、网页应用、交互实验，以及仍在生长的程序原型。</p></div>
+          <div className="stage-copy stage-copy--light programs-copy"><p className="eyebrow">DEPTH 3800 · PROGRAM ARCHIVE</p><h2 id="featured-programs-title">沉在海里的程序档案</h2><p>我本人编写的工具、网页应用、交互实验，以及仍在生长的程序原型。</p></div>
           <div className="portholes">
             {programs.map((program, index) => (
               <article key={program.slug} className={`porthole porthole--${["terminal", "probe", "capsule"][index % 3]}`} style={{ "--porthole-index": index } as CSSProperties}>
