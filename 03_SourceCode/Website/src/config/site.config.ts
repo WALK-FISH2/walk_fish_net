@@ -11,10 +11,10 @@ export const SITE_CONFIG = {
   shortName: "PIXEL//WALK",
   title: "像素漫游者 · 软件开发与奇怪想法",
   description: "一个关于软件开发、本人程序和奇怪想法的像素叙事网站。沿着陆地、深海与星空，看看文字如何变成作品。",
-  author: "[姓名]",
+  author: "[Leyu Zhang]",
   role: "软件开发者，也喜欢把一些奇怪的想法做成东西。",
-  email: "hello@example.com",
-  github: "https://github.com/",
+  email: "1542892196@qq.com",
+  github: "https://github.com/WALK-FISH2",
   nav: [
     { href: "/", label: "首页" },
     { href: "/articles", label: "文章" },
