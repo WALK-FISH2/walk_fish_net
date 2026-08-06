@@ -8,15 +8,15 @@ TypeScript、ESLint、内容 schema、Markdown 链接和资源引用。
 
 ### 单元测试
 
-`localProgress`、阶段判定、画质选择、动效模式优先级、Reduced Motion、偏好持久化与存储失败降级、内容排序、Program schema、DemoRegistry 和旧路由映射。
+`localProgress`、阶段判定、画质选择、动效模式优先级、Reduced Motion、偏好持久化与存储失败降级、内容排序、Program schema、`platforms`/`media` 组合和旧路由映射。DemoRegistry 只在未来恢复站内静态演示时加入门禁。
 
 ### 集成测试
 
-文章加载、程序加载、动态详情、演示容器、错误边界和静态路由生成。
+文章加载、程序加载、动态详情、外部入口、视频/二维码媒体、错误边界和静态路由生成。未来若恢复 iframe，再增加沙箱容器集成测试。
 
 ### E2E
 
-首页滚动、反向滚动、节点导航、文章搜索、程序筛选、程序演示、详情刷新、404、移动端、键盘和动效模式。M6 动效模式至少覆盖：普通网址首次完整、手动切换、刷新保持、站内跳转保持、`?motion=full`/`?motion=reduce` 临时覆盖且不污染保存值、系统 Reduced Motion 建议、存储不可用、Canvas fallback，以及连续切换后无重复 RAF/timer/监听器。
+首页滚动、反向滚动、节点导航、文章搜索、程序筛选、程序外链/媒体、详情刷新、404、移动端、键盘和动效模式。M6 动效模式至少覆盖：普通网址首次完整、手动切换、刷新保持、站内跳转保持、`?motion=full`/`?motion=reduce` 临时覆盖且不污染保存值、系统 Reduced Motion 建议、存储不可用、Canvas fallback，以及连续切换后无重复 RAF/timer/监听器。
 
 M6 回归矩阵必须在 64%、72%、76%、79%、80%、82%、90% 执行 full→reduce 与 reduce→full。每次记录切换前后 progress、ScrollTrigger start/end、scrollY、scrollMax、phase，并继续向下到 100%、再向上回到 0%。硬性断言为：进度误差 `<= 0.01`；物理底部时 progress `>= 0.999` 且 phase 为 space；连续 5 轮切换后只有一个有效恢复事务、一个 ScrollTrigger、一个 MeteorOverlay 和预期 Canvas 数量。
 
@@ -49,6 +49,35 @@ M6.2 星空分支测试必须区分：
 
 M6.2 响应式矩阵至少覆盖 1280×720、1920×1080、375×812、完整动画、简化动画和 Canvas fallback。375px 检查角色边界、横向溢出、顶部导航、底部进度、动效开关和主要按钮；简化动画断言持续浮动与 DVD RAF 均未运行，但三种形态与必要的切换可见。
 
+### M6.3 普通内容页滚动
+
+源码/样式回归必须断言 `.page-shell` 不会永久关闭纵向溢出，同时继续阻止页面级横向溢出。移动导航测试覆盖打开锁定，以及关闭按钮、Escape、选择链接、resize 和卸载五条恢复路径。
+
+浏览器矩阵在桌面和 375×812 逐一打开 `/articles/`、一篇文章详情、`/programs/`、一个 Program 详情、`/about/` 和 404。每页从顶部滚动到底部再返回，至少覆盖滚轮或触摸、PageDown/PageUp、Home/End、Tab 焦点推进、直接刷新和浏览器前进后退；记录 `scrollHeight > clientHeight` 页面可到达 `scrollY >= scrollHeight - innerHeight - 1`，且 `scrollWidth <= clientWidth`。
+
+M6.3 复验首页，确认唯一 ScrollTrigger、故事总高度、完整/简化切换、Canvas 数和关键进度未变化。
+
+### M7 真实 Program 详情与组合媒体
+
+单元测试覆盖 `platforms`/`media` 可选数组、稳定枚举、HTTPS 外链、二维码字段、视频 orientation、缺失可选媒体和无效组合。旧内容在没有新字段时仍能构建。
+
+集成/E2E 至少验证：
+
+```text
+标题/状态/简介之后的第一个主要操作是“打开网页版”
+外链目标正确，target=_blank 且 rel 包含 noopener noreferrer
+同一详情页同时存在 9:16 视频与微信小程序码
+视频无 autoplay，具有 controls、playsinline 和 preload=metadata
+媒体缺失/加载失败时正文和外链仍可用
+桌面双栏无相交；375px DOM/视觉顺序符合规格
+二维码有 alt 与可读扫码说明
+Program 搜索/筛选、SoftwareApplication、Sitemap 和 /projects 兼容无回归
+详情直接刷新由纯静态服务器返回 200
+首页产物不提前包含 Program 视频或演示代码
+```
+
+“拉了么”上线验收还必须人工核对链接、小程序码、技术栈、本人贡献、限制、隐私和外部服务。Tidy Desk、Signal Garden 等现有示例需要真实性清单；自动化不能代替项目所有者确认。
+
 ## 2. 视觉测试点
 
 截图：
@@ -79,7 +108,7 @@ M6.2 已按上述策略执行：自动化覆盖状态边界、移动端分支、
 
 ## 4. 演示隔离测试
 
-验证 iframe 不能访问主站敏感状态、不能顶层跳转、样式不污染主站、失败时可关闭、移动端可滚动和加载超时有提示。
+当前 M7 验证外部程序在新标签页打开、主站不代理外部 API、外部后端不进入主站静态运行时，并且媒体只在详情页按需加载。若未来恢复 iframe，再验证它不能访问主站敏感状态、不能顶层跳转、样式不污染主站、失败时可关闭、移动端可滚动和加载超时有提示。
 
 ## 5. 完成证据
 

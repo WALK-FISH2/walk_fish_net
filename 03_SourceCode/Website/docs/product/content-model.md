@@ -31,7 +31,9 @@ draft: false
 兼容路由：/projects/、/projects/<slug>/
 ```
 
-## 3. Program 示例
+## 3. 当前内容格式示例
+
+以下内容用于说明现有 schema，不代表该 Program 已通过真实性审核。Tidy Desk、Signal Garden 等示例在 M7 接入真实内容前必须由项目所有者确认；未确认条目应保持草稿或在发布前移除。
 
 ```yaml
 title: Tidy Desk
@@ -105,7 +107,7 @@ draft: false
 | `coreFeatures` | string[] | 核心功能 |
 | `technicalApproach` | string[] | 技术方案 |
 
-可选字段：`startDate`、`endDate`、`demoUrl`、`sourceUrl`、`demoDescription`。
+当前代码可选字段：`startDate`、`endDate`、`demoUrl`、`sourceUrl`、`demoDescription`。
 
 ## 5. ProgramStatus
 
@@ -156,7 +158,52 @@ none
 
 不得用假数据伪装接口成功、登录完成、支付成功、实时同步或已经存在的后端能力。
 
-## 8. Privacy
+## 8. M7 组合入口与媒体目标模型
+
+> 本节是 2026-08-06 已确认但尚未写入 schema 的 M7 目标模型。完成代码迁移前，`src/content.config.ts` 仍以现有字段为准。
+
+`demoType` 和 `demoUrl` 继续表示 Program 的主要演示方式与主要地址，供列表筛选、主要按钮和现有内容兼容。一个 Program 需要同时展示网页版、微信小程序、视频或截图时，使用可选数组：
+
+```yaml
+demoType: external-live
+demoUrl: https://pp.nuanzhualife.cn/
+
+platforms:
+  - kind: web
+    label: 打开网页版
+    url: https://pp.nuanzhualife.cn/
+  - kind: wechat-mini-program
+    label: 微信小程序
+    qrImage: /programs/laleme/wechat-qr.png
+    description: 微信扫码打开小程序
+
+media:
+  - type: video
+    src: https://media.example.com/laleme-demo.mp4
+    poster: /programs/laleme/video-poster.webp
+    orientation: portrait
+    caption: 手机端操作演示
+```
+
+其中媒体 URL 是字段格式示例，并非已经确认的“拉了么”素材。实际内容不得保留虚构地址。
+
+```text
+ProgramPlatformKind = web | wechat-mini-program
+ProgramMediaType = video | gif | screenshot
+ProgramMediaOrientation = portrait | landscape
+```
+
+约束：
+
+- `platforms` 和 `media` 均可省略，不得为满足 schema 伪造条目；
+- `web` 必须有真实 `https` URL；主按钮文案优先为“打开网页版”；
+- `wechat-mini-program` 必须有真实二维码图片、alt/说明，不用不可验证的跳转代替；
+- `video` 默认不自动播放，支持 poster、controls、`playsinline` 和 `preload="metadata"`；
+- 大视频优先引用独立媒体托管地址，二维码、poster 和截图可作为优化后的静态资源；
+- 媒体缺失或失败不影响正文与主要外链；
+- 这些资源只在 Program 详情页按需加载，不进入首页初始包。
+
+## 9. Privacy
 
 ```yaml
 privacy:
@@ -167,9 +214,9 @@ privacy:
 
 如果 `sendsDataExternally: true`，必须在 `externalServices` 列出真实服务。不能用空数组掩盖外部数据传输。
 
-## 9. 程序详情页固定结构
+## 10. 程序详情页内容与展示顺序
 
-每个 Program 详情页按以下顺序显示：
+每个 Program 详情页仍必须包含以下八类内容：
 
 1. 这是什么程序；
 2. 为什么编写它；
@@ -180,9 +227,16 @@ privacy:
 7. 当前限制；
 8. 数据和隐私说明。
 
-源码地址为空时不显示按钮；演示缺失或加载失败不能影响其余详情内容。
+八类内容是完整性约束，不要求全部被锁进一个固定的单栏顺序。对于具有真实网页版的 Program，详情页显示优先级为：
 
-## 10. 路由与 SEO
+```text
+桌面：标题/状态/简介 → 打开网页版 → 左侧核心介绍 + 右侧竖屏视频/小程序码 → 其余完整详情
+移动：标题/状态/简介 → 打开网页版 → 视频 → 小程序码 → 其余完整详情
+```
+
+“打开网页版”必须位于长篇正文之前。桌面使用普通文档流双栏，移动端使用单列；不使用 sticky、pin 或嵌套主滚动容器。源码地址为空时不显示按钮；演示缺失或加载失败不能影响其余详情内容。
+
+## 11. 路由与 SEO
 
 - `/programs/` 和 `/programs/<slug>/` 是 canonical；
 - `/projects/` 和 `/projects/<slug>/` 只保留静态兼容跳转；
@@ -190,15 +244,17 @@ privacy:
 - Sitemap 只收录主 Programs 路由；
 - Program 详情页输出标题、摘要、Open Graph、canonical 和 SoftwareApplication 结构化数据。
 
-## 11. 新增或维护 Program
+## 12. 新增或维护 Program
 
 1. 在 `src/content/programs/` 新建 Markdown 或 MDX；
 2. 填写所有必填字段；
 3. 确认条目确实是本人编写，或明确本人贡献；
 4. 选择真实的 `status`、`category` 和 `demoType`；
 5. 填写当前限制和隐私边界；
-6. 不填写不存在的演示或源码地址；
-7. 运行 `npm run check` 验证 schema；
-8. 运行测试和生产构建；
-9. 使用纯静态服务器刷新新旧路由；
-10. 检查 Sitemap 只包含主路由。
+6. 有独立网页版时设置真实 `external-live`/`demoUrl`，并把“打开网页版”作为详情页首要操作；
+7. 有真实小程序码或媒体时再填写 `platforms`/`media`，不填写不存在的演示、源码或外部服务；
+8. 不要求把已上线项目复制进 `Project_Demos`；站内静态演示仅按未来真实需求评估；
+9. 运行 `npm run check` 验证 schema；
+10. 运行测试和生产构建；
+11. 使用纯静态服务器刷新新旧路由；
+12. 检查 Sitemap 只包含主路由。

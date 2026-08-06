@@ -29,7 +29,7 @@ npm run preview
 
 ## 内容维护
 
-个人信息、导航与链接集中在 `src/config/site.config.ts`。文章放在 `src/content/articles/`，项目放在 `src/content/projects/`；Astro Content Collections 会在构建期校验 frontmatter，并由 `getStaticPaths()` 生成全部详情页。
+个人信息、导航与链接集中在 `src/config/site.config.ts`。文章放在 `src/content/articles/`，Program 放在 `src/content/programs/`；Astro Content Collections 会在构建期校验 frontmatter，并由 `getStaticPaths()` 生成全部详情页。`/programs` 是“做点啥呢”的主路由，`/projects` 只保留旧链接兼容。
 
 文章常用字段：
 
@@ -46,26 +46,33 @@ draft: false
 ---
 ```
 
-项目常用字段：
+Program 常用字段：
 
 ```yaml
 ---
-title: 项目名称
-summary: 一句话说明项目解决的问题
-status: 已完成
-startDate: 2026-01
-endDate: 2026-06
+title: 程序名称
+slug: program-slug
+summary: 一句话说明程序解决的问题
+status: completed
+category: web-app
 featured: true
 order: 1
 stack: [Astro, TypeScript]
 tags: [Web]
+demoType: external-live
 demoUrl: ""
 sourceUrl: ""
+ownerContribution: [本人完成的内容]
+limitations: []
+privacy:
+  storesData: none
+  sendsDataExternally: false
+  externalServices: []
 draft: false
 ---
 ```
 
-空的演示或源码地址不会渲染按钮；生产构建会排除 `draft: true`。
+空的演示或源码地址不会渲染按钮；生产构建会排除 `draft: true`。M7 将在保持 `demoType`/`demoUrl` 兼容的基础上增加可选 `platforms`/`media`，使详情页可组合展示真实网页版、竖屏视频与微信小程序码。“打开网页版”将紧跟标题和简介，位于长篇正文之前。已经独立上线的程序不要求复制到 `Project_Demos`；完整规则见 `docs/product/content-model.md` 与 `docs/product/m7-real-program-showcase-spec.md`。
 
 ## 场景结构
 
@@ -104,4 +111,4 @@ BASE_PATH=/<repository>
 
 ## 仍可继续精修
 
-当前已完成第二轮核心视觉升级、M4.5 陆海三层浪、M5/M5.5 海空粒子与星空抛光、M6 动效模式、M6.1 深海 Programs 布局，以及 M6.2 跨世界小章鱼主题角色的实现与验收。普通、潜水和宇航员三种生产形态由同一进度模型串联，星空宇航员使用独立且可清理的边界反弹循环。MDX 自定义交互组件、代码 token 高亮、RSS、音频与视频仍尚未加入。
+当前已完成第二轮核心视觉升级、M4.5 陆海三层浪、M5/M5.5 海空粒子与星空抛光、M6 动效模式、M6.1 深海 Programs 布局、M6.2 跨世界小章鱼主题角色，以及 M6.3 普通内容页原生纵向滚动修复。普通、潜水和宇航员三种生产形态由同一进度模型串联，星空宇航员使用独立且可清理的边界反弹循环；文章、Programs、关于页和 404 均可自然滚动。下一实施阶段是 M7 真实 Programs 展示系统。MDX 自定义交互组件、代码 token 高亮、RSS 和音频仍尚未加入。

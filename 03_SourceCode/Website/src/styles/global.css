@@ -945,7 +945,8 @@ canvas {
 /* content pages */
 .page-shell {
   min-height: 100vh;
-  overflow: hidden;
+  overflow-x: hidden;
+  overflow-y: auto;
 }
 
 .page-shell--land { background: #eff9e7; color: var(--land-ink); }
@@ -978,9 +979,9 @@ canvas {
 
 .archive-hero::after {
   position: absolute;
-  right: calc((100vw - 100%) / -2);
+  right: 0;
   bottom: 0;
-  left: calc((100vw - 100%) / -2);
+  left: 0;
   height: 4px;
   background: currentColor;
   content: "";
@@ -1383,7 +1384,7 @@ canvas {
   .story-progress button span { width: 17px; height: 9px; }
 
   .archive-hero, .about-hero, .archive-section, .detail-page, .about-grid, .contact-banner, .site-footer { width: min(calc(100% - 28px), var(--page-width)); }
-  .archive-hero { min-height: 480px; grid-template-columns: 1fr; padding: 70px 0 45px; }
+  .archive-hero { min-height: 480px; grid-template-columns: 1fr; overflow: clip; padding: 70px 0 45px; }
   .pixel-sun, .sonar { position: absolute; right: -80px; bottom: 30px; width: 180px; height: 180px; opacity: 0.38; }
   .filter-panel { grid-template-columns: 1fr; }
   .content-grid, .content-grid--programs { grid-template-columns: 1fr; }

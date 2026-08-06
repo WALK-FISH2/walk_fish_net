@@ -303,6 +303,86 @@ Programs 卡片仍保留 terminal、probe、capsule 三种视觉外形、原有�
 - `docs/engineering/testing-strategy.md`
 - `docs/engineering/adjustment_record.md`
 
+## 12. 2026-08-06 M6.3 普通内容页纵向滚动修复
+
+### 12.1 根因、范围与不变量
+
+普通列表页、详情页、关于页和 404 共用 `BaseLayout.astro` 写在 `body` 上的 `.page-shell`。原规则使用 `overflow: hidden`，因此横向和纵向溢出同时被裁切；内容高度虽然存在，浏览器却不能继续推进主文档滚动。
+
+本次只修改普通页面外壳、移动导航滚动锁的恢复路径和与恢复滚动直接相关的装饰裁切。没有修改首页 `ImmersiveHome`、ScrollTrigger、五段进度、场景高度、Canvas、动效模式、Program 内容模型、文章系统或路由。
+
+### 12.2 最终参数与实现
+
+| 位置 | 参数/行为 | 调整结果 |
+| --- | --- | --- |
+| `.page-shell` | `min-height: 100vh` | 保留最小一屏，但允许内容自然增长 |
+| `.page-shell` | `overflow-x: hidden` | 继续抑制页面级横向溢出 |
+| `.page-shell` | `overflow-y: auto` | 恢复浏览器 document/body 原生纵向滚动 |
+| `.archive-hero::after` | `left: 0; right: 0` | 分隔线限制在 Hero 内，不再通过 `100vw` 扩张桌面页面宽度 |
+| `@media (max-width: 767px) .archive-hero` | `overflow: clip` | 裁切 `right: -80px` 的太阳/声呐装饰；修复列表页实测 `66px` 横向溢出 |
+| 移动菜单断点 | `768px` | 达到桌面宽度时自动关闭菜单并恢复 body |
+| 菜单打开 | 保存 `document.body.style.overflow` 后写入 `hidden` | 只在 Overlay 可见期间临时锁定 |
+| 菜单关闭/Escape | 恢复保存值；Escape 返回打开按钮焦点 | 防止锁定残留并保持键盘路径 |
+| 链接选择/`pagehide` | 关闭且恢复 body，不强制把焦点拉回旧页面 | 兼容站内跳转、历史导航和 bfcache |
+
+`SiteNav.astro` 没有新增长期滚动监听器或第二个滚动容器；所有恢复路径复用同一个 `restoreBodyScroll()`。
+
+### 12.3 浏览器证据
+
+1280×720 纯静态服务器：
+
+| 路由 | `scrollHeight` | 最大滚动距离 | 实际到底 | 横向溢出 |
+| --- | ---: | ---: | ---: | ---: |
+| `/articles/` | `1710px` | `990px` | `990px` | `0` |
+| `/articles/first-post/` | `1963px` | `1243px` | `1243px` | `0` |
+| `/programs/` | `1552px` | `832px` | `832px` | `0` |
+| `/programs/pixel-journey/` | `2993px` | `2273px` | `2273px` | `0` |
+| `/about/` | `1579px` | `859px` | `859px` | `0` |
+| `/404.html` | `978px` | `258px` | `258px` | `0` |
+
+六页均显示页脚并可返回 `scrollY=0`。375×812 下六页最大滚动距离分别为 `1313/1417/1994/2690/1682/219px`，全部到达相同实际值并显示页脚。列表页初测发现太阳/声呐把文档宽度从 `360px` 扩张到 `426px`；增加移动 Hero 裁切后文章和 Programs 列表均为 `scrollWidth=clientWidth=360px`、`scrollX=0`，其余四页同样为 0 横向溢出。
+
+移动菜单实测：
+
+```text
+关闭：aria-expanded=false / panel hidden / body overflow=""
+打开：aria-expanded=true  / panel visible / body overflow="hidden"
+Escape：关闭 / body overflow="" / 焦点返回打开按钮
+375px → 800px：自动关闭 / body overflow=""
+菜单进入 /about/ → 后退 /articles/：菜单关闭 / body overflow=""
+前进 /about/：页面继续可滚动
+```
+
+Program 详情使用 `?motion=reduce` 直接刷新后仍到达 `2690/2690px`，有 24 个真实链接且页脚可见。普通页面不拦截 PageDown/PageUp、Home/End 或 Tab；PageDown 实测推进 `656px`，链接继续使用原生焦点顺序。
+
+首页 `/?motion=full` 回归：顶部为 `phase=land`，底部 `phase=space`，返回顶部重新为 `land`；`scrollHeight=6192px`、最大滚动 `5472px`、Canvas 数 `2`、`.page-shell` 数 `0`，控制台 warn/error 为空。
+
+### 12.4 自动化、构建与静态输出
+
+| 验证 | 结果 |
+| --- | --- |
+| Astro Check | 45 个文件，0 errors / 0 warnings / 0 hints |
+| ESLint | 通过 |
+| 自动化测试 | 18/18 通过；新增普通外壳、移动装饰裁切和菜单恢复路径断言 |
+| 生产构建 | Astro `output: static`，`dist/` 生成 15 个 HTML |
+| Sites 打包 | `npm run build:sites` 通过，生成 `sites-dist/` |
+| 静态路由 | 11 个主路由与 4 个 `/projects` 兼容路由 HTTP 200；未知路由 HTTP 404 |
+| 浏览器控制台 | 桌面、375px、简化动画、刷新/历史导航与首页回归后 warn/error 为空 |
+
+### 12.5 修改文件
+
+- `src/styles/global.css`
+- `src/components/SiteNav.astro`
+- `tests/static-export.test.mjs`
+- `tasks.md`
+- `plan.md`
+- `architecture.md`
+- `README.md`
+- `CHANGELOG.md`
+- `docs/product/m6-3-content-page-scroll-spec.md`
+- `docs/product/acceptance-criteria.md`
+- `docs/engineering/adjustment_record.md`
+
 ## 11. 2026-07-23 M6.2 跨世界小章鱼主题角色
 
 ### 11.1 调整范围与不变量

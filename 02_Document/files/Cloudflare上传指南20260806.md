@@ -194,3 +194,71 @@ npx wrangler pages deploy . `
 Wrangler 的 `pages deploy` 命令支持指定上传目录、项目名称和分支。
 
 **对你来说，使用 `main + production` 两个分支，再将构建监听路径限制为 `03_SourceCode/Website/*` 最合适。**它既保留 GitHub 自动部署的便利，也不会让每一次普通提交直接影响正式网页。
+
+
+
+
+
+
+
+测试网站的网址是什么？
+
+假设你的 Cloudflare Pages 项目名是：
+
+```
+walk-fish-net
+```
+
+并且设置为：
+
+```
+production：正式发布分支
+main：测试分支
+```
+
+那么测试网站通常是：
+
+```
+https://main.walk-fish-net.pages.dev
+```
+
+正式网站仍然是：
+
+```
+https://walk-fish-net.pages.dev
+```
+
+每次 `main` 分支生成预览部署时，还会产生一个对应本次提交的固定地址，例如：
+
+```
+https://abc123.walk-fish-net.pages.dev
+```
+
+其中：
+
+- `main.walk-fish-net.pages.dev`：始终指向 `main` 分支的最新测试版本；
+- `abc123.walk-fish-net.pages.dev`：对应某一次具体部署，之后不会改变。
+
+你可以在 Cloudflare 中查看准确网址：
+
+```
+Workers 和 Pages
+→ 选择你的项目
+→ 部署 / Deployments
+→ 找到 main 分支的部署
+→ 查看构建 / View build
+```
+
+部署详情中的 **Aliases / 别名** 就会显示测试网址。
+
+前提是预览分支部署已开启，并允许部署 `main`：
+
+```
+设置
+→ 构建和部署
+→ 分支控制
+→ Preview branches
+→ All non-production branches
+```
+
+Cloudflare 默认可以为非正式分支生成预览部署。

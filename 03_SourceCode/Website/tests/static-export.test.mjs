@@ -123,6 +123,28 @@ test("keeps content, SEO, motion modes, and migrated source boundaries", async (
   await access(new URL("src/content/programs/tidy-desk.md", root));
 });
 
+test("keeps ordinary content pages vertically scrollable and restores mobile menu locking", async () => {
+  const [css, baseLayout, siteNav] = await Promise.all([
+    readFile(new URL("src/styles/global.css", root), "utf8"),
+    readFile(new URL("src/layouts/BaseLayout.astro", root), "utf8"),
+    readFile(new URL("src/components/SiteNav.astro", root), "utf8"),
+  ]);
+
+  assert.match(baseLayout, /!noShell && "page-shell"/);
+  assert.match(css, /\.page-shell\s*\{[\s\S]*?min-height:\s*100vh;[\s\S]*?overflow-x:\s*hidden;[\s\S]*?overflow-y:\s*auto;[\s\S]*?\}/);
+  assert.doesNotMatch(css, /\.page-shell\s*\{[^}]*overflow:\s*hidden;/);
+  assert.doesNotMatch(css, /\.archive-hero::after\s*\{[^}]*100vw/);
+  assert.match(css, /@media\s*\(max-width:\s*767px\)[\s\S]*?\.archive-hero\s*\{[^}]*overflow:\s*clip;/s);
+
+  assert.match(siteNav, /const restoreBodyScroll = \(\) =>/);
+  assert.match(siteNav, /document\.body\.style\.overflow = previousOverflow/);
+  assert.match(siteNav, /window\.addEventListener\("resize", handleResize\)/);
+  assert.match(siteNav, /window\.addEventListener\("pagehide", handlePageHide\)/);
+  assert.match(siteNav, /const handlePageHide = \(\) => closeMenu\(false\)/);
+  assert.match(siteNav, /event\.key === "Escape"\) closeMenu\(\)/);
+  assert.match(siteNav, /link\.addEventListener\("click", \(\) => closeMenu\(false\)\)/);
+});
+
 test("centralizes overworld parallax without scene-local layer coefficients", async () => {
   const [storyConfig, overworldScene] = await Promise.all([
     readFile(new URL("src/config/story.config.ts", root), "utf8"),

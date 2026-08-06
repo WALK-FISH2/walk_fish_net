@@ -1,6 +1,6 @@
 # 任务清单 Tasks
 
-更新时间：2026-07-23
+更新时间：2026-08-06
 
 ```text
 [ ] 未开始
@@ -323,22 +323,43 @@ M6.2 Definition of Done：
 M3～M6.1、Programs、路由、静态输出和世界 0°无回归
 ```
 
-## M7：程序演示系统
+## M6.3：普通内容页纵向滚动修复
 
-- [ ] `M7-01` DemoRegistry
-- [ ] `M7-02` 静态组件演示容器
-- [ ] `M7-03` iframe 演示容器与 sandbox
-- [ ] `M7-04` 外部链接和媒体演示
-- [ ] `M7-05` Loading、错误和关闭状态
-- [ ] `M7-06` 限制与隐私说明
-- [ ] `M7-07` 演示懒加载和移动端
-- [ ] `M7-08` 至少接入一个真实本人程序
-- [ ] `M7-09` 演示隔离测试
+- [x] `M6.3-01` 记录根因、范围、非目标与验收矩阵（证据：`docs/product/m6-3-content-page-scroll-spec.md`；当前 `.page-shell { overflow: hidden; }` 会同时裁掉普通内容页的纵向溢出）
+- [x] `M6.3-02` 普通页面外壳只抑制横向溢出并恢复原生纵向文档滚动（CSS/浏览器证据：`.page-shell` 改为 `overflow-x: hidden; overflow-y: auto`；桌面六类普通页均由 document 滚动到实际底部，未建立嵌套主滚动容器）
+- [x] `M6.3-03` 复核移动导航打开期间的临时滚动锁，并覆盖关闭、Escape、选择链接、resize 与卸载恢复（代码/浏览器证据：`SiteNav.astro` 保存并恢复原 inline overflow，Escape 返回焦点，链接选择、`>=768px` resize 和 `pagehide` 均关闭菜单并恢复；375px 实测 `"" → hidden → ""`，历史返回后菜单保持关闭）
+- [x] `M6.3-04` 验证 `/articles/`、文章详情、`/programs/`、Program 详情、`/about/` 和 404 可从顶部滚动到底部（浏览器证据：1280×720 六页最大滚动距离分别为 `990/1243/832/2273/859/258px`，全部到达相同 `scrollY`、页脚可见并返回 `0`）
+- [x] `M6.3-05` 验证桌面滚轮/触控板、PageDown/PageUp、Home/End、Tab、刷新和前进后退（浏览器/代码证据：页面使用浏览器 document 原生滚动且未拦截滚动键；PageDown 实测推进 `656px`；直接刷新 Program 详情仍到达 `2690/2690px`；菜单导航、后退、前进均恢复可滚动态；链接保持原生可聚焦顺序）
+- [x] `M6.3-06` 验证 375×812 触摸滚动、菜单开合、零横向溢出和可到达页脚（浏览器证据：六类页面均到达页脚；列表页装饰通过移动端 `overflow: clip` 消除 `66px` 溢出，最终 `scrollWidth=clientWidth=360px`、`scrollX=0`；菜单 Escape、断点切换和链接导航通过）
+- [x] `M6.3-07` 增加页面外壳纵向滚动及移动导航锁定/恢复回归测试（自动化证据：`tests/static-export.test.mjs` 新增 M6.3 测试，锁定纵向 overflow、横向裁切、移动 Hero 装饰边界和全部菜单恢复路径）
+- [x] `M6.3-08` 运行 Astro Check、ESLint、测试、生产构建和静态路由验证（命令证据：Astro Check 0 errors/0 warnings/0 hints，ESLint 通过，18/18 测试通过，Astro 静态构建生成 15 个 HTML；15 个主/兼容路由 HTTP 200，未知路由 HTTP 404）
+- [x] `M6.3-09` 确认首页 ScrollTrigger、动效模式、Canvas、章节高度和静态输出无回归（浏览器/构建证据：`?motion=full` 仍为单一沉浸式外壳、2 个 Canvas、`scrollHeight=6192px`、最大滚动 `5472px`，0% land → 100% space → 0% land 可逆；控制台 warn/error 为空）
+
+阶段状态：`[x]` M6.3 已完成实现、桌面/375px/简化动画/历史导航/首页回归验证与全部质量门禁；下一阶段为 M7。
+
+## M7：真实 Programs 展示系统
+
+- [x] `M7-01` 确认真实 Program 接入方向、详情页优先级与 `Project_Demos` 非强制边界（证据：`docs/product/m7-real-program-showcase-spec.md`；项目所有者确认“打开网页版”紧跟简介、位于长篇正文之前）
+- [ ] `M7-02` 扩展 Program schema：保留 `demoType`/`demoUrl`，增加可选 `platforms` 与 `media`
+- [ ] `M7-03` 重排 Program 详情首屏：标题/简介后立即显示“打开网页版”，桌面左文右媒体
+- [ ] `M7-04` 实现 9:16 竖屏视频、poster、controls、playsinline、metadata 预载与诚实失败状态
+- [ ] `M7-05` 实现微信小程序入口、二维码、替代文本和扫码说明
+- [ ] `M7-06` 实现桌面双栏与移动端“简介 → 外链 → 视频 → 二维码 → 详情”顺序，无 sticky/pin/嵌套主滚动
+- [ ] `M7-07` 接入“拉了么”真实网页版 `https://pp.nuanzhualife.cn/`，基于项目所有者资料填写技术栈、贡献、限制、隐私和外部服务
+- [ ] `M7-08` 审核现有 Tidy Desk、Signal Garden 等示例是否为真实本人程序；未确认条目转草稿或在发布前移除
+- [ ] `M7-09` 确保媒体只在详情页按需加载，不进入首页包；大视频使用独立媒体地址
+- [ ] `M7-10` 更新 Programs 搜索、筛选、SEO、SoftwareApplication 数据、Sitemap 和 `/projects` 兼容测试
+- [ ] `M7-11` 验证外链新标签页安全属性、视频无自动声音、媒体失败不影响正文与主要入口
+- [ ] `M7-12` 验证桌面、375px、键盘、静态详情刷新、控制台和纯静态部署边界
+- [-] `M7-13` DemoRegistry、`Project_Demos`、站内静态组件和 sandbox iframe（按当前真实外链方向延期；未来出现站内交互演示需求时另行恢复，不作为 M7 退出条件）
+- [ ] `M7-14` 运行 Astro Check、ESLint、测试、生产构建和静态路由验证
+
+M7 只有需求与文档基线已完成；schema、详情页、真实内容与验证均未实施，阶段保持未完成。
 
 ## M8：质量
 
 - [ ] `M8-01` 单元测试：进度映射与内容校验
-- [ ] `M8-02` 单元测试：DemoRegistry
+- [ ] `M8-02` 单元测试：Program `platforms`/`media` schema、外链和媒体组合
 - [ ] `M8-03` 集成测试：文章和程序路由
 - [ ] `M8-04` 集成测试：旧路由兼容
 - [ ] `M8-05` E2E：完整和反向滚动

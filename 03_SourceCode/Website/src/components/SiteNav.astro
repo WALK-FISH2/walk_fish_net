@@ -34,28 +34,33 @@ const current = (href: string) => href === "/" ? pathname === sitePath("/") : pa
   const closeButton = nav?.querySelector<HTMLButtonElement>("[data-menu-close]");
   const panel = nav?.querySelector<HTMLElement>("[data-menu-panel]");
   let previousOverflow = "";
+  let bodyScrollLocked = false;
 
-  const closeMenu = () => {
+  const restoreBodyScroll = () => {
+    if (!bodyScrollLocked) return;
+    document.body.style.overflow = previousOverflow;
+    bodyScrollLocked = false;
+  };
+
+  const closeMenu = (restoreFocus = true) => {
     if (!panel || !openButton) return;
     panel.hidden = true;
     openButton.setAttribute("aria-expanded", "false");
     openButton.querySelector("[aria-hidden]")!.textContent = "≡";
-    document.body.style.overflow = previousOverflow;
-    openButton.focus();
+    restoreBodyScroll();
+    if (restoreFocus) openButton.focus();
   };
   const openMenu = () => {
-    if (!panel || !openButton) return;
+    if (!panel || !openButton || !panel.hidden) return;
     previousOverflow = document.body.style.overflow;
+    bodyScrollLocked = true;
     panel.hidden = false;
     openButton.setAttribute("aria-expanded", "true");
     openButton.querySelector("[aria-hidden]")!.textContent = "×";
     document.body.style.overflow = "hidden";
     panel.querySelector<HTMLAnchorElement>("a")?.focus();
   };
-  openButton?.addEventListener("click", () => panel?.hidden ? openMenu() : closeMenu());
-  closeButton?.addEventListener("click", closeMenu);
-  panel?.querySelectorAll("a").forEach((link) => link.addEventListener("click", closeMenu));
-  document.addEventListener("keydown", (event) => {
+  const handleKeydown = (event: KeyboardEvent) => {
     if (!panel || panel.hidden) return;
     if (event.key === "Escape") closeMenu();
     if (event.key !== "Tab") return;
@@ -64,5 +69,16 @@ const current = (href: string) => href === "/" ? pathname === sitePath("/") : pa
     const last = items[items.length - 1];
     if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus(); }
     if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }
-  });
+  };
+  const handleResize = () => {
+    if (window.innerWidth >= 768 && panel && !panel.hidden) closeMenu(false);
+  };
+  const handlePageHide = () => closeMenu(false);
+
+  openButton?.addEventListener("click", () => panel?.hidden ? openMenu() : closeMenu());
+  closeButton?.addEventListener("click", () => closeMenu());
+  panel?.querySelectorAll("a").forEach((link) => link.addEventListener("click", () => closeMenu(false)));
+  document.addEventListener("keydown", handleKeydown);
+  window.addEventListener("resize", handleResize);
+  window.addEventListener("pagehide", handlePageHide);
 </script>

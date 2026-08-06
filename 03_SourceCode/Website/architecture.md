@@ -1,10 +1,10 @@
 # 技术架构 Architecture
 
-版本：1.11.0
+版本：1.13.0
 
-状态：M6、M6.1 与 M6.2 已完成实现和正式验收
+状态：M6、M6.1、M6.2 与 M6.3 已完成；重整后的 M7 已完成需求基线，尚未修改代码
 
-对账日期：2026-07-23
+对账日期：2026-08-06
 验证基线：Sites 源码仓库的 `3cd17db` 是“迁移到静态 Astro 世界”的提交，包含 Astro 配置、`src/pages/`、内容集合和静态导出测试。本地 Vibe Coding 文档最初位于另一条 Git 历史，因此首次对账时无法解析该提交；发布准备阶段只读获取 Sites 历史后已完成核对。本文结论同时采用 `3cd17db`、当前实现、实际构建和静态服务器结果。
 
 ## 1. 当前结论
@@ -132,10 +132,32 @@ BASE_PATH=/pixel-walk-audit
 - `src/lib/content.ts` 使用 `CollectionEntry<"programs">`；
 - 内容存放在 `src/content/programs/`；
 - 主路由是 `/programs` 与 `/programs/[slug]`；
-- 每项 Program 必须包含本人贡献、限制、隐私、演示类型和详情页八个固定内容区块；
+- 每项 Program 必须包含本人贡献、限制、隐私、演示类型和八项必备详情内容；当前实现按八个区块顺序渲染；
 - `static-embedded` 条目显示静态演示能力边界，不伪造后端、数据库、登录或实时能力。
 
 完整维护规则见 `docs/product/content-model.md`，领域与路由决策见 ADR 0009。
+
+### M6.3 实际架构：原生文档滚动与临时菜单锁
+
+普通内容页继续由 `BaseLayout.astro` 把 `.page-shell` 应用到 `body`，但该外壳现在明确使用 `overflow-x: hidden; overflow-y: auto`。浏览器 document/body 仍是唯一主滚动容器，列表、详情、关于页和 404 不创建嵌套滚动根，也不限制内容自然高度。
+
+`SiteNav` 的移动菜单只在展开期间保存并覆盖 `document.body.style.overflow`，关闭按钮和 Escape 恢复焦点及原值，链接选择、`>=768px` resize 与 `pagehide` 在离场前恢复原值。列表页桌面分隔线限制在 Hero 宽度内；375px 的太阳/声呐装饰由 Hero 的 `overflow: clip` 裁切，避免视觉装饰扩张页面宽度。
+
+该实现未进入 `ImmersiveHome`，没有改变首页唯一 ScrollTrigger、`6192px` 实测故事文档高度、完整/简化动效状态或 Canvas 生命周期。桌面和 375px 六类普通路由、刷新、历史导航、菜单、简化动画及首页 land → space → land 往返均已验证。详细证据见 `docs/product/m6-3-content-page-scroll-spec.md`、`tasks.md` 与 `docs/engineering/adjustment_record.md` 第 12 节。
+
+### M7 目标架构：外部真实程序与组合媒体
+
+当前 `ProgramDemo.astro` 依据单个 `demoType` 在静态说明、外部链接、视频、GIF、截图或无演示之间择一，不能在同一详情页同时表达网页版、竖屏视频和微信小程序码。M7 保留 `demoType`/`demoUrl` 作为主要演示类型和主要地址，同时增加两个可选集合：
+
+```text
+Program
+├─ platforms[] → web / wechat-mini-program
+└─ media[]     → video / gif / screenshot
+```
+
+详情页继续使用 Astro 静态生成和普通 DOM 文档流。桌面首屏为左文右媒体双栏，“打开网页版”紧跟标题、状态和简介；右侧承载 9:16 视频与小程序入口。移动端按“简介 → 打开网页版 → 视频 → 小程序码 → 详细说明”排列。媒体仅在详情页按需加载，不进入首页包。
+
+需要后端的真实程序继续由独立服务器承载，纯前端程序可以部署到独立静态托管。主站只输出链接、二维码、媒体和介绍，不代理外部 API，因此不会引入 Node 生产运行时。`Project_Demos`、DemoRegistry 和 sandbox iframe 保留为未来可选能力，不是本轮 M7 的必经层。完整决策和验收见 `docs/product/m7-real-program-showcase-spec.md` 与 ADR 0006。
 
 ## 9. 首页交互架构
 
@@ -285,12 +307,15 @@ M5.5 浏览器验收覆盖 1280×720 的约 35% 三层浪和 82% 星空、1920×
 
 ## 11. 已知未完成项
 
-- DemoRegistry 与程序演示隔离层尚未实现；
-- 当前 `static-embedded` 只提供静态说明；真正的独立演示容器和按需加载由 M7 跟踪；
+- 当前 Program schema 和 `ProgramDemo.astro` 仍只能表达单一主要演示，`platforms`/`media` 组合字段与新版详情布局尚未实现；
+- “拉了么”真实内容尚未写入；微信小程序码、视频、技术栈、本人贡献、限制、隐私和外部服务仍等待真实资料；
+- Tidy Desk、Signal Garden 等当前示例的真实性尚待项目所有者审核；未确认内容不能作为真实作品进入最终发布；
+- DemoRegistry、`Project_Demos`、站内静态演示与 sandbox iframe 已延期为未来按需能力，不作为当前 M7 退出条件；
 - M3 陆地视差、M4 下潜/深海、M4.5 陆海翻涌、M5 气泡到繁星/流星、M5.5 视觉抛光和 M6 星空/动效模式均已完成正式验收；
 - M6.1 已完成实现与正式验收；
 - M6.2 已完成三张生产素材、统一角色状态、跨世界动画、降级与正式验收；
-- 下一产品阶段为 M7 程序演示系统。
+- M6.3 已完成普通内容页原生纵向滚动、移动菜单锁恢复、响应式与首页回归验收；
+- 下一实施阶段为 M7 真实 Programs 展示系统。
 
 ## 12. 架构变化流程
 
