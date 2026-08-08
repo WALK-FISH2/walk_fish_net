@@ -25,12 +25,16 @@ const primaryRoutes = [
   ["dist/articles/small-tools/index.html", "小工具也值得被认真记录"],
   ["dist/programs/index.html", "做点啥呢"],
   ["dist/programs/pixel-journey/index.html", "像素漫游个人站"],
+  ["dist/programs/tidy-desk/index.html", "Tidy Desk"],
+  ["dist/programs/signal-garden/index.html", "Signal Garden"],
   ["dist/404.html", "LOST COORDINATES"],
 ];
 
 const legacyRoutes = [
   ["dist/projects/index.html", "/programs/"],
   ["dist/projects/pixel-journey/index.html", "/programs/pixel-journey/"],
+  ["dist/projects/tidy-desk/index.html", "/programs/tidy-desk/"],
+  ["dist/projects/signal-garden/index.html", "/programs/signal-garden/"],
 ];
 
 test("emits independent HTML for every primary and compatibility route", async () => {
@@ -48,7 +52,7 @@ test("emits independent HTML for every primary and compatibility route", async (
   }
 
   const outputEntries = await readdir(new URL("dist/", root), { recursive: true });
-  assert.equal(outputEntries.filter((entry) => entry.endsWith(".html")).length, 11);
+  assert.equal(outputEntries.filter((entry) => entry.endsWith(".html")).length, 15);
 });
 
 test("program pages expose the required domain content without claiming missing services", async () => {
@@ -114,7 +118,7 @@ test("keeps content, SEO, motion modes, and migrated source boundaries", async (
   await access(new URL("src/content/programs/pixel-journey.md", root));
 });
 
-test("implements M7 Programs platforms, detail-first actions, media isolation, and truthful publishing", async () => {
+test("implements M7 Programs platforms, detail-first actions, media isolation, and three-card publishing", async () => {
   const [program, home, contentConfig, types, contentLib, layout, demo, css, sitemap, tidyDesk, signalGarden] = await Promise.all([
     readFile(new URL("dist/programs/pixel-journey/index.html", root), "utf8"),
     readFile(new URL("dist/index.html", root), "utf8"),
@@ -159,11 +163,15 @@ test("implements M7 Programs platforms, detail-first actions, media isolation, a
   assert.match(css, /@media \(max-width:\s*767px\)[\s\S]*?grid-template-areas:[\s\S]*?"header"[\s\S]*?"media"[\s\S]*?"intro"/);
 
   assert.doesNotMatch(home, /data-program-media-root|data-program-video|program-platform-card--wechat/);
-  assert.match(tidyDesk, /draft:\s*true/);
-  assert.match(signalGarden, /draft:\s*true/);
-  await assert.rejects(access(new URL("dist/programs/tidy-desk/index.html", root)));
-  await assert.rejects(access(new URL("dist/programs/signal-garden/index.html", root)));
-  assert.doesNotMatch(sitemap, /tidy-desk|signal-garden|\/projects(?:\/|<)/);
+  assert.match(tidyDesk, /status:\s*prototype/);
+  assert.match(signalGarden, /status:\s*prototype/);
+  assert.match(tidyDesk, /draft:\s*false/);
+  assert.match(signalGarden, /draft:\s*false/);
+  await access(new URL("dist/programs/tidy-desk/index.html", root));
+  await access(new URL("dist/programs/signal-garden/index.html", root));
+  assert.match(sitemap, /\/programs\/tidy-desk\//);
+  assert.match(sitemap, /\/programs\/signal-garden\//);
+  assert.doesNotMatch(sitemap, /\/projects(?:\/|<)/);
 });
 
 test("keeps ordinary content pages vertically scrollable and restores mobile menu locking", async () => {

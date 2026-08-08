@@ -31,9 +31,9 @@ draft: false
 兼容路由：/projects/、/projects/<slug>/
 ```
 
-## 3. 当前草稿内容格式示例
+## 3. 当前公开原型内容格式示例
 
-以下内容用于说明现有 schema，不代表该 Program 已通过真实性审核。Tidy Desk、Signal Garden 等示例在 M7 接入真实内容前必须由项目所有者确认；未确认条目应保持草稿或在发布前移除。
+Tidy Desk、Signal Garden 当前按项目所有者要求作为可继续维护的原型档案公开，以保证首页海洋区域保持三张完整卡片。它们的 `prototype` 状态、无公开演示或静态演示边界、限制和隐私字段必须保持清楚；后续可以由项目所有者手动替换，也可以在获得真实资料后由开发任务更新。不得在维护时补造在线地址、后端能力、用户数据或已完成功能。
 
 ```yaml
 title: Tidy Desk
@@ -82,7 +82,7 @@ technicalApproach:
   - React 管理界面状态
   - IndexedDB 作为本地数据层
 demoDescription: 本轮只展示界面和数据流程说明。
-draft: true
+draft: false
 ```
 
 ## 4. Program 必填字段

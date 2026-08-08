@@ -624,3 +624,40 @@ Canvas / 普通与潜水角色：z=1
 - `docs/product/acceptance-criteria.md`
 - `docs/engineering/testing-strategy.md`
 - `docs/engineering/adjustment_record.md`
+
+## 14. 2026-08-08 M7 海洋三张 Program 卡片恢复
+
+### 14.1 调整原因与范围
+
+M7 初次真实性清理把 `Tidy Desk` 与 `Signal Garden` 设为草稿，首页按 `!draft && featured` 过滤后只剩“像素漫游个人站”，因此深海 Programs 区域只能生成一张档案卡片。项目所有者随后明确要求保留三张卡片，并允许两项内容以后手动或通过后续任务继续维护。
+
+本次只修改两项 Program 的发布状态、静态路由测试和相关工程文档；没有改动 `.portholes` 布局、三种卡片轮廓、M6.1 左右轨道、标题渐暗、深海 Canvas、进度区间或动画参数。
+
+### 14.2 内容与生成参数
+
+| 项目 | 调整后值 |
+| --- | --- |
+| `pixel-journey` | `featured: true`、`draft: false`、`order: 1` |
+| `tidy-desk` | `featured: true`、`draft: false`、`order: 2`、`status: prototype` |
+| `signal-garden` | `featured: true`、`draft: false`、`order: 3`、`status: prototype` |
+| 首页选择规则 | 非草稿且精选，排序后 `slice(0, 3)` |
+| 海洋卡片数量 | `3` 个 `.porthole` |
+| 主 Program 详情 | 3 个 `/programs/<slug>/` |
+| Projects 兼容详情 | 3 个 `/projects/<slug>/`，另有 `/projects/` 列表兼容页 |
+| 静态 HTML 总数 | `15` |
+
+`Tidy Desk` 与 `Signal Garden` 继续以原型档案呈现，保留现有演示边界、限制和隐私说明；没有新增在线地址、源码地址、后端、账号、数据库或实时能力声明。后续维护真实内容时仍必须遵守 `content-model.md` 的字段与真实性约束。
+
+### 14.3 验证结果
+
+| 验证 | 结果 |
+| --- | --- |
+| Astro Check | 45 个文件，0 errors / 0 warnings / 0 hints |
+| ESLint | 通过 |
+| 自动化测试 | 19/19 通过 |
+| Sites 生产构建 | `npm run build:sites` 通过 |
+| 首页静态产物 | 同时包含 `pixel-journey`、`tidy-desk`、`signal-garden` 三个链接和 3 个 `.porthole` |
+| Sitemap | 收录三个 canonical Program，不收录 `/projects` |
+| 静态输出 | `dist/` 共 15 个 HTML，`dist/server` 不存在 |
+
+本次属于内容发布状态的小范围修复，没有执行新的视觉样式变更；原 M6.1 桌面双轨和移动端单列验收结论继续适用。

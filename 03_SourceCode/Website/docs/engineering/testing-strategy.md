@@ -78,7 +78,9 @@ Program 搜索/筛选、SoftwareApplication、Sitemap 和 /projects 兼容无回
 
 “拉了么”上线验收还必须人工核对链接、小程序码、技术栈、本人贡献、限制、隐私和外部服务。Tidy Desk、Signal Garden 等现有示例需要真实性清单；自动化不能代替项目所有者确认。
 
-2026-08-08 M7 当前执行结果：Astro Check 45 文件 0 errors/warnings/hints，ESLint 通过，19/19 测试通过，`npm run build:sites` 成功。纯静态服务器验证 11/11 路由 HTTP 200、未知路由 404、`dist/server` 不存在。浏览器在 1280×720 验证左栏 `642px`、右栏 `474px` 无相交；375×812 验证 header/media/intro 依次为 `y=189/557/795`、两组重叠为 0、横向溢出为 0；主入口可获得 `:focus-visible`，详情刷新、平台筛选与控制台通过。真实“拉了么”资料和小程序码仍属人工内容验收，不由自动化代替。
+2026-08-08 M7 初次清理的历史执行结果：Astro Check 45 文件 0 errors/warnings/hints，ESLint 通过，19/19 测试通过，`npm run build:sites` 成功。纯静态服务器验证 11/11 路由 HTTP 200、未知路由 404、`dist/server` 不存在。浏览器在 1280×720 验证左栏 `642px`、右栏 `474px` 无相交；375×812 验证 header/media/intro 依次为 `y=189/557/795`、两组重叠为 0、横向溢出为 0；主入口可获得 `:focus-visible`，详情刷新、平台筛选与控制台通过。真实“拉了么”资料和小程序码仍属人工内容验收，不由自动化代替。
+
+同日三卡恢复补充验证：Astro Check 仍为 45 文件 0 errors/warnings/hints，ESLint 通过，19/19 测试通过，`npm run build:sites` 成功。`dist/index.html` 含 3 个 `.porthole`，三个 Program 详情链接均存在；`tidy-desk`、`signal-garden` 主详情和 `/projects/<slug>/` 兼容页恢复，Sitemap 收录三个 canonical Program；静态 HTML 总数恢复为 15，`dist/server` 仍不存在。本次没有修改海洋布局与动画，因此不重复声明新的视觉浏览器验收。
 
 ## 2. 视觉测试点
 

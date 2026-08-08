@@ -153,11 +153,11 @@ M7 每次新增、转草稿或移除 Program 后，都必须重新统计独立 H
 
 ### 2026-08-08 M7 当前静态基线
 
-- `Tidy Desk` 与 `Signal Garden` 因未经真实性确认改为草稿；当前公开 Program 只有 `pixel-journey`；
+- 项目所有者要求首页海洋区域恢复三张完整 Program 卡片；`Tidy Desk` 与 `Signal Garden` 以 `prototype` 原型档案重新公开，当前公开 Program 为 `pixel-journey`、`tidy-desk` 与 `signal-garden`；
 - `npm run build` 与 `npm run build:sites`：成功，正式输出仍为 `dist/`，适配输出为 `sites-dist/`；
-- 当前静态 HTML：11 个，其中 9 个主页面、2 个 Projects 兼容页；
-- 纯静态服务器：11/11 路由为 HTTP 200，未知路由为 HTTP 404；
+- 当前静态 HTML：15 个，其中 11 个主页面、4 个 Projects 兼容页；
+- 自动化逐一读取 15/15 个主/兼容路由，未知路由和纯静态 HTTP 基线继续由既有部署测试覆盖；
 - `dist/server` 不存在，外部 Program 后端没有进入主站运行时；
-- Sitemap 包含 `/programs/pixel-journey/`，不包含 `/projects`、`tidy-desk` 或 `signal-garden`；
+- Sitemap 包含三个 `/programs/<slug>/` canonical 详情，不包含 `/projects`；
 - 首页使用 `ProgramSummary`，不包含 `media`、二维码地址或详情媒体组件；
 - Astro Check 45 文件 0 errors / 0 warnings / 0 hints，ESLint 通过，19/19 测试通过。

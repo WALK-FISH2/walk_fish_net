@@ -1,6 +1,6 @@
 # 技术架构 Architecture
 
-版本：1.14.0
+版本：1.14.1
 
 状态：M6、M6.1、M6.2 与 M6.3 已完成；M7 组合展示架构已实现，“拉了么”真实内容接入待资料
 
@@ -39,7 +39,7 @@ flowchart LR
     Programs["src/content/programs"]
     Pages["src/pages/*.astro"]
     Astro["Astro static build"]
-    HTML["11 个独立 HTML"]
+    HTML["15 个独立 HTML"]
     Assets["浏览器端 JS / CSS / Pixi 场景"]
     Dist["dist/"]
     Host["任意静态文件服务器"]
@@ -78,7 +78,7 @@ src/
 
 ## 5. 静态路由生成
 
-`src/pages/articles/[slug].astro` 和 `src/pages/programs/[slug].astro` 使用 `getStaticPaths()` 在构建期枚举非草稿内容；`src/pages/projects/[slug].astro` 使用同一公开 Programs slug 集合生成兼容跳转页。M7 将两个未经确认的示例设为草稿后，当前 `npm run build` 生成以下 11 个 HTML：
+`src/pages/articles/[slug].astro` 和 `src/pages/programs/[slug].astro` 使用 `getStaticPaths()` 在构建期枚举非草稿内容；`src/pages/projects/[slug].astro` 使用同一公开 Programs slug 集合生成兼容跳转页。项目所有者随后确认海洋区域继续公开展示三张 Program 卡片，因此 `pixel-journey`、`tidy-desk` 与 `signal-garden` 均参与静态生成，当前 `npm run build` 生成以下 15 个 HTML：
 
 | URL 路由 | 静态文件 | 来源 |
 | --- | --- | --- |
@@ -90,11 +90,15 @@ src/
 | `/articles/small-tools/` | `dist/articles/small-tools/index.html` | 文章内容集合 |
 | `/programs/` | `dist/programs/index.html` | “做点啥呢”主列表 |
 | `/programs/pixel-journey/` | `dist/programs/pixel-journey/index.html` | Program 内容集合 |
+| `/programs/tidy-desk/` | `dist/programs/tidy-desk/index.html` | Program 原型内容集合 |
+| `/programs/signal-garden/` | `dist/programs/signal-garden/index.html` | Program 原型内容集合 |
 | `/projects/` | `dist/projects/index.html` | 指向 `/programs/` 的兼容页 |
 | `/projects/pixel-journey/` | `dist/projects/pixel-journey/index.html` | 指向同 slug Program 的兼容页 |
+| `/projects/tidy-desk/` | `dist/projects/tidy-desk/index.html` | 指向同 slug Program 的兼容页 |
+| `/projects/signal-garden/` | `dist/projects/signal-garden/index.html` | 指向同 slug Program 的兼容页 |
 | `/404.html` | `dist/404.html` | `src/pages/404.astro` |
 
-静态服务器逐一请求上述 11 个 URL 均返回 HTTP 200，未知路由返回 HTTP 404。兼容页通过 meta refresh、`window.location.replace` 和无脚本链接跳转，并使用 `noindex,follow` 与新 canonical。Sitemap 只收录公开主 Programs 路由，不收录 Projects 兼容页或草稿。
+静态服务器逐一请求上述 15 个 URL 均返回 HTTP 200，未知路由返回 HTTP 404。兼容页通过 meta refresh、`window.location.replace` 和无脚本链接跳转，并使用 `noindex,follow` 与新 canonical。Sitemap 只收录公开主 Programs 路由，不收录 Projects 兼容页或草稿。
 
 ## 6. 静态输出与运行时边界
 
@@ -308,7 +312,7 @@ M5.5 浏览器验收覆盖 1280×720 的约 35% 三层浪和 82% 星空、1920×
 
 - Program `platforms`/`media`、新版详情布局、平台筛选、SEO 和媒体隔离已经实现并通过自动化与浏览器验收；
 - “拉了么”网址已验证返回 HTTP 200，真实内容尚未写入；微信小程序码、视频、最终状态、技术栈、本人贡献、限制、隐私和外部服务仍等待真实资料；
-- Tidy Desk、Signal Garden 未获得真实性确认，现已设为草稿并从首页、列表、详情路由与 Sitemap 排除；
+- 按项目所有者当前决定，Tidy Desk、Signal Garden 作为可继续维护的原型档案公开，用于恢复海洋区域三张卡片；两项保持 `prototype` 状态与明确限制，不增加未经确认的外链或后端能力；
 - DemoRegistry、`Project_Demos`、站内静态演示与 sandbox iframe 已延期为未来按需能力，不作为当前 M7 退出条件；
 - M3 陆地视差、M4 下潜/深海、M4.5 陆海翻涌、M5 气泡到繁星/流星、M5.5 视觉抛光和 M6 星空/动效模式均已完成正式验收；
 - M6.1 已完成实现与正式验收；

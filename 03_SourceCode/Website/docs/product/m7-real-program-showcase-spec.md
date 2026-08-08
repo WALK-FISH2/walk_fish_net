@@ -110,7 +110,7 @@ ProgramMediaOrientation: portrait | landscape
 ## 7. 内容真实性
 
 - 接入前逐项确认程序确由站点所有者编写，并填写真实 ownerContribution；
-- 审核当前示例条目（包括 Tidy Desk、Signal Garden）是否为真实本人程序；未确认的条目保持草稿或在发布前移除，不能作为真实作品公开；
+- Tidy Desk、Signal Garden 按项目所有者本轮决定恢复公开，作为内容仍可后续维护的 `prototype` 档案；现阶段保留明确的原型状态、演示边界、限制与隐私说明，不把它们描述为已经上线的完整产品；
 - 不伪造源码地址、线上状态、后端能力、用户数量、技术栈或隐私声明；
 - 程序列表现有版式和 `/programs`、`/programs/<slug>` canonical 路由保持不变；
 - `/projects` 兼容入口继续可用。
@@ -132,6 +132,6 @@ ProgramMediaOrientation: portrait | landscape
 
 - 已实现 `platforms`/`media` schema、摘要/详情数据分层、首要网页版入口、桌面双栏、375px 单列、视频失败提示、小程序码组件、平台搜索筛选和 SoftwareApplication 外部地址；
 - 视频使用原生 controls、`playsinline`、`preload="metadata"`，没有 autoplay 或 loop；竖屏媒体使用 `9:16` 与 `max-height: 70svh`；
-- `Tidy Desk` 与 `Signal Garden` 因未获得真实性确认已设为 `draft: true`，不进入列表、首页、详情路由或 Sitemap；
-- 当前公开 Program 只保留已有真实站点“像素漫游个人站”，因此生产输出由 15 个 HTML 调整为 11 个 HTML；
+- 项目所有者要求海洋区域继续完整显示三张卡片，`Tidy Desk` 与 `Signal Garden` 已恢复为公开 `prototype` 档案；其内容允许后续手动维护，但当前不得补造外链或完整能力；
+- 当前公开 Program 为 `pixel-journey`、`tidy-desk` 与 `signal-garden`，生产输出恢复为 15 个 HTML；
 - “拉了么”正式接入仍等待项目所有者提供：状态、技术栈、本人贡献、限制、数据存储/外发边界、真实外部服务、小程序码、视频或 poster。没有这些资料前，M7 内容接入任务保持未完成。

@@ -1,6 +1,6 @@
 # 任务清单 Tasks
 
-更新时间：2026-08-06
+更新时间：2026-08-08
 
 ```text
 [ ] 未开始
@@ -347,15 +347,16 @@ M3～M6.1、Programs、路由、静态输出和世界 0°无回归
 - [x] `M7-06` 实现桌面双栏与移动端“简介 → 外链 → 视频 → 二维码 → 详情”顺序，无 sticky/pin/嵌套主滚动（浏览器证据：375×812 下 header/media/intro 依次为 `y=189/557/795`，两组重叠均为 `0`，`scrollWidth=clientWidth=360`）
 - [ ] `M7-07` 接入“拉了么”真实网页版 `https://pp.nuanzhualife.cn/`，基于项目所有者资料填写技术栈、贡献、限制、隐私和外部服务
   - 已验证该 URL 返回 `HTTP 200` 且公开页面标题为“拉了么”；最终状态、完整技术栈、本人贡献、限制、数据存储/外发边界、小程序码和视频仍缺项目所有者资料，因此本任务保持 `[ ]`，没有以推测内容公开条目。
-- [x] `M7-08` 审核现有 Tidy Desk、Signal Garden 等示例是否为真实本人程序；未确认条目转草稿或在发布前移除（代码/构建证据：两项均为 `draft: true`，对应主详情、Projects 详情和 Sitemap 均不再生成）
+- [x] `M7-08` 明确 Tidy Desk、Signal Garden 的公开边界（项目所有者决定以可后续维护的 `prototype` 原型档案公开；内容保持明确限制和隐私说明，不增加未经确认的外链或后端能力）
 - [x] `M7-09` 确保媒体只在详情页按需加载，不进入首页包；大视频使用独立媒体地址（代码/测试证据：`programSummary()` 只映射平台 kind/label，不含 `qrImage` 或 `media`；首页 HTML 不含媒体组件标记）
 - [x] `M7-10` 更新 Programs 搜索、筛选、SEO、SoftwareApplication 数据、Sitemap 和 `/projects` 兼容测试（代码/浏览器证据：新增平台搜索/筛选，`SoftwareApplication.sameAs`，平台筛选实测 1 条；Sitemap 无草稿/Projects；公开 Projects 兼容页 HTTP 200）
 - [x] `M7-11` 验证外链新标签页安全属性、视频无自动声音、媒体失败不影响正文与主要入口（HTML/测试证据：主入口 `target=_blank`、`rel="noopener noreferrer"`；视频无 autoplay/loop；失败提示与入口相互独立）
-- [x] `M7-12` 验证桌面、375px、键盘、静态详情刷新、控制台和纯静态部署边界（浏览器/命令证据：桌面与 375px 无重叠/横溢；主入口 `:focus-visible=true`；详情刷新标题正确；列表和详情 warn/error 均为空；11/11 静态路由 HTTP 200、未知路由 404、`dist/server=false`）
+- [x] `M7-12` 验证桌面、375px、键盘、静态详情刷新、控制台和纯静态部署边界（浏览器/命令证据：桌面与 375px 无重叠/横溢；主入口 `:focus-visible=true`；详情刷新标题正确；列表和详情 warn/error 均为空；三卡恢复前的 11/11 静态路由 HTTP 200、未知路由 404、`dist/server=false`）
 - [-] `M7-13` DemoRegistry、`Project_Demos`、站内静态组件和 sandbox iframe（按当前真实外链方向延期；未来出现站内交互演示需求时另行恢复，不作为 M7 退出条件）
-- [x] `M7-14` 运行 Astro Check、ESLint、测试、生产构建和静态路由验证（命令证据：Astro Check 45 文件 0 errors/warnings/hints；ESLint 通过；19/19 测试；`npm run build:sites` 通过；Astro 生成 11 个 HTML）
+- [x] `M7-14` 运行 Astro Check、ESLint、测试、生产构建和静态路由验证（历史证据：Astro Check 45 文件 0 errors/warnings/hints；ESLint 通过；19/19 测试；`npm run build:sites` 通过；三卡恢复前 Astro 生成 11 个 HTML）
+- [x] `M7-15` 恢复海洋区域三张 Program 卡片并验证两项原型详情、Projects 兼容路由、Sitemap 与 15 个静态 HTML（代码/构建证据：`tidy-desk`、`signal-garden` 均为 `draft: false` 且保持 `prototype`；首页产物含 3 个 `.porthole` 和三个详情链接；19/19 测试、`npm run build:sites` 通过；Sitemap 收录三个 canonical Program；`dist/` 为 15 个 HTML 且无 `dist/server`）
 
-M7 的 schema、详情布局、媒体/小程序能力、真实性清理、搜索/SEO、静态边界与正式工程验收已经完成；由于 `M7-07` 所需的“拉了么”真实资料未齐，阶段仍保持部分完成。当前最应该执行的下一任务是由项目所有者提供该条目的内容与媒体资料，再发布真实 Program，而不是扩建新的展示系统。
+M7 的 schema、详情布局、媒体/小程序能力、搜索/SEO、三张海洋 Program 卡片和静态边界已经完成并验证；`Tidy Desk` 与 `Signal Garden` 当前作为可继续维护的原型档案公开。由于 `M7-07` 所需的“拉了么”真实资料未齐，阶段仍保持部分完成。
 
 ## M8：质量
 
