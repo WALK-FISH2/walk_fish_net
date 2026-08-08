@@ -18,6 +18,10 @@ tags:
   - 叙事交互
 demoType: external-live
 demoUrl: /
+platforms:
+  - kind: web
+    label: 打开网页版
+    url: https://pixel-walk-journey-2026.free-fish.chatgpt.site/
 ownerContribution:
   - 信息架构与内容结构设计
   - Astro 静态站点开发

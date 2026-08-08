@@ -303,6 +303,75 @@ Programs 卡片仍保留 terminal、probe、capsule 三种视觉外形、原有�
 - `docs/engineering/testing-strategy.md`
 - `docs/engineering/adjustment_record.md`
 
+## 13. 2026-08-08 M7 真实 Programs 组合展示系统
+
+### 13.1 调整范围与真实性边界
+
+本轮只调整 Programs 内容模型、详情页、搜索筛选、SEO、静态输出测试和相关文档，没有修改首页场景进度、Canvas 美术、文章内容或 `/about`。已上线程序继续通过外部 HTTPS 入口运行，主站不代理其 API，也不引入 Node 请求期运行时。
+
+“拉了么”入口 `https://pp.nuanzhualife.cn/` 已由只读请求验证为 `HTTP 200`，公开 HTML 标题为“拉了么”。由于最终状态、完整技术栈、本人贡献、限制、数据存储/外发边界、小程序码、视频和 poster 尚未由项目所有者提供，本轮没有把推测内容写成公开 Program。`Tidy Desk` 与 `Signal Garden` 未获得真实性确认，统一改为 `draft: true`。
+
+### 13.2 内容模型参数
+
+| 项目 | 实现 |
+| --- | --- |
+| 主要演示兼容 | 保留 `demoType`、`demoUrl` |
+| 平台类型 | `web`、`wechat-mini-program` |
+| 媒体类型 | `video`、`gif`、`screenshot` |
+| 媒体方向 | `portrait`、`landscape` |
+| 网页版 URL | 强制完整 `https://` URL |
+| 媒体/二维码地址 | 只允许站内绝对路径 `/...` 或 `https://...` |
+| 小程序必填 | `label`、`qrImage`、`description`、`alt` |
+| 视频必填 | `src`、`orientation`、`caption`；`poster` 可选 |
+| 摘要边界 | `ProgramSummary` 只映射平台 `kind/label`，不含二维码或媒体 |
+| 详情边界 | `ProgramDetail` 才包含完整 `platforms/media` |
+
+### 13.3 详情页布局与媒体参数
+
+| 参数 | 值 |
+| --- | --- |
+| 桌面列宽 | `minmax(0, 1.15fr) minmax(280px, 0.85fr)` |
+| 桌面行距 | `44px` |
+| 桌面列距 | `clamp(28px, 5vw, 72px)` |
+| 移动断点 | `767px` |
+| 移动顺序 | header → media → intro → lower details |
+| 竖屏媒体 | `aspect-ratio: 9 / 16`、`object-fit: contain` |
+| 媒体最大高度 | `70svh` |
+| 横屏视频 | `aspect-ratio: 16 / 9` |
+| 二维码显示宽度 | `min(240px, 100%)`，白底 `8px` 内边距 |
+| 视频加载 | `controls`、`playsinline`、`preload="metadata"`；无 autoplay/loop |
+| 失败提示 | 视频 error 后显示诚实状态；网页版入口与正文保持可用 |
+| 外链安全 | `target="_blank"` + `rel="noopener noreferrer"` |
+
+“打开网页版”现在位于标题、简介、状态与技术标签之后，长篇正文之前。媒体栏不使用 sticky、pin 或内部滚动容器；Program 目录在该详情页也改为普通文档流。
+
+### 13.4 搜索、SEO 与静态输出
+
+- Programs 搜索文本包含平台种类和标签，新增“平台”筛选；
+- SoftwareApplication 的 canonical 仍为本站详情页，真实外部网页版进入 `sameAs`；
+- Sitemap 继续排除 `/projects`，并自动排除草稿；
+- 首页只接收轻量摘要，不出现 `data-program-media-root`、视频或小程序二维码组件；
+- 当前公开 Program 只有 `pixel-journey`，静态 HTML 从 15 个变为 11 个：9 个主页面和 2 个 Projects 兼容页。
+
+### 13.5 浏览器与工程证据
+
+| 验证 | 结果 |
+| --- | --- |
+| 桌面 1280×720 | 左栏 `642×390px`，右栏 `474×217px`；无重叠；主入口位于长文前 |
+| 375×812 | header/media/intro 的 Y 为 `189/557/795px`；两组重叠均为 `0` |
+| 移动横向溢出 | `scrollWidth=clientWidth=360px` |
+| 键盘 | 主入口 `tabIndex=0` 且 `:focus-visible=true` |
+| 静态刷新 | `/programs/pixel-journey/` 刷新后标题与主入口正常 |
+| 平台筛选 | 选择 `web` 后显示“找到 1 条记录” |
+| 控制台 | Programs 列表与详情 warn/error 均为空 |
+| Astro Check | 45 文件，0 errors / 0 warnings / 0 hints |
+| ESLint | 通过 |
+| 自动化测试 | 19/19 通过 |
+| 生产/Sites 构建 | `npm run build:sites` 通过 |
+| 静态路由 | 11/11 HTTP 200，未知路由 404，`dist/server=false` |
+
+本轮 M7 核心展示能力已完成；阶段没有宣告全部完成，唯一实质阻塞是 `M7-07` 的真实“拉了么”内容与媒体资料。
+
 ## 12. 2026-08-06 M6.3 普通内容页纵向滚动修复
 
 ### 12.1 根因、范围与不变量

@@ -43,5 +43,5 @@ technicalApproach:
   - PWA 提供离线使用方向
   - 数据模型优先考虑可导出与可恢复
 demoDescription: 本轮只展示界面和数据流程说明，不会模拟已经接通的账号、数据库或云同步结果。
-draft: false
+draft: true
 ---

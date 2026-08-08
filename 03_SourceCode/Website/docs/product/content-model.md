@@ -31,7 +31,7 @@ draft: false
 兼容路由：/projects/、/projects/<slug>/
 ```
 
-## 3. 当前内容格式示例
+## 3. 当前草稿内容格式示例
 
 以下内容用于说明现有 schema，不代表该 Program 已通过真实性审核。Tidy Desk、Signal Garden 等示例在 M7 接入真实内容前必须由项目所有者确认；未确认条目应保持草稿或在发布前移除。
 
@@ -82,7 +82,7 @@ technicalApproach:
   - React 管理界面状态
   - IndexedDB 作为本地数据层
 demoDescription: 本轮只展示界面和数据流程说明。
-draft: false
+draft: true
 ```
 
 ## 4. Program 必填字段
@@ -107,7 +107,7 @@ draft: false
 | `coreFeatures` | string[] | 核心功能 |
 | `technicalApproach` | string[] | 技术方案 |
 
-当前代码可选字段：`startDate`、`endDate`、`demoUrl`、`sourceUrl`、`demoDescription`。
+当前代码可选字段：`startDate`、`endDate`、`demoUrl`、`sourceUrl`、`demoDescription`、`platforms`、`media`。
 
 ## 5. ProgramStatus
 
@@ -158,9 +158,9 @@ none
 
 不得用假数据伪装接口成功、登录完成、支付成功、实时同步或已经存在的后端能力。
 
-## 8. M7 组合入口与媒体目标模型
+## 8. M7 组合入口与媒体模型
 
-> 本节是 2026-08-06 已确认但尚未写入 schema 的 M7 目标模型。完成代码迁移前，`src/content.config.ts` 仍以现有字段为准。
+> 本节模型已于 2026-08-08 写入 `src/content.config.ts`、`src/types/content.ts` 与详情页组件。`demoType`/`demoUrl` 继续兼容旧内容，`platforms`/`media` 为可选组合字段。
 
 `demoType` 和 `demoUrl` 继续表示 Program 的主要演示方式与主要地址，供列表筛选、主要按钮和现有内容兼容。一个 Program 需要同时展示网页版、微信小程序、视频或截图时，使用可选数组：
 
@@ -176,6 +176,7 @@ platforms:
     label: 微信小程序
     qrImage: /programs/laleme/wechat-qr.png
     description: 微信扫码打开小程序
+    alt: 拉了么微信小程序码
 
 media:
   - type: video
@@ -202,6 +203,8 @@ ProgramMediaOrientation = portrait | landscape
 - 大视频优先引用独立媒体托管地址，二维码、poster 和截图可作为优化后的静态资源；
 - 媒体缺失或失败不影响正文与主要外链；
 - 这些资源只在 Program 详情页按需加载，不进入首页初始包。
+
+内容读取分为两层：列表和首页使用 `ProgramSummary`，只携带平台种类与标签，不携带二维码和媒体地址；详情页使用 `ProgramDetail`，才包含完整 `platforms` 和 `media`。因此新增竖屏视频或小程序码不会被序列化进首页 React island。
 
 ## 9. Privacy
 

@@ -340,21 +340,22 @@ M3～M6.1、Programs、路由、静态输出和世界 0°无回归
 ## M7：真实 Programs 展示系统
 
 - [x] `M7-01` 确认真实 Program 接入方向、详情页优先级与 `Project_Demos` 非强制边界（证据：`docs/product/m7-real-program-showcase-spec.md`；项目所有者确认“打开网页版”紧跟简介、位于长篇正文之前）
-- [ ] `M7-02` 扩展 Program schema：保留 `demoType`/`demoUrl`，增加可选 `platforms` 与 `media`
-- [ ] `M7-03` 重排 Program 详情首屏：标题/简介后立即显示“打开网页版”，桌面左文右媒体
-- [ ] `M7-04` 实现 9:16 竖屏视频、poster、controls、playsinline、metadata 预载与诚实失败状态
-- [ ] `M7-05` 实现微信小程序入口、二维码、替代文本和扫码说明
-- [ ] `M7-06` 实现桌面双栏与移动端“简介 → 外链 → 视频 → 二维码 → 详情”顺序，无 sticky/pin/嵌套主滚动
+- [x] `M7-02` 扩展 Program schema：保留 `demoType`/`demoUrl`，增加可选 `platforms` 与 `media`（代码证据：`src/content.config.ts` 的判别联合与 HTTPS/媒体地址校验；`ProgramSummary`/`ProgramDetail` 分层；Astro Check 0/0/0）
+- [x] `M7-03` 重排 Program 详情首屏：标题/简介后立即显示“打开网页版”，桌面左文右媒体（代码/浏览器证据：`ProgramDetailLayout.astro`；1280×720 下左栏 `642px`、右栏 `474px`，主按钮位于长文之前且无相交）
+- [x] `M7-04` 实现 9:16 竖屏视频、poster、controls、playsinline、metadata 预载与诚实失败状态（代码/测试证据：`ProgramDemo.astro`、`.program-media--portrait`；无 autoplay/loop，19/19 测试锁定属性和失败提示）
+- [x] `M7-05` 实现微信小程序入口、二维码、替代文本和扫码说明（代码/测试证据：`wechat-mini-program` schema 强制 `qrImage`、`description`、`alt`，组件使用 lazy/async 图片；真实码尚待 `M7-07` 内容资料）
+- [x] `M7-06` 实现桌面双栏与移动端“简介 → 外链 → 视频 → 二维码 → 详情”顺序，无 sticky/pin/嵌套主滚动（浏览器证据：375×812 下 header/media/intro 依次为 `y=189/557/795`，两组重叠均为 `0`，`scrollWidth=clientWidth=360`）
 - [ ] `M7-07` 接入“拉了么”真实网页版 `https://pp.nuanzhualife.cn/`，基于项目所有者资料填写技术栈、贡献、限制、隐私和外部服务
-- [ ] `M7-08` 审核现有 Tidy Desk、Signal Garden 等示例是否为真实本人程序；未确认条目转草稿或在发布前移除
-- [ ] `M7-09` 确保媒体只在详情页按需加载，不进入首页包；大视频使用独立媒体地址
-- [ ] `M7-10` 更新 Programs 搜索、筛选、SEO、SoftwareApplication 数据、Sitemap 和 `/projects` 兼容测试
-- [ ] `M7-11` 验证外链新标签页安全属性、视频无自动声音、媒体失败不影响正文与主要入口
-- [ ] `M7-12` 验证桌面、375px、键盘、静态详情刷新、控制台和纯静态部署边界
+  - 已验证该 URL 返回 `HTTP 200` 且公开页面标题为“拉了么”；最终状态、完整技术栈、本人贡献、限制、数据存储/外发边界、小程序码和视频仍缺项目所有者资料，因此本任务保持 `[ ]`，没有以推测内容公开条目。
+- [x] `M7-08` 审核现有 Tidy Desk、Signal Garden 等示例是否为真实本人程序；未确认条目转草稿或在发布前移除（代码/构建证据：两项均为 `draft: true`，对应主详情、Projects 详情和 Sitemap 均不再生成）
+- [x] `M7-09` 确保媒体只在详情页按需加载，不进入首页包；大视频使用独立媒体地址（代码/测试证据：`programSummary()` 只映射平台 kind/label，不含 `qrImage` 或 `media`；首页 HTML 不含媒体组件标记）
+- [x] `M7-10` 更新 Programs 搜索、筛选、SEO、SoftwareApplication 数据、Sitemap 和 `/projects` 兼容测试（代码/浏览器证据：新增平台搜索/筛选，`SoftwareApplication.sameAs`，平台筛选实测 1 条；Sitemap 无草稿/Projects；公开 Projects 兼容页 HTTP 200）
+- [x] `M7-11` 验证外链新标签页安全属性、视频无自动声音、媒体失败不影响正文与主要入口（HTML/测试证据：主入口 `target=_blank`、`rel="noopener noreferrer"`；视频无 autoplay/loop；失败提示与入口相互独立）
+- [x] `M7-12` 验证桌面、375px、键盘、静态详情刷新、控制台和纯静态部署边界（浏览器/命令证据：桌面与 375px 无重叠/横溢；主入口 `:focus-visible=true`；详情刷新标题正确；列表和详情 warn/error 均为空；11/11 静态路由 HTTP 200、未知路由 404、`dist/server=false`）
 - [-] `M7-13` DemoRegistry、`Project_Demos`、站内静态组件和 sandbox iframe（按当前真实外链方向延期；未来出现站内交互演示需求时另行恢复，不作为 M7 退出条件）
-- [ ] `M7-14` 运行 Astro Check、ESLint、测试、生产构建和静态路由验证
+- [x] `M7-14` 运行 Astro Check、ESLint、测试、生产构建和静态路由验证（命令证据：Astro Check 45 文件 0 errors/warnings/hints；ESLint 通过；19/19 测试；`npm run build:sites` 通过；Astro 生成 11 个 HTML）
 
-M7 只有需求与文档基线已完成；schema、详情页、真实内容与验证均未实施，阶段保持未完成。
+M7 的 schema、详情布局、媒体/小程序能力、真实性清理、搜索/SEO、静态边界与正式工程验收已经完成；由于 `M7-07` 所需的“拉了么”真实资料未齐，阶段仍保持部分完成。当前最应该执行的下一任务是由项目所有者提供该条目的内容与媒体资料，再发布真实 Program，而不是扩建新的展示系统。
 
 ## M8：质量
 

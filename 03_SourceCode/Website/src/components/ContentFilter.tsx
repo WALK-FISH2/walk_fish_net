@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { sitePath } from "../config/site.config";
-import { PROGRAM_STATUS_LABELS, type ArticleSummary, type ProgramStatus, type ProgramSummary } from "../types/content";
+import { PROGRAM_PLATFORM_LABELS, PROGRAM_STATUS_LABELS, type ArticleSummary, type ProgramPlatformKind, type ProgramStatus, type ProgramSummary } from "../types/content";
 
 type Props = { kind: "article"; items: ArticleSummary[] } | { kind: "program"; items: ProgramSummary[] };
 
@@ -38,18 +38,21 @@ export function ContentFilter(props: Props) {
   const [tag, setTag] = useState("全部");
   const [status, setStatus] = useState("全部");
   const [category, setCategory] = useState("全部");
+  const [platform, setPlatform] = useState("全部");
   const tags = useMemo(() => ["全部", ...new Set(props.items.flatMap((item) => item.kind === "article" ? item.tags : [...item.stack, ...item.tags]))], [props.items]);
   const statuses = useMemo(() => props.kind === "program" ? ["全部", ...new Set(props.items.map((item) => item.status))] : [], [props]);
   const categories = useMemo(() => props.kind === "program" ? ["全部", ...new Set(props.items.map((item) => item.category))] : [], [props]);
+  const platforms = useMemo(() => props.kind === "program" ? ["全部", ...new Set(props.items.flatMap((item) => item.platforms.map((entry) => entry.kind)))] : [], [props]);
   const filtered = props.items.filter((item) => {
     const text = item.kind === "article"
       ? `${item.title} ${item.description} ${item.tags.join(" ")}`
-      : `${item.title} ${item.summary} ${item.category} ${item.stack.join(" ")} ${item.tags.join(" ")} ${item.ownerContribution.join(" ")}`;
+      : `${item.title} ${item.summary} ${item.category} ${item.stack.join(" ")} ${item.tags.join(" ")} ${item.ownerContribution.join(" ")} ${item.platforms.map((entry) => `${entry.kind} ${entry.label}`).join(" ")}`;
     const itemTags = item.kind === "article" ? item.tags : [...item.stack, ...item.tags];
     return text.toLowerCase().includes(query.trim().toLowerCase())
       && (tag === "全部" || itemTags.includes(tag))
       && (item.kind === "article" || status === "全部" || item.status === status)
-      && (item.kind === "article" || category === "全部" || item.category === category);
+      && (item.kind === "article" || category === "全部" || item.category === category)
+      && (item.kind === "article" || platform === "全部" || item.platforms.some((entry) => entry.kind === platform));
   });
 
   return (
@@ -59,6 +62,7 @@ export function ContentFilter(props: Props) {
         <label><span>{props.kind === "article" ? "标签" : "标签 / 技术栈"}</span><select value={tag} onChange={(event) => setTag(event.target.value)}>{tags.map((item) => <option key={item}>{item}</option>)}</select></label>
         {props.kind === "program" && <label><span>状态</span><select value={status} onChange={(event) => setStatus(event.target.value)}>{statuses.map((item) => <option key={item} value={item}>{item === "全部" ? item : PROGRAM_STATUS_LABELS[item as ProgramStatus]}</option>)}</select></label>}
         {props.kind === "program" && <label><span>分类</span><select value={category} onChange={(event) => setCategory(event.target.value)}>{categories.map((item) => <option key={item}>{item}</option>)}</select></label>}
+        {props.kind === "program" && <label><span>平台</span><select value={platform} onChange={(event) => setPlatform(event.target.value)}>{platforms.map((item) => <option key={item} value={item}>{item === "全部" ? item : PROGRAM_PLATFORM_LABELS[item as ProgramPlatformKind]}</option>)}</select></label>}
       </div>
       <p className="result-count" aria-live="polite">找到 {filtered.length} 条记录</p>
       {filtered.length > 0 ? (

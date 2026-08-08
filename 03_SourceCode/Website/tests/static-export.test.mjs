@@ -25,16 +25,12 @@ const primaryRoutes = [
   ["dist/articles/small-tools/index.html", "小工具也值得被认真记录"],
   ["dist/programs/index.html", "做点啥呢"],
   ["dist/programs/pixel-journey/index.html", "像素漫游个人站"],
-  ["dist/programs/signal-garden/index.html", "Signal Garden"],
-  ["dist/programs/tidy-desk/index.html", "Tidy Desk"],
   ["dist/404.html", "LOST COORDINATES"],
 ];
 
 const legacyRoutes = [
   ["dist/projects/index.html", "/programs/"],
   ["dist/projects/pixel-journey/index.html", "/programs/pixel-journey/"],
-  ["dist/projects/signal-garden/index.html", "/programs/signal-garden/"],
-  ["dist/projects/tidy-desk/index.html", "/programs/tidy-desk/"],
 ];
 
 test("emits independent HTML for every primary and compatibility route", async () => {
@@ -52,7 +48,7 @@ test("emits independent HTML for every primary and compatibility route", async (
   }
 
   const outputEntries = await readdir(new URL("dist/", root), { recursive: true });
-  assert.equal(outputEntries.filter((entry) => entry.endsWith(".html")).length, 15);
+  assert.equal(outputEntries.filter((entry) => entry.endsWith(".html")).length, 11);
 });
 
 test("program pages expose the required domain content without claiming missing services", async () => {
@@ -66,26 +62,21 @@ test("program pages expose the required domain content without claiming missing 
     "当前限制",
     "数据和隐私说明",
   ];
-  const [pixelJourney, tidyDesk, signalGarden, home] = await Promise.all([
+  const [pixelJourney, home, programDemo] = await Promise.all([
     readFile(new URL("dist/programs/pixel-journey/index.html", root), "utf8"),
-    readFile(new URL("dist/programs/tidy-desk/index.html", root), "utf8"),
-    readFile(new URL("dist/programs/signal-garden/index.html", root), "utf8"),
     readFile(new URL("dist/index.html", root), "utf8"),
+    readFile(new URL("src/components/ProgramDemo.astro", root), "utf8"),
   ]);
 
-  for (const html of [pixelJourney, tidyDesk, signalGarden]) {
-    for (const section of requiredSections) assert.match(html, new RegExp(section));
-    assert.match(html, /SoftwareApplication/);
-    assert.match(html, /\/programs\//);
-  }
+  for (const section of requiredSections) assert.match(pixelJourney, new RegExp(section));
+  assert.match(pixelJourney, /SoftwareApplication/);
+  assert.match(pixelJourney, /\/programs\//);
 
   const staticDisclaimer = "这是静态演示版，部分后端、数据库、登录或实时功能未接入。";
-  assert.match(tidyDesk, new RegExp(staticDisclaimer));
+  assert.match(programDemo, new RegExp(staticDisclaimer));
   assert.doesNotMatch(home, new RegExp(staticDisclaimer));
   assert.match(home, /在线程序/);
-  assert.match(home, /静态前端演示/);
   assert.match(home, /当前限制/);
-  assert.match(signalGarden, /当前没有可公开访问的程序演示/);
 });
 
 test("static output has no Node server runtime and sitemap favors canonical routes", async () => {
@@ -106,21 +97,73 @@ test("static output has no Node server runtime and sitemap favors canonical rout
 test("keeps content, SEO, motion modes, and migrated source boundaries", async () => {
   const [home, program, css, contentConfig, baseLayout] = await Promise.all([
     readFile(new URL("dist/index.html", root), "utf8"),
-    readFile(new URL("dist/programs/tidy-desk/index.html", root), "utf8"),
+    readFile(new URL("dist/programs/pixel-journey/index.html", root), "utf8"),
     readFile(new URL("src/styles/global.css", root), "utf8"),
     readFile(new URL("src/content.config.ts", root), "utf8"),
     readFile(new URL("src/layouts/BaseLayout.astro", root), "utf8"),
   ]);
   assert.match(home, /aria-label="旅程阶段"/);
-  assert.match(home, /\/programs\/tidy-desk\//);
-  assert.match(program, /rel="canonical"[^>]+\/programs\/tidy-desk\//);
+  assert.match(home, /\/programs\/pixel-journey\//);
+  assert.match(program, /rel="canonical"[^>]+\/programs\/pixel-journey\//);
   assert.match(program, /og:image/);
   assert.match(css, /html\[data-motion-mode="reduce"\]/);
   assert.match(baseLayout, /prefers-reduced-motion: reduce/);
   assert.match(baseLayout, /data-motion-mode="full"/);
   assert.match(contentConfig, /const programs = defineCollection/);
   assert.doesNotMatch(contentConfig, /const projects = defineCollection/);
-  await access(new URL("src/content/programs/tidy-desk.md", root));
+  await access(new URL("src/content/programs/pixel-journey.md", root));
+});
+
+test("implements M7 Programs platforms, detail-first actions, media isolation, and truthful publishing", async () => {
+  const [program, home, contentConfig, types, contentLib, layout, demo, css, sitemap, tidyDesk, signalGarden] = await Promise.all([
+    readFile(new URL("dist/programs/pixel-journey/index.html", root), "utf8"),
+    readFile(new URL("dist/index.html", root), "utf8"),
+    readFile(new URL("src/content.config.ts", root), "utf8"),
+    readFile(new URL("src/types/content.ts", root), "utf8"),
+    readFile(new URL("src/lib/content.ts", root), "utf8"),
+    readFile(new URL("src/layouts/ProgramDetailLayout.astro", root), "utf8"),
+    readFile(new URL("src/components/ProgramDemo.astro", root), "utf8"),
+    readFile(new URL("src/styles/global.css", root), "utf8"),
+    readFile(new URL("dist/sitemap-0.xml", root), "utf8"),
+    readFile(new URL("src/content/programs/tidy-desk.md", root), "utf8"),
+    readFile(new URL("src/content/programs/signal-garden.mdx", root), "utf8"),
+  ]);
+
+  assert.match(contentConfig, /const programPlatform = z\.discriminatedUnion\("kind"/);
+  assert.match(contentConfig, /kind: z\.literal\("web"\)[\s\S]*?url: httpsUrl/);
+  assert.match(contentConfig, /kind: z\.literal\("wechat-mini-program"\)[\s\S]*?qrImage: mediaSource[\s\S]*?alt: z\.string\(\)\.min\(1\)/);
+  assert.match(contentConfig, /const programMedia = z\.discriminatedUnion\("type"/);
+  assert.match(contentConfig, /orientation: z\.enum\(\["portrait", "landscape"\]\)/);
+  assert.match(types, /export interface ProgramDetail extends ProgramSummary/);
+  assert.match(contentLib, /export function programDetail/);
+  const summarySource = contentLib.match(/export function programSummary[\s\S]*?\n\}/)?.[0] ?? "";
+  assert.match(summarySource, /platforms: entry\.data\.platforms\.map/);
+  assert.doesNotMatch(summarySource, /qrImage|\.media/);
+
+  const actionIndex = program.indexOf("打开网页版");
+  const whatIndex = program.indexOf("这是什么程序");
+  assert.ok(actionIndex > 0 && actionIndex < whatIndex, "primary web action precedes long-form content");
+  assert.match(program, /href="https:\/\/pixel-walk-journey-2026\.free-fish\.chatgpt\.site\/"[^>]*target="_blank"[^>]*rel="noopener noreferrer"/);
+  assert.match(layout, /grid-area|program-showcase__media/);
+  assert.match(layout, /sameAs: externalProgramUrls/);
+
+  assert.match(demo, /<video[\s\S]*?controls[\s\S]*?playsinline[\s\S]*?preload="metadata"/);
+  assert.doesNotMatch(demo, /<video[^>]*\bautoplay\b/);
+  assert.doesNotMatch(demo, /<video[^>]*\bloop\b/);
+  assert.match(demo, /data-media-error/);
+  assert.match(demo, /platform\.alt/);
+  assert.match(demo, /loading="lazy"/);
+  assert.match(css, /grid-template-columns:\s*minmax\(0, 1\.15fr\) minmax\(280px, 0\.85fr\)/);
+  assert.match(css, /max-height:\s*70svh/);
+  assert.match(css, /aspect-ratio:\s*9 \/ 16/);
+  assert.match(css, /@media \(max-width:\s*767px\)[\s\S]*?grid-template-areas:[\s\S]*?"header"[\s\S]*?"media"[\s\S]*?"intro"/);
+
+  assert.doesNotMatch(home, /data-program-media-root|data-program-video|program-platform-card--wechat/);
+  assert.match(tidyDesk, /draft:\s*true/);
+  assert.match(signalGarden, /draft:\s*true/);
+  await assert.rejects(access(new URL("dist/programs/tidy-desk/index.html", root)));
+  await assert.rejects(access(new URL("dist/programs/signal-garden/index.html", root)));
+  assert.doesNotMatch(sitemap, /tidy-desk|signal-garden|\/projects(?:\/|<)/);
 });
 
 test("keeps ordinary content pages vertically scrollable and restores mobile menu locking", async () => {

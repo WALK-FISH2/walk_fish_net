@@ -1,5 +1,5 @@
 import type { CollectionEntry } from "astro:content";
-import type { ArticleSummary, ProgramSummary } from "../types/content";
+import type { ArticleSummary, ProgramDetail, ProgramSummary } from "../types/content";
 
 export function entrySlug(entry: CollectionEntry<"articles"> | CollectionEntry<"programs">) {
   const explicit = "slug" in entry.data ? entry.data.slug : undefined;
@@ -38,6 +38,7 @@ export function programSummary(entry: CollectionEntry<"programs">): ProgramSumma
     demoType: entry.data.demoType,
     demoUrl: entry.data.demoUrl || undefined,
     sourceUrl: entry.data.sourceUrl || undefined,
+    platforms: entry.data.platforms.map(({ kind, label }) => ({ kind, label })),
     ownerContribution: entry.data.ownerContribution,
     limitations: entry.data.limitations,
     privacy: entry.data.privacy,
@@ -46,6 +47,14 @@ export function programSummary(entry: CollectionEntry<"programs">): ProgramSumma
     coreFeatures: entry.data.coreFeatures,
     technicalApproach: entry.data.technicalApproach,
     demoDescription: entry.data.demoDescription,
+  };
+}
+
+export function programDetail(entry: CollectionEntry<"programs">): ProgramDetail {
+  return {
+    ...programSummary(entry),
+    platforms: entry.data.platforms,
+    media: entry.data.media,
   };
 }
 

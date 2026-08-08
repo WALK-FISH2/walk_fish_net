@@ -1,7 +1,7 @@
 ---
 import { getCollection, type CollectionEntry } from "astro:content";
 import ProgramDetailLayout from "../../layouts/ProgramDetailLayout.astro";
-import { entrySlug, programSummary, sortPrograms } from "../../lib/content";
+import { entrySlug, programDetail, programSummary, sortPrograms } from "../../lib/content";
 
 export async function getStaticPaths() {
   const entries = sortPrograms(await getCollection("programs", ({ data }) => !data.draft));
@@ -21,7 +21,7 @@ const { entry, previous, next } = Astro.props;
 ---
 
 <ProgramDetailLayout
-  program={programSummary(entry)}
+  program={programDetail(entry)}
   previous={previous ? programSummary(previous) : undefined}
   next={next ? programSummary(next) : undefined}
 />

@@ -1,7 +1,8 @@
 # M7 真实 Programs 展示系统规格
 
-状态：需求已确认，尚未修改代码或内容数据  
+状态：核心展示能力已实现；“拉了么”内容资料尚待项目所有者补充
 确认日期：2026-08-06
+实现对账：2026-08-08
 
 ## 1. 产品方向
 
@@ -14,6 +15,8 @@
 - 只有未来确实需要站内静态交互演示时，才评估 `Project_Demos`、DemoRegistry 和 sandbox iframe。
 
 首个计划接入的真实程序是“拉了么”，已知网页版为 `https://pp.nuanzhualife.cn/`。微信小程序码、演示视频、技术栈、本人贡献、限制、隐私和外部服务必须由项目所有者提供真实资料后再写入内容，不能推测或补造。
+
+2026-08-08 已通过只读 HTTP 请求确认该网址返回 `200 OK`，公开页面标题为“拉了么”，页面可见“附近厕所”、城市、地点、半径、定位和结果列表等界面；这些公开事实仍不足以确认最终状态、完整技术栈、本人负责范围、数据存储方式和隐私边界，因此本轮不把“拉了么”写成公开 Program 条目。
 
 ## 2. Program 详情页首屏优先级
 
@@ -64,6 +67,7 @@ platforms:
     label: 微信小程序
     qrImage: /programs/laleme/wechat-qr.png
     description: 微信扫码打开小程序
+    alt: 拉了么微信小程序码
 
 media:
   - type: video
@@ -123,3 +127,11 @@ ProgramMediaOrientation: portrait | landscape
 - 真实 Program 内容、本人贡献、限制和隐私已经人工确认；
 - 搜索、筛选、SEO、Sitemap、旧路由兼容、375px、键盘与静态刷新通过；
 - Astro Check、ESLint、测试、生产构建和纯静态路由验证通过。
+
+## 9. 2026-08-08 实施状态
+
+- 已实现 `platforms`/`media` schema、摘要/详情数据分层、首要网页版入口、桌面双栏、375px 单列、视频失败提示、小程序码组件、平台搜索筛选和 SoftwareApplication 外部地址；
+- 视频使用原生 controls、`playsinline`、`preload="metadata"`，没有 autoplay 或 loop；竖屏媒体使用 `9:16` 与 `max-height: 70svh`；
+- `Tidy Desk` 与 `Signal Garden` 因未获得真实性确认已设为 `draft: true`，不进入列表、首页、详情路由或 Sitemap；
+- 当前公开 Program 只保留已有真实站点“像素漫游个人站”，因此生产输出由 15 个 HTML 调整为 11 个 HTML；
+- “拉了么”正式接入仍等待项目所有者提供：状态、技术栈、本人贡献、限制、数据存储/外发边界、真实外部服务、小程序码、视频或 poster。没有这些资料前，M7 内容接入任务保持未完成。

@@ -1,18 +1,83 @@
 ---
 import { sitePath } from "../config/site.config";
-import type { ProgramSummary } from "../types/content";
+import type { ProgramDetail, ProgramMedia } from "../types/content";
 
 interface Props {
-  program: ProgramSummary;
+  program: ProgramDetail;
 }
 
 const { program } = Astro.props;
 const demoHref = program.demoUrl ? sitePath(program.demoUrl) : undefined;
-const opensNewTab = Boolean(demoHref && /^https?:/i.test(demoHref));
+const wechatPlatforms = program.platforms.filter((platform) => platform.kind === "wechat-mini-program");
+const legacyMedia: ProgramMedia[] = demoHref && program.media.length === 0
+  ? program.demoType === "video"
+    ? [{ type: "video", src: demoHref, orientation: "landscape", caption: `${program.title} 演示视频` }]
+    : program.demoType === "gif"
+      ? [{ type: "gif", src: demoHref, orientation: "landscape", alt: `${program.title} GIF 演示` }]
+      : program.demoType === "screenshots"
+        ? [{ type: "screenshot", src: demoHref, orientation: "landscape", alt: `${program.title} 程序截图` }]
+        : []
+  : [];
+const mediaItems = program.media.length > 0 ? program.media : legacyMedia;
+const hasShowcase = mediaItems.length > 0 || wechatPlatforms.length > 0;
 ---
 
-<div class="program-demo" data-demo-type={program.demoType}>
-  {program.demoType === "static-embedded" && (
+<div class="program-demo" data-demo-type={program.demoType} data-program-media-root>
+  {mediaItems.length > 0 && (
+    <div class="program-media-list">
+      {mediaItems.map((media) => (
+        <figure class:list={["program-media", `program-media--${media.type}`, `program-media--${media.orientation}`]}>
+          {media.type === "video" ? (
+            <>
+              <video
+                controls
+                playsinline
+                preload="metadata"
+                src={sitePath(media.src)}
+                poster={media.poster ? sitePath(media.poster) : undefined}
+                title={media.caption}
+                data-program-video
+              >
+                当前浏览器无法播放该演示视频。
+              </video>
+              <p class="program-media__error" role="status" hidden data-media-error>
+                演示视频暂时无法加载；网页版入口和项目说明仍可正常使用。
+              </p>
+            </>
+          ) : (
+            <img
+              src={sitePath(media.src)}
+              alt={media.alt}
+              loading="lazy"
+              decoding="async"
+            />
+          )}
+          {media.caption && <figcaption>{media.caption}</figcaption>}
+        </figure>
+      ))}
+    </div>
+  )}
+
+  {wechatPlatforms.length > 0 && (
+    <div class="program-platform-list" aria-label="小程序入口">
+      {wechatPlatforms.map((platform) => (
+        <section class="program-platform-card program-platform-card--wechat">
+          <p class="program-platform-card__label">{platform.label}</p>
+          <img
+            src={sitePath(platform.qrImage)}
+            alt={platform.alt}
+            width="240"
+            height="240"
+            loading="lazy"
+            decoding="async"
+          />
+          <p>{platform.description}</p>
+        </section>
+      ))}
+    </div>
+  )}
+
+  {!hasShowcase && program.demoType === "static-embedded" && (
     <div class="program-demo__static">
       <p class="program-demo__notice">这是静态演示版，部分后端、数据库、登录或实时功能未接入。</p>
       {program.demoDescription && <p>{program.demoDescription}</p>}
@@ -20,37 +85,49 @@ const opensNewTab = Boolean(demoHref && /^https?:/i.test(demoHref));
     </div>
   )}
 
-  {program.demoType === "external-live" && (
+  {!hasShowcase && program.demoType === "external-live" && (
     <div class="program-demo__external">
-      <p>{program.demoDescription ?? "该程序提供可访问的在线版本。"}</p>
-      {demoHref
-        ? <a class="pixel-button pixel-button--primary" href={demoHref} target={opensNewTab ? "_blank" : undefined} rel={opensNewTab ? "noreferrer" : undefined}>打开在线程序</a>
-        : <p class="program-demo__notice">在线地址尚未公开。</p>}
+      <p class="program-demo__notice">演示媒体待补充；网页版入口和项目说明仍可正常使用。</p>
+      {program.demoDescription && <p>{program.demoDescription}</p>}
     </div>
   )}
 
-  {program.demoType === "video" && (
-    demoHref
-      ? <video controls preload="metadata" src={demoHref}>当前浏览器无法播放该演示视频。</video>
-      : <p class="program-demo__notice">演示视频尚未公开。</p>
+  {!hasShowcase && program.demoType === "video" && (
+    <p class="program-demo__notice">演示视频尚未公开。</p>
   )}
 
-  {program.demoType === "gif" && (
-    demoHref
-      ? <img src={demoHref} alt={program.title + " GIF 演示"} loading="lazy" />
-      : <p class="program-demo__notice">GIF 演示尚未公开。</p>
+  {!hasShowcase && program.demoType === "gif" && (
+    <p class="program-demo__notice">GIF 演示尚未公开。</p>
   )}
 
-  {program.demoType === "screenshots" && (
-    demoHref
-      ? <img src={demoHref} alt={program.title + " 程序截图"} loading="lazy" />
-      : <p class="program-demo__notice">程序截图尚未公开。</p>
+  {!hasShowcase && program.demoType === "screenshots" && (
+    <p class="program-demo__notice">程序截图尚未公开。</p>
   )}
 
-  {program.demoType === "none" && (
+  {!hasShowcase && program.demoType === "none" && (
     <div class="program-demo__empty">
       <p>当前没有可公开访问的程序演示。</p>
       {program.demoDescription && <p>{program.demoDescription}</p>}
     </div>
   )}
 </div>
+
+<script>
+  const initializeProgramMedia = () => {
+    document.querySelectorAll<HTMLElement>("[data-program-media-root]").forEach((root) => {
+      if (root.dataset.mediaReady === "true") return;
+      root.dataset.mediaReady = "true";
+      root.querySelectorAll<HTMLVideoElement>("[data-program-video]").forEach((video) => {
+        const error = video.parentElement?.querySelector<HTMLElement>("[data-media-error]");
+        if (!error) return;
+        const showError = () => { error.hidden = false; };
+        const hideError = () => { error.hidden = true; };
+        video.addEventListener("error", showError, { once: true });
+        video.addEventListener("loadedmetadata", hideError, { once: true });
+        if (video.error) showError();
+      });
+    });
+  };
+
+  initializeProgramMedia();
+</script>

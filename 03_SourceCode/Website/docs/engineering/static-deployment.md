@@ -134,7 +134,7 @@ Program 可以链接到独立部署的真实应用：纯前端应用可以使用
 - 外部站点不可用时，主站详情正文、限制和隐私说明仍能静态访问；
 - 未来若增加站内 iframe/静态演示，仍需满足 ADR 0006，但不是当前 M7 的部署前提。
 
-M7 新增真实 Program 后，重新统计独立 HTML 数量并逐一验证 `/programs/<slug>/` 与对应 `/projects/<slug>/` 兼容页；不能继续沿用新增前的 15 个 HTML 数字作为证据。
+M7 每次新增、转草稿或移除 Program 后，都必须重新统计独立 HTML 数量并逐一验证 `/programs/<slug>/` 与对应 `/projects/<slug>/` 兼容页；不能沿用内容变更前的路由数字作为证据。
 
 ## 12. 已验证基线
 
@@ -150,3 +150,14 @@ M7 新增真实 Program 后，重新统计独立 HTML 数量并逐一验证 `/pr
 - `npm run check`：0 errors / 0 warnings / 0 hints；
 - `npm run lint`：通过；
 - `npm test`：4 项测试全部通过。
+
+### 2026-08-08 M7 当前静态基线
+
+- `Tidy Desk` 与 `Signal Garden` 因未经真实性确认改为草稿；当前公开 Program 只有 `pixel-journey`；
+- `npm run build` 与 `npm run build:sites`：成功，正式输出仍为 `dist/`，适配输出为 `sites-dist/`；
+- 当前静态 HTML：11 个，其中 9 个主页面、2 个 Projects 兼容页；
+- 纯静态服务器：11/11 路由为 HTTP 200，未知路由为 HTTP 404；
+- `dist/server` 不存在，外部 Program 后端没有进入主站运行时；
+- Sitemap 包含 `/programs/pixel-journey/`，不包含 `/projects`、`tidy-desk` 或 `signal-garden`；
+- 首页使用 `ProgramSummary`，不包含 `media`、二维码地址或详情媒体组件；
+- Astro Check 45 文件 0 errors / 0 warnings / 0 hints，ESLint 通过，19/19 测试通过。

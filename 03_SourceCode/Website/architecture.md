@@ -1,10 +1,10 @@
 # 技术架构 Architecture
 
-版本：1.13.0
+版本：1.14.0
 
-状态：M6、M6.1、M6.2 与 M6.3 已完成；重整后的 M7 已完成需求基线，尚未修改代码
+状态：M6、M6.1、M6.2 与 M6.3 已完成；M7 组合展示架构已实现，“拉了么”真实内容接入待资料
 
-对账日期：2026-08-06
+对账日期：2026-08-08
 验证基线：Sites 源码仓库的 `3cd17db` 是“迁移到静态 Astro 世界”的提交，包含 Astro 配置、`src/pages/`、内容集合和静态导出测试。本地 Vibe Coding 文档最初位于另一条 Git 历史，因此首次对账时无法解析该提交；发布准备阶段只读获取 Sites 历史后已完成核对。本文结论同时采用 `3cd17db`、当前实现、实际构建和静态服务器结果。
 
 ## 1. 当前结论
@@ -39,7 +39,7 @@ flowchart LR
     Programs["src/content/programs"]
     Pages["src/pages/*.astro"]
     Astro["Astro static build"]
-    HTML["15 个独立 HTML"]
+    HTML["11 个独立 HTML"]
     Assets["浏览器端 JS / CSS / Pixi 场景"]
     Dist["dist/"]
     Host["任意静态文件服务器"]
@@ -78,7 +78,7 @@ src/
 
 ## 5. 静态路由生成
 
-`src/pages/articles/[slug].astro` 和 `src/pages/programs/[slug].astro` 使用 `getStaticPaths()` 在构建期枚举主内容；`src/pages/projects/[slug].astro` 使用同一 Programs slug 集合生成兼容跳转页。当前 `npm run build` 生成以下 15 个 HTML：
+`src/pages/articles/[slug].astro` 和 `src/pages/programs/[slug].astro` 使用 `getStaticPaths()` 在构建期枚举非草稿内容；`src/pages/projects/[slug].astro` 使用同一公开 Programs slug 集合生成兼容跳转页。M7 将两个未经确认的示例设为草稿后，当前 `npm run build` 生成以下 11 个 HTML：
 
 | URL 路由 | 静态文件 | 来源 |
 | --- | --- | --- |
@@ -90,15 +90,11 @@ src/
 | `/articles/small-tools/` | `dist/articles/small-tools/index.html` | 文章内容集合 |
 | `/programs/` | `dist/programs/index.html` | “做点啥呢”主列表 |
 | `/programs/pixel-journey/` | `dist/programs/pixel-journey/index.html` | Program 内容集合 |
-| `/programs/signal-garden/` | `dist/programs/signal-garden/index.html` | Program 内容集合 |
-| `/programs/tidy-desk/` | `dist/programs/tidy-desk/index.html` | Program 内容集合 |
 | `/projects/` | `dist/projects/index.html` | 指向 `/programs/` 的兼容页 |
 | `/projects/pixel-journey/` | `dist/projects/pixel-journey/index.html` | 指向同 slug Program 的兼容页 |
-| `/projects/signal-garden/` | `dist/projects/signal-garden/index.html` | 指向同 slug Program 的兼容页 |
-| `/projects/tidy-desk/` | `dist/projects/tidy-desk/index.html` | 指向同 slug Program 的兼容页 |
 | `/404.html` | `dist/404.html` | `src/pages/404.astro` |
 
-静态服务器逐一请求上述 15 个 URL 均返回 HTTP 200，未知路由返回 HTTP 404。兼容页通过 meta refresh、`window.location.replace` 和无脚本链接跳转，并使用 `noindex,follow` 与新 canonical。Sitemap 只收录主 Programs 路由，不收录 Projects 兼容页。
+静态服务器逐一请求上述 11 个 URL 均返回 HTTP 200，未知路由返回 HTTP 404。兼容页通过 meta refresh、`window.location.replace` 和无脚本链接跳转，并使用 `noindex,follow` 与新 canonical。Sitemap 只收录公开主 Programs 路由，不收录 Projects 兼容页或草稿。
 
 ## 6. 静态输出与运行时边界
 
@@ -128,11 +124,14 @@ BASE_PATH=/pixel-walk-audit
 当前代码事实：
 
 - `src/content.config.ts` 注册 `articles` 与 `programs`；
-- `src/types/content.ts` 定义 `ProgramSummary`、`ProgramStatus`、`DemoType` 与隐私结构；
+- `src/types/content.ts` 定义 `ProgramSummary`、`ProgramDetail`、`ProgramPlatform`、`ProgramMedia`、状态与隐私结构；
 - `src/lib/content.ts` 使用 `CollectionEntry<"programs">`；
 - 内容存放在 `src/content/programs/`；
 - 主路由是 `/programs` 与 `/programs/[slug]`；
-- 每项 Program 必须包含本人贡献、限制、隐私、演示类型和八项必备详情内容；当前实现按八个区块顺序渲染；
+- 每项 Program 必须包含本人贡献、限制、隐私、演示类型和八项必备详情内容；
+- `ProgramSummary` 只携带列表/首页需要的平台种类与标签，`ProgramDetail` 才携带完整外链、二维码与媒体，避免详情媒体进入首页 hydration 数据；
+- `platforms[]` 支持 HTTPS 网页版和带 alt/说明的微信小程序码，`media[]` 支持视频、GIF、截图及横竖屏方向；
+- 详情页使用普通文档流：桌面为 `1.15fr / minmax(280px, 0.85fr)` 双栏，375px 为“标题/入口 → 媒体 → 详情”单列；
 - `static-embedded` 条目显示静态演示能力边界，不伪造后端、数据库、登录或实时能力。
 
 完整维护规则见 `docs/product/content-model.md`，领域与路由决策见 ADR 0009。
@@ -145,9 +144,9 @@ BASE_PATH=/pixel-walk-audit
 
 该实现未进入 `ImmersiveHome`，没有改变首页唯一 ScrollTrigger、`6192px` 实测故事文档高度、完整/简化动效状态或 Canvas 生命周期。桌面和 375px 六类普通路由、刷新、历史导航、菜单、简化动画及首页 land → space → land 往返均已验证。详细证据见 `docs/product/m6-3-content-page-scroll-spec.md`、`tasks.md` 与 `docs/engineering/adjustment_record.md` 第 12 节。
 
-### M7 目标架构：外部真实程序与组合媒体
+### M7 实际架构：外部真实程序与组合媒体
 
-当前 `ProgramDemo.astro` 依据单个 `demoType` 在静态说明、外部链接、视频、GIF、截图或无演示之间择一，不能在同一详情页同时表达网页版、竖屏视频和微信小程序码。M7 保留 `demoType`/`demoUrl` 作为主要演示类型和主要地址，同时增加两个可选集合：
+`ProgramDemo.astro` 已从单一 `demoType` 分支升级为组合媒体栏。M7 保留 `demoType`/`demoUrl` 作为主要演示类型和主要地址，同时增加两个可选集合：
 
 ```text
 Program
@@ -155,9 +154,9 @@ Program
 └─ media[]     → video / gif / screenshot
 ```
 
-详情页继续使用 Astro 静态生成和普通 DOM 文档流。桌面首屏为左文右媒体双栏，“打开网页版”紧跟标题、状态和简介；右侧承载 9:16 视频与小程序入口。移动端按“简介 → 打开网页版 → 视频 → 小程序码 → 详细说明”排列。媒体仅在详情页按需加载，不进入首页包。
+详情页继续使用 Astro 静态生成和普通 DOM 文档流。桌面首屏为左文右媒体双栏，“打开网页版”紧跟标题、状态和简介；右侧承载 9:16 视频与小程序入口。移动端按“简介 → 打开网页版 → 视频 → 小程序码 → 详细说明”排列。视频使用原生 controls、`playsinline`、`preload="metadata"` 和诚实失败提示；媒体仅在详情页按需加载，不进入首页摘要。
 
-需要后端的真实程序继续由独立服务器承载，纯前端程序可以部署到独立静态托管。主站只输出链接、二维码、媒体和介绍，不代理外部 API，因此不会引入 Node 生产运行时。`Project_Demos`、DemoRegistry 和 sandbox iframe 保留为未来可选能力，不是本轮 M7 的必经层。完整决策和验收见 `docs/product/m7-real-program-showcase-spec.md` 与 ADR 0006。
+需要后端的真实程序继续由独立服务器承载，纯前端程序可以部署到独立静态托管。主站只输出链接、二维码、媒体和介绍，不代理外部 API，因此不会引入 Node 生产运行时。`Project_Demos`、DemoRegistry 和 sandbox iframe 保留为未来可选能力，不是本轮 M7 的必经层。平台种类进入搜索筛选，外部网址进入 SoftwareApplication `sameAs`；Sitemap 仍只使用 Astro 静态 canonical 路由。完整决策和验收见 `docs/product/m7-real-program-showcase-spec.md` 与 ADR 0006。
 
 ## 9. 首页交互架构
 
@@ -307,15 +306,15 @@ M5.5 浏览器验收覆盖 1280×720 的约 35% 三层浪和 82% 星空、1920×
 
 ## 11. 已知未完成项
 
-- 当前 Program schema 和 `ProgramDemo.astro` 仍只能表达单一主要演示，`platforms`/`media` 组合字段与新版详情布局尚未实现；
-- “拉了么”真实内容尚未写入；微信小程序码、视频、技术栈、本人贡献、限制、隐私和外部服务仍等待真实资料；
-- Tidy Desk、Signal Garden 等当前示例的真实性尚待项目所有者审核；未确认内容不能作为真实作品进入最终发布；
+- Program `platforms`/`media`、新版详情布局、平台筛选、SEO 和媒体隔离已经实现并通过自动化与浏览器验收；
+- “拉了么”网址已验证返回 HTTP 200，真实内容尚未写入；微信小程序码、视频、最终状态、技术栈、本人贡献、限制、隐私和外部服务仍等待真实资料；
+- Tidy Desk、Signal Garden 未获得真实性确认，现已设为草稿并从首页、列表、详情路由与 Sitemap 排除；
 - DemoRegistry、`Project_Demos`、站内静态演示与 sandbox iframe 已延期为未来按需能力，不作为当前 M7 退出条件；
 - M3 陆地视差、M4 下潜/深海、M4.5 陆海翻涌、M5 气泡到繁星/流星、M5.5 视觉抛光和 M6 星空/动效模式均已完成正式验收；
 - M6.1 已完成实现与正式验收；
 - M6.2 已完成三张生产素材、统一角色状态、跨世界动画、降级与正式验收；
 - M6.3 已完成普通内容页原生纵向滚动、移动菜单锁恢复、响应式与首页回归验收；
-- 下一实施阶段为 M7 真实 Programs 展示系统。
+- 下一任务是收集“拉了么”真实资料并完成 `M7-07`，不是继续扩建另一套展示架构。
 
 ## 12. 架构变化流程
 
