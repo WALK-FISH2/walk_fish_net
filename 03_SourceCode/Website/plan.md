@@ -113,7 +113,7 @@ M7 优先把已经独立上线的真实程序接入“做点啥呢”，不要�
 
 详情页首屏使用稳定的普通文档流双栏：“打开网页版”紧跟标题、状态和简介，位于长篇说明之前；右侧优先展示 9:16 竖屏视频和小程序入口。移动端顺序为简介 → 打开网页版 → 视频 → 小程序码 → 详细说明。不使用 sticky、pin 或嵌套主滚动容器。
 
-在保持 `demoType`、`demoUrl` 兼容的前提下，增加可选 `platforms` 和 `media` 组合字段，完成 schema、渲染、加载/失败状态、响应式、搜索筛选、SEO、Sitemap 和测试。首个计划接入“拉了么”网页版 `https://pp.nuanzhualife.cn/`；本人贡献、技术栈、限制、隐私、小程序码和视频必须基于真实资料填写。
+在保持 `demoType`、`demoUrl` 兼容的前提下，增加可选 `platforms` 和 `media` 组合字段，完成 schema、渲染、加载/失败状态、响应式、搜索筛选、SEO、Sitemap 和测试。首个计划接入“拉了么”网页版 `https://poo.nuanzhualife.cn/`；本人贡献、技术栈、限制、隐私、小程序码和视频必须基于真实资料填写。
 
 DemoRegistry、站内静态演示和 sandbox iframe 保留为未来按需能力，不是本阶段退出条件。退出条件：至少一个真实本人 Program 同时完成介绍、主要外链和可用媒体/入口组合；当前示例内容真实性已经审核；桌面、375px、键盘、静态刷新与全部工程门禁通过。详细要求见 `docs/product/m7-real-program-showcase-spec.md`。
 

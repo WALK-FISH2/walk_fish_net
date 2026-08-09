@@ -345,7 +345,7 @@ M3～M6.1、Programs、路由、静态输出和世界 0°无回归
 - [x] `M7-04` 实现 9:16 竖屏视频、poster、controls、playsinline、metadata 预载与诚实失败状态（代码/测试证据：`ProgramDemo.astro`、`.program-media--portrait`；无 autoplay/loop，19/19 测试锁定属性和失败提示）
 - [x] `M7-05` 实现微信小程序入口、二维码、替代文本和扫码说明（代码/测试/素材证据：`wechat-mini-program` schema 强制 `qrImage`、`description`、`alt`，组件使用 lazy/async 图片；`wechat-qr.png` 为项目所有者提供的 258×258 真实小程序码，静态服务器以 `image/png` 返回 200）
 - [x] `M7-06` 实现桌面双栏与移动端“简介 → 外链 → 视频 → 二维码 → 详情”顺序，无 sticky/pin/嵌套主滚动（浏览器证据：375×812 下 header/media/intro 依次为 `y=189/557/795`，两组重叠均为 `0`，`scrollWidth=clientWidth=360`）
-- [x] `M7-07` 接入“拉了么”真实网页版 `https://pp.nuanzhualife.cn/`，基于项目所有者资料填写技术栈、贡献、限制、隐私和外部服务（内容/构建证据：`src/content/programs/laleme.md`；状态为完整原型，公开网页版与微信小程序，Android 标记开发中且无下载/源码入口；详情 HTML 包含 21 项单元测试、本人贡献、限制和外部数据处理说明）
+- [x] `M7-07` 接入“拉了么”真实网页版 `https://poo.nuanzhualife.cn/`，基于项目所有者资料填写技术栈、贡献、限制、隐私和外部服务（内容/构建证据：`src/content/programs/laleme.md`；状态为完整原型，公开网页版与微信小程序，Android 标记开发中且无下载/源码入口；详情 HTML 包含 21 项单元测试、本人贡献、限制和外部数据处理说明）
 - [x] `M7-08` 明确 Tidy Desk、Signal Garden 的公开边界（项目所有者决定以可后续维护的 `prototype` 原型档案公开；内容保持明确限制和隐私说明，不增加未经确认的外链或后端能力）
 - [x] `M7-09` 确保媒体只在详情页按需加载，不进入首页包（代码/测试证据：`programSummary()` 只映射平台 kind/label，不含 `qrImage` 或 `media`；首页 HTML 不含 `demo.mp4`、poster、二维码地址或媒体组件；当前 1.23 MB H.264 视频作为详情静态资源按需加载）
 - [x] `M7-10` 更新 Programs 搜索、筛选、SEO、SoftwareApplication 数据、Sitemap 和 `/projects` 兼容测试（代码/浏览器证据：新增平台搜索/筛选，`SoftwareApplication.sameAs`，平台筛选实测 1 条；Sitemap 无草稿/Projects；公开 Projects 兼容页 HTTP 200）

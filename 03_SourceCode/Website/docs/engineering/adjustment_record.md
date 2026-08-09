@@ -309,7 +309,7 @@ Programs 卡片仍保留 terminal、probe、capsule 三种视觉外形、原有�
 
 本轮只调整 Programs 内容模型、详情页、搜索筛选、SEO、静态输出测试和相关文档，没有修改首页场景进度、Canvas 美术、文章内容或 `/about`。已上线程序继续通过外部 HTTPS 入口运行，主站不代理其 API，也不引入 Node 请求期运行时。
 
-“拉了么”入口 `https://pp.nuanzhualife.cn/` 已由只读请求验证为 `HTTP 200`，公开 HTML 标题为“拉了么”。由于最终状态、完整技术栈、本人贡献、限制、数据存储/外发边界、小程序码、视频和 poster 尚未由项目所有者提供，本轮没有把推测内容写成公开 Program。`Tidy Desk` 与 `Signal Garden` 未获得真实性确认，统一改为 `draft: true`。
+“拉了么”入口 `https://poo.nuanzhualife.cn/` 已由只读请求验证为 `HTTP 200`，公开 HTML 标题为“拉了么”。由于最终状态、完整技术栈、本人贡献、限制、数据存储/外发边界、小程序码、视频和 poster 尚未由项目所有者提供，本轮没有把推测内容写成公开 Program。`Tidy Desk` 与 `Signal Garden` 未获得真实性确认，统一改为 `draft: true`。
 
 ### 13.2 内容模型参数
 
@@ -674,7 +674,7 @@ M7 初次真实性清理把 `Tidy Desk` 与 `Signal Garden` 设为草稿，首�
 | `status` | `prototype`：网页和微信小程序已形成完整原型，Android 仍在开发 |
 | `category` | `web-app` |
 | `featured / order` | `true / 0` |
-| `demoType / demoUrl` | `external-live / https://pp.nuanzhualife.cn/` |
+| `demoType / demoUrl` | `external-live / https://poo.nuanzhualife.cn/` |
 | 公开平台 | 网页版、微信小程序 |
 | 暂不公开 | Android 下载、`sourceUrl` |
 | 首页三卡 | 拉了么 → 像素漫游个人站 → Tidy Desk |

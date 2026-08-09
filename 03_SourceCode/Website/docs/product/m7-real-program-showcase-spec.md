@@ -14,7 +14,7 @@
 - 没有公开在线版本：诚实使用视频、GIF、截图或 `none`；
 - 只有未来确实需要站内静态交互演示时，才评估 `Project_Demos`、DemoRegistry 和 sandbox iframe。
 
-首个真实程序是“拉了么”，网页版为 `https://pp.nuanzhualife.cn/`。2026-08-09，项目所有者提供并确认了最终状态、技术栈、本人贡献、限制、隐私、外部服务、小程序码、H.264 演示视频和 poster；这些资料已写入 `src/content/programs/laleme.md`，没有推测源码地址、Android 下载或尚未完成的能力。
+首个真实程序是“拉了么”，网页版为 `https://poo.nuanzhualife.cn/`。2026-08-09，项目所有者提供并确认了最终状态、技术栈、本人贡献、限制、隐私、外部服务、小程序码、H.264 演示视频和 poster；这些资料已写入 `src/content/programs/laleme.md`，没有推测源码地址、Android 下载或尚未完成的能力。
 
 ## 2. Program 详情页首屏优先级
 
@@ -55,12 +55,12 @@
 
 ```yaml
 demoType: external-live
-demoUrl: https://pp.nuanzhualife.cn/
+demoUrl: https://poo.nuanzhualife.cn/
 
 platforms:
   - kind: web
     label: 打开网页版
-    url: https://pp.nuanzhualife.cn/
+    url: https://poo.nuanzhualife.cn/
   - kind: wechat-mini-program
     label: 微信小程序
     qrImage: /programs/laleme/wechat-qr.png

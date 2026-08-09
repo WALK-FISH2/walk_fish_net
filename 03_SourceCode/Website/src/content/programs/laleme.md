@@ -19,11 +19,11 @@ tags:
   - 多端应用
   - 微信小程序
 demoType: external-live
-demoUrl: https://pp.nuanzhualife.cn/
+demoUrl: https://poo.nuanzhualife.cn/
 platforms:
   - kind: web
     label: 打开网页版
-    url: https://pp.nuanzhualife.cn/
+    url: https://poo.nuanzhualife.cn/
   - kind: wechat-mini-program
     label: 微信小程序
     qrImage: /programs/laleme/wechat-qr.png
