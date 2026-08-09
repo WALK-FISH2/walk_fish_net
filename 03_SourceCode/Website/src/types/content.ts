@@ -24,6 +24,7 @@ export interface ProgramPrivacy {
   storesData: "none" | "local-only" | "external";
   sendsDataExternally: boolean;
   externalServices: string[];
+  notes: string[];
 }
 
 export type ProgramPlatformKind = "web" | "wechat-mini-program";

@@ -151,7 +151,7 @@ M7 每次新增、转草稿或移除 Program 后，都必须重新统计独立 H
 - `npm run lint`：通过；
 - `npm test`：4 项测试全部通过。
 
-### 2026-08-08 M7 当前静态基线
+### 2026-08-08 M7 三卡恢复历史基线
 
 - 项目所有者要求首页海洋区域恢复三张完整 Program 卡片；`Tidy Desk` 与 `Signal Garden` 以 `prototype` 原型档案重新公开，当前公开 Program 为 `pixel-journey`、`tidy-desk` 与 `signal-garden`；
 - `npm run build` 与 `npm run build:sites`：成功，正式输出仍为 `dist/`，适配输出为 `sites-dist/`；
@@ -161,3 +161,13 @@ M7 每次新增、转草稿或移除 Program 后，都必须重新统计独立 H
 - Sitemap 包含三个 `/programs/<slug>/` canonical 详情，不包含 `/projects`；
 - 首页使用 `ProgramSummary`，不包含 `media`、二维码地址或详情媒体组件；
 - Astro Check 45 文件 0 errors / 0 warnings / 0 hints，ESLint 通过，19/19 测试通过。
+
+### 2026-08-09 M7 完成静态基线
+
+- 新增真实 `laleme` Program 后，公开 Program 为 4 个；首页仍只取排序前三项；
+- `npm run build` 与 `npm run build:sites` 无警告通过；核心输出为 `dist/`，Sites 适配输出为 `sites-dist/`；
+- 当前静态 HTML 为 17 个：12 个主页面（含 4 个 Program 详情与 404）和 5 个 Projects 兼容页；
+- 纯静态服务器逐一验证 17/17 路由为 HTTP 200，未知路由为 404；`/programs/laleme/` 与 `/projects/laleme/` 均可直接请求；
+- `demo.mp4`、`video-poster.webp`、`wechat-qr.png` 分别以 `video/mp4`、`image/webp`、`image/png` 返回 200；
+- 本地 `demo-HEVC.mp4` 只作为备份，构建时排除，`dist/` 与 `sites-dist/` 均不包含该文件；
+- `dist/server` 不存在，独立运行的“拉了么”后端没有成为本站请求期运行时；Sitemap 收录 4 个 canonical Program 并排除 `/projects`。

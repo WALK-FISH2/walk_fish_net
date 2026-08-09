@@ -661,3 +661,60 @@ M7 初次真实性清理把 `Tidy Desk` 与 `Signal Garden` 设为草稿，首�
 | 静态输出 | `dist/` 共 15 个 HTML，`dist/server` 不存在 |
 
 本次属于内容发布状态的小范围修复，没有执行新的视觉样式变更；原 M6.1 桌面双轨和移动端单列验收结论继续适用。
+
+## 15. 2026-08-09 M7 “拉了么”真实 Program 完成接入
+
+### 15.1 内容与排序
+
+新增 `src/content/programs/laleme.md`，仅使用项目所有者提供并确认的资料。条目参数如下：
+
+| 参数 | 值 |
+| --- | --- |
+| `slug` | `laleme` |
+| `status` | `prototype`：网页和微信小程序已形成完整原型，Android 仍在开发 |
+| `category` | `web-app` |
+| `featured / order` | `true / 0` |
+| `demoType / demoUrl` | `external-live / https://pp.nuanzhualife.cn/` |
+| 公开平台 | 网页版、微信小程序 |
+| 暂不公开 | Android 下载、`sourceUrl` |
+| 首页三卡 | 拉了么 → 像素漫游个人站 → Tidy Desk |
+| Programs 列表 | 上述三项加 Signal Garden，共四项 |
+| 星空 Program 入口 | 拉了么、像素漫游个人站 |
+
+详情页完整记录统一后端和三客户端现状、厕所/地铁独立查询、四档半径、地铁厕所三状态、国内高德/海外 Geoapify 策略、21 项单元测试、本人贡献、八项限制和隐私边界。外部服务明确列为微信/腾讯地图、高德、Geoapify、OpenStreetMap/OpenMapTiles 和 Google Maps；不声明账号、数据库、收藏同步、源码公开或 Android 已发布。
+
+为承载详细隐私说明，在既有 `privacy` 对象中增加默认空数组 `notes`；旧内容无需改写即可继续构建。“拉了么”使用该字段公开不持久化位置/搜索/查询中心/导航记录、不后台持续定位、密钥边界和诊断坐标日志风险。
+
+### 15.2 媒体参数
+
+| 文件 | 生产参数 | 发布行为 |
+| --- | --- | --- |
+| `public/programs/laleme/demo.mp4` | H.264 High Profile、576×1280、22.133 秒、1,226,283 bytes | 详情页原生 controls、`playsinline`、`preload=metadata`；不 autoplay、不 loop |
+| `public/programs/laleme/video-poster.webp` | 1080×2210、555,304 bytes | 竖屏视频 poster |
+| `public/programs/laleme/wechat-qr.png` | 258×258、46,432 bytes | lazy/async，小程序码 alt 为“拉了么微信小程序码” |
+
+用户保留的 `demo-HEVC.mp4` 只作为本地备份。最终 `build:sites` 前临时移出 `public/`，构建完成后原位恢复；`dist/` 和 `sites-dist/` 均确认不包含该备份。三项生产媒体只在详情页加载，首页 HTML 不含视频、poster、二维码路径或媒体组件。
+
+### 15.3 路由与静态边界
+
+- 新 canonical：`/programs/laleme/`；
+- 新兼容页：`/projects/laleme/` → `/programs/laleme/`；
+- 公开 Program 详情增至 4 个，Projects 兼容详情增至 4 个；
+- 总静态 HTML 为 17 个：12 个主页面与 5 个兼容页；
+- Sitemap 收录四个 `/programs/<slug>/`，不收录 `/projects`；
+- “拉了么”的统一后端仍运行在独立服务器，主站不代理其 API，`dist/server` 不存在。
+
+### 15.4 实际验证
+
+| 验证 | 结果 |
+| --- | --- |
+| `npm run check` | 45 个文件，0 errors / 0 warnings / 0 hints |
+| `npm run lint` | 通过 |
+| `npm test` | 19/19 通过；覆盖内容真实性字段、外链安全、媒体属性、首页排序、媒体隔离、Sitemap 与 17 个 HTML |
+| `npm run build` | 无警告通过，生成 17 个静态 HTML |
+| `npm run build:sites` | 无警告通过，HEVC 备份未进入部署包 |
+| 纯静态 HTTP | 17/17 路由为 200，未知路由 404 |
+| 媒体 HTTP | MP4/WebP/PNG 均为 200，MIME 与 Content-Length 正确 |
+| Node 请求期运行时 | `dist/server` 不存在 |
+
+沿用 M7 初次实现时已通过的桌面双栏、375px 单列、键盘焦点和控制台浏览器基线；本轮未修改该布局、首页海洋动画或其他场景代码。发布后仍需项目所有者用微信真机复核线上小程序码扫码结果与最终媒体视觉。

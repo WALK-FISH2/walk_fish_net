@@ -1,8 +1,8 @@
 # M7 真实 Programs 展示系统规格
 
-状态：核心展示能力已实现；“拉了么”内容资料尚待项目所有者补充
+状态：已完成
 确认日期：2026-08-06
-实现对账：2026-08-08
+实现对账：2026-08-09
 
 ## 1. 产品方向
 
@@ -14,9 +14,7 @@
 - 没有公开在线版本：诚实使用视频、GIF、截图或 `none`；
 - 只有未来确实需要站内静态交互演示时，才评估 `Project_Demos`、DemoRegistry 和 sandbox iframe。
 
-首个计划接入的真实程序是“拉了么”，已知网页版为 `https://pp.nuanzhualife.cn/`。微信小程序码、演示视频、技术栈、本人贡献、限制、隐私和外部服务必须由项目所有者提供真实资料后再写入内容，不能推测或补造。
-
-2026-08-08 已通过只读 HTTP 请求确认该网址返回 `200 OK`，公开页面标题为“拉了么”，页面可见“附近厕所”、城市、地点、半径、定位和结果列表等界面；这些公开事实仍不足以确认最终状态、完整技术栈、本人负责范围、数据存储方式和隐私边界，因此本轮不把“拉了么”写成公开 Program 条目。
+首个真实程序是“拉了么”，网页版为 `https://pp.nuanzhualife.cn/`。2026-08-09，项目所有者提供并确认了最终状态、技术栈、本人贡献、限制、隐私、外部服务、小程序码、H.264 演示视频和 poster；这些资料已写入 `src/content/programs/laleme.md`，没有推测源码地址、Android 下载或尚未完成的能力。
 
 ## 2. Program 详情页首屏优先级
 
@@ -71,13 +69,13 @@ platforms:
 
 media:
   - type: video
-    src: https://media.example.com/laleme-demo.mp4
+    src: /programs/laleme/demo.mp4
     poster: /programs/laleme/video-poster.webp
     orientation: portrait
-    caption: 手机端操作演示
+    caption: 拉了么微信小程序竖屏操作演示
 ```
 
-示例中的媒体地址是字段格式示意，不是已确认的“拉了么”真实素材地址，实施时必须替换或省略。
+以上是当前真实生产路径。`demo.mp4` 已验证为 H.264 High Profile、576×1280、约 22.1 秒；`video-poster.webp` 为 1080×2210；`wechat-qr.png` 为项目所有者提供的真实小程序码。原始 HEVC 文件只作为本地备份，不进入发布。
 
 建议稳定值：
 
@@ -104,7 +102,8 @@ ProgramMediaOrientation: portrait | landscape
 - 主站继续是 Astro 纯静态站；链接到需要后端的独立程序不会给主站引入 Node 服务端运行时；
 - Program 详情页不代理、不伪造外部程序的 API、登录、数据库或实时能力；
 - “拉了么”首轮使用外部新标签页，不在 iframe 中直接嵌入；
-- 只有访客主动打开外部站点或播放外部媒体后，外部服务才会接收相应请求；隐私说明必须列出真实边界；
+- 主站本地视频、poster 和小程序码只由静态托管读取；访客打开外部程序后，位置等数据才按程序功能交由微信/腾讯地图、高德、Geoapify、OpenStreetMap/OpenMapTiles 或 Google Maps 处理；
+- “拉了么”不建立用户账号，不在业务数据库中持久化位置、搜索历史、查询中心或导航记录，也不后台持续定位；诊断日志可能记录截断或四舍五入坐标，正式日志访问权限和最短保留期仍需完善；
 - 未来若加入站内静态演示，仍按 ADR 0006 使用独立路由或 sandbox iframe，并按需加载；该能力不是本轮 M7 的退出前提。
 
 ## 7. 内容真实性
@@ -128,10 +127,12 @@ ProgramMediaOrientation: portrait | landscape
 - 搜索、筛选、SEO、Sitemap、旧路由兼容、375px、键盘与静态刷新通过；
 - Astro Check、ESLint、测试、生产构建和纯静态路由验证通过。
 
-## 9. 2026-08-08 实施状态
+## 9. 2026-08-09 完成状态
 
 - 已实现 `platforms`/`media` schema、摘要/详情数据分层、首要网页版入口、桌面双栏、375px 单列、视频失败提示、小程序码组件、平台搜索筛选和 SoftwareApplication 外部地址；
 - 视频使用原生 controls、`playsinline`、`preload="metadata"`，没有 autoplay 或 loop；竖屏媒体使用 `9:16` 与 `max-height: 70svh`；
-- 项目所有者要求海洋区域继续完整显示三张卡片，`Tidy Desk` 与 `Signal Garden` 已恢复为公开 `prototype` 档案；其内容允许后续手动维护，但当前不得补造外链或完整能力；
-- 当前公开 Program 为 `pixel-journey`、`tidy-desk` 与 `signal-garden`，生产输出恢复为 15 个 HTML；
-- “拉了么”正式接入仍等待项目所有者提供：状态、技术栈、本人贡献、限制、数据存储/外发边界、真实外部服务、小程序码、视频或 poster。没有这些资料前，M7 内容接入任务保持未完成。
+- “拉了么”以 `prototype` 发布：网页和微信小程序已形成完整原型，Android 仍在开发；网页版、小程序、Android 共用统一后端，主站不代理该后端；
+- 详情页展示真实网页版、H.264 竖屏视频、poster、小程序码、本人贡献、21 项单元测试、限制和完整隐私边界；暂不显示 Android 下载与源码按钮；
+- 首页三张卡片按 `order` 排列为“拉了么”“像素漫游个人站”“Tidy Desk”，`Signal Garden` 继续在 `/programs` 公开；星空的前两个 Program 入口同步为“拉了么”和“像素漫游个人站”；
+- 当前公开 Program 为 `laleme`、`pixel-journey`、`tidy-desk` 与 `signal-garden`，生产输出为 17 个 HTML：12 个主页面和 5 个 Projects 兼容页；
+- 媒体只在“拉了么”详情页加载，首页 HTML 不包含视频、poster 或小程序码地址；主站仍无 Node 请求期运行时。

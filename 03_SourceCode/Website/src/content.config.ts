@@ -98,6 +98,7 @@ const programs = defineCollection({
       storesData: z.enum(["none", "local-only", "external"]),
       sendsDataExternally: z.boolean(),
       externalServices: z.array(z.string()).default([]),
+      notes: z.array(z.string()).default([]),
     }),
     whatItIs: z.string(),
     whyBuilt: z.string(),

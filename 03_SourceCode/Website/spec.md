@@ -175,7 +175,7 @@ none
 
 显示程序名称、说明、封面、技术栈、类别、状态、演示类型、查看详情、立即体验和可选源码入口。
 
-首页深海区域保持三张完整 Program 档案卡片。当前 `Tidy Desk` 与 `Signal Garden` 作为可后续维护的 `prototype` 原型档案公开；它们必须保留清楚的限制与演示边界，后续可替换真实内容，但不得为了填满卡片伪造线上地址或后端能力。
+首页深海区域保持三张完整 Program 档案卡片，当前固定排序为“拉了么”第一、“像素漫游个人站”第二、`Tidy Desk` 第三；`Signal Garden` 继续在 `/programs` 列表公开但不进入首页前三。`Tidy Desk` 与 `Signal Garden` 作为可后续维护的 `prototype` 原型档案公开；它们必须保留清楚的限制与演示边界，后续可替换真实内容，但不得为了填满卡片伪造线上地址或后端能力。
 
 已经部署到独立网址的真实程序不要求复制到 `Project_Demos`。纯前端程序可以使用独立静态托管地址，需要后端的程序可以使用自己的服务器；主站只展示真实信息并链接到该程序，继续保持纯静态边界。
 
@@ -201,7 +201,7 @@ Program 详情页同时承担案例介绍和真实入口。对于 `external-live
 
 同一个 Program 可以组合显示真实网页版、9:16 竖屏视频、微信小程序码、GIF 和截图。`demoType`/`demoUrl` 继续表示主要演示方式与主要地址，组合入口和媒体由可选的 `platforms` 与 `media` 描述。视频默认不自动播放、不自动播放声音，缺失或失败不得影响外部入口和正文。
 
-M7 首个计划接入的真实 Program 是“拉了么”，网页版为 `https://pp.nuanzhualife.cn/`。小程序码、视频、技术栈、本人贡献、限制、隐私和外部服务在获得真实资料前不得推测。完整规格见 `docs/product/m7-real-program-showcase-spec.md`。
+M7 首个真实 Program 是“拉了么”，网页版为 `https://pp.nuanzhualife.cn/`。条目使用项目所有者提供的真实小程序码、H.264 竖屏视频、poster、技术栈、本人贡献、限制、隐私和外部服务资料；Android 客户端明确标记为开发中，暂不提供 Android 下载或源码入口。完整规格见 `docs/product/m7-real-program-showcase-spec.md`。
 
 ### 演示诚实性
 

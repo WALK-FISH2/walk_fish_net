@@ -31,7 +31,50 @@ draft: false
 兼容路由：/projects/、/projects/<slug>/
 ```
 
-## 3. 当前公开原型内容格式示例
+## 3. 当前真实 Program 内容示例
+
+“拉了么”是当前首个完整接入的真实 Program，首页排序值为 `0`，因此位于“像素漫游个人站”和 `Tidy Desk` 之前。其网页版由独立服务器承载，主站只发布介绍、外链、H.264 视频、poster 与小程序码，不代理后端 API。
+
+```yaml
+title: 拉了么
+slug: laleme
+status: prototype
+category: web-app
+featured: true
+order: 0
+demoType: external-live
+demoUrl: https://pp.nuanzhualife.cn/
+platforms:
+  - kind: web
+    label: 打开网页版
+    url: https://pp.nuanzhualife.cn/
+  - kind: wechat-mini-program
+    label: 微信小程序
+    qrImage: /programs/laleme/wechat-qr.png
+    description: 微信扫码打开小程序
+    alt: 拉了么微信小程序码
+media:
+  - type: video
+    src: /programs/laleme/demo.mp4
+    poster: /programs/laleme/video-poster.webp
+    orientation: portrait
+    caption: 拉了么微信小程序竖屏操作演示
+privacy:
+  storesData: external
+  sendsDataExternally: true
+  externalServices:
+    - 微信与腾讯地图
+    - 高德地图
+    - Geoapify
+    - OpenStreetMap / OpenMapTiles
+    - Google Maps
+  notes:
+    - 不在业务数据库中持久化用户位置、搜索历史、查询中心或导航记录
+```
+
+完整资料位于 `src/content/programs/laleme.md`。状态使用 `prototype` 是因为网页版和微信小程序已形成完整原型，而 Android 客户端、公开后端安全加固与部分数据仍在继续开发；当前没有 `sourceUrl` 或 Android 下载入口。
+
+## 4. 当前公开原型内容格式示例
 
 Tidy Desk、Signal Garden 当前按项目所有者要求作为可继续维护的原型档案公开，以保证首页海洋区域保持三张完整卡片。它们的 `prototype` 状态、无公开演示或静态演示边界、限制和隐私字段必须保持清楚；后续可以由项目所有者手动替换，也可以在获得真实资料后由开发任务更新。不得在维护时补造在线地址、后端能力、用户数据或已完成功能。
 
@@ -85,7 +128,7 @@ demoDescription: 本轮只展示界面和数据流程说明。
 draft: false
 ```
 
-## 4. Program 必填字段
+## 5. Program 必填字段
 
 | 字段 | 类型 | 说明 |
 | --- | --- | --- |
@@ -109,7 +152,7 @@ draft: false
 
 当前代码可选字段：`startDate`、`endDate`、`demoUrl`、`sourceUrl`、`demoDescription`、`platforms`、`media`。
 
-## 5. ProgramStatus
+## 6. ProgramStatus
 
 ```text
 completed
@@ -120,7 +163,7 @@ archived
 
 页面显示时转换为“已完成、进行中、原型、已归档”，内容文件必须保存稳定英文值。
 
-## 6. ProgramCategory
+## 7. ProgramCategory
 
 ```text
 web-app
@@ -134,7 +177,7 @@ experiment
 other
 ```
 
-## 7. DemoType
+## 8. DemoType
 
 ```text
 static-embedded
@@ -158,7 +201,7 @@ none
 
 不得用假数据伪装接口成功、登录完成、支付成功、实时同步或已经存在的后端能力。
 
-## 8. M7 组合入口与媒体模型
+## 9. M7 组合入口与媒体模型
 
 > 本节模型已于 2026-08-08 写入 `src/content.config.ts`、`src/types/content.ts` 与详情页组件。`demoType`/`demoUrl` 继续兼容旧内容，`platforms`/`media` 为可选组合字段。
 
@@ -180,13 +223,13 @@ platforms:
 
 media:
   - type: video
-    src: https://media.example.com/laleme-demo.mp4
+    src: /programs/laleme/demo.mp4
     poster: /programs/laleme/video-poster.webp
     orientation: portrait
     caption: 手机端操作演示
 ```
 
-其中媒体 URL 是字段格式示例，并非已经确认的“拉了么”素材。实际内容不得保留虚构地址。
+以上路径是当前“拉了么”已接入的真实生产素材；本地 HEVC 备份不进入站点构建或部署。
 
 ```text
 ProgramPlatformKind = web | wechat-mini-program
@@ -206,18 +249,19 @@ ProgramMediaOrientation = portrait | landscape
 
 内容读取分为两层：列表和首页使用 `ProgramSummary`，只携带平台种类与标签，不携带二维码和媒体地址；详情页使用 `ProgramDetail`，才包含完整 `platforms` 和 `media`。因此新增竖屏视频或小程序码不会被序列化进首页 React island。
 
-## 9. Privacy
+## 10. Privacy
 
 ```yaml
 privacy:
   storesData: none | local-only | external
   sendsDataExternally: false
   externalServices: []
+  notes: []
 ```
 
-如果 `sendsDataExternally: true`，必须在 `externalServices` 列出真实服务。不能用空数组掩盖外部数据传输。
+如果 `sendsDataExternally: true`，必须在 `externalServices` 列出真实服务。`notes` 用于补充账号/持久化边界、外部处理目的、客户端可见凭据与日志策略，不能用空数组掩盖外部数据传输。
 
-## 10. 程序详情页内容与展示顺序
+## 11. 程序详情页内容与展示顺序
 
 每个 Program 详情页仍必须包含以下八类内容：
 
@@ -239,7 +283,7 @@ privacy:
 
 “打开网页版”必须位于长篇正文之前。桌面使用普通文档流双栏，移动端使用单列；不使用 sticky、pin 或嵌套主滚动容器。源码地址为空时不显示按钮；演示缺失或加载失败不能影响其余详情内容。
 
-## 11. 路由与 SEO
+## 12. 路由与 SEO
 
 - `/programs/` 和 `/programs/<slug>/` 是 canonical；
 - `/projects/` 和 `/projects/<slug>/` 只保留静态兼容跳转；
@@ -247,7 +291,7 @@ privacy:
 - Sitemap 只收录主 Programs 路由；
 - Program 详情页输出标题、摘要、Open Graph、canonical 和 SoftwareApplication 结构化数据。
 
-## 12. 新增或维护 Program
+## 13. 新增或维护 Program
 
 1. 在 `src/content/programs/` 新建 Markdown 或 MDX；
 2. 填写所有必填字段；

@@ -24,6 +24,7 @@ const primaryRoutes = [
   ["dist/articles/first-post/index.html", "在像素世界里搭一条可逆的路"],
   ["dist/articles/small-tools/index.html", "小工具也值得被认真记录"],
   ["dist/programs/index.html", "做点啥呢"],
+  ["dist/programs/laleme/index.html", "拉了么"],
   ["dist/programs/pixel-journey/index.html", "像素漫游个人站"],
   ["dist/programs/tidy-desk/index.html", "Tidy Desk"],
   ["dist/programs/signal-garden/index.html", "Signal Garden"],
@@ -32,6 +33,7 @@ const primaryRoutes = [
 
 const legacyRoutes = [
   ["dist/projects/index.html", "/programs/"],
+  ["dist/projects/laleme/index.html", "/programs/laleme/"],
   ["dist/projects/pixel-journey/index.html", "/programs/pixel-journey/"],
   ["dist/projects/tidy-desk/index.html", "/programs/tidy-desk/"],
   ["dist/projects/signal-garden/index.html", "/programs/signal-garden/"],
@@ -52,7 +54,7 @@ test("emits independent HTML for every primary and compatibility route", async (
   }
 
   const outputEntries = await readdir(new URL("dist/", root), { recursive: true });
-  assert.equal(outputEntries.filter((entry) => entry.endsWith(".html")).length, 15);
+  assert.equal(outputEntries.filter((entry) => entry.endsWith(".html")).length, 17);
 });
 
 test("program pages expose the required domain content without claiming missing services", async () => {
@@ -118,9 +120,9 @@ test("keeps content, SEO, motion modes, and migrated source boundaries", async (
   await access(new URL("src/content/programs/pixel-journey.md", root));
 });
 
-test("implements M7 Programs platforms, detail-first actions, media isolation, and three-card publishing", async () => {
-  const [program, home, contentConfig, types, contentLib, layout, demo, css, sitemap, tidyDesk, signalGarden] = await Promise.all([
-    readFile(new URL("dist/programs/pixel-journey/index.html", root), "utf8"),
+test("implements M7 real Program publishing, detail-first actions, media isolation, and three-card ordering", async () => {
+  const [program, home, contentConfig, types, contentLib, layout, demo, css, sitemap, laleme, tidyDesk, signalGarden] = await Promise.all([
+    readFile(new URL("dist/programs/laleme/index.html", root), "utf8"),
     readFile(new URL("dist/index.html", root), "utf8"),
     readFile(new URL("src/content.config.ts", root), "utf8"),
     readFile(new URL("src/types/content.ts", root), "utf8"),
@@ -129,6 +131,7 @@ test("implements M7 Programs platforms, detail-first actions, media isolation, a
     readFile(new URL("src/components/ProgramDemo.astro", root), "utf8"),
     readFile(new URL("src/styles/global.css", root), "utf8"),
     readFile(new URL("dist/sitemap-0.xml", root), "utf8"),
+    readFile(new URL("src/content/programs/laleme.md", root), "utf8"),
     readFile(new URL("src/content/programs/tidy-desk.md", root), "utf8"),
     readFile(new URL("src/content/programs/signal-garden.mdx", root), "utf8"),
   ]);
@@ -147,7 +150,7 @@ test("implements M7 Programs platforms, detail-first actions, media isolation, a
   const actionIndex = program.indexOf("打开网页版");
   const whatIndex = program.indexOf("这是什么程序");
   assert.ok(actionIndex > 0 && actionIndex < whatIndex, "primary web action precedes long-form content");
-  assert.match(program, /href="https:\/\/pixel-walk-journey-2026\.free-fish\.chatgpt\.site\/"[^>]*target="_blank"[^>]*rel="noopener noreferrer"/);
+  assert.match(program, /href="https:\/\/pp\.nuanzhualife\.cn\/"[^>]*target="_blank"[^>]*rel="noopener noreferrer"/);
   assert.match(layout, /grid-area|program-showcase__media/);
   assert.match(layout, /sameAs: externalProgramUrls/);
 
@@ -157,18 +160,47 @@ test("implements M7 Programs platforms, detail-first actions, media isolation, a
   assert.match(demo, /data-media-error/);
   assert.match(demo, /platform\.alt/);
   assert.match(demo, /loading="lazy"/);
+  assert.match(program, /src="\/programs\/laleme\/demo\.mp4"/);
+  assert.match(program, /poster="\/programs\/laleme\/video-poster\.webp"/);
+  assert.match(program, /src="\/programs\/laleme\/wechat-qr\.png"/);
+  assert.match(program, /alt="拉了么微信小程序码"/);
+  assert.match(program, /21 项单元测试/);
+  assert.match(program, /Google Maps/);
+  assert.match(program, /不在业务数据库中持久化用户位置/);
+  assert.match(program, /高德 Web Service Key 和 Geoapify API Key 只保存在后端/);
+  assert.match(program, /Android 客户端仍在开发中/);
+  assert.doesNotMatch(program, /查看源码/);
   assert.match(css, /grid-template-columns:\s*minmax\(0, 1\.15fr\) minmax\(280px, 0\.85fr\)/);
   assert.match(css, /max-height:\s*70svh/);
   assert.match(css, /aspect-ratio:\s*9 \/ 16/);
   assert.match(css, /@media \(max-width:\s*767px\)[\s\S]*?grid-template-areas:[\s\S]*?"header"[\s\S]*?"media"[\s\S]*?"intro"/);
 
   assert.doesNotMatch(home, /data-program-media-root|data-program-video|program-platform-card--wechat/);
+  assert.doesNotMatch(home, /demo\.mp4|video-poster\.webp|wechat-qr\.png/);
+  const homeProgramLinks = [
+    home.indexOf("/programs/laleme/"),
+    home.indexOf("/programs/pixel-journey/"),
+    home.indexOf("/programs/tidy-desk/"),
+  ];
+  assert.ok(homeProgramLinks.every((index) => index > 0), "the three selected Programs are published on home");
+  assert.ok(homeProgramLinks[0] < homeProgramLinks[1] && homeProgramLinks[1] < homeProgramLinks[2], "home Program order is Laleme, Pixel Journey, Tidy Desk");
+  assert.equal((home.match(/class="porthole /g) ?? []).length, 3);
+  assert.match(laleme, /status:\s*prototype/);
+  assert.match(laleme, /order:\s*0/);
+  assert.match(laleme, /storesData:\s*external/);
+  assert.match(laleme, /sendsDataExternally:\s*true/);
+  assert.doesNotMatch(laleme, /sourceUrl:/);
   assert.match(tidyDesk, /status:\s*prototype/);
   assert.match(signalGarden, /status:\s*prototype/);
   assert.match(tidyDesk, /draft:\s*false/);
   assert.match(signalGarden, /draft:\s*false/);
   await access(new URL("dist/programs/tidy-desk/index.html", root));
   await access(new URL("dist/programs/signal-garden/index.html", root));
+  await access(new URL("dist/programs/laleme/index.html", root));
+  await access(new URL("public/programs/laleme/demo.mp4", root));
+  await access(new URL("public/programs/laleme/video-poster.webp", root));
+  await access(new URL("public/programs/laleme/wechat-qr.png", root));
+  assert.match(sitemap, /\/programs\/laleme\//);
   assert.match(sitemap, /\/programs\/tidy-desk\//);
   assert.match(sitemap, /\/programs\/signal-garden\//);
   assert.doesNotMatch(sitemap, /\/projects(?:\/|<)/);

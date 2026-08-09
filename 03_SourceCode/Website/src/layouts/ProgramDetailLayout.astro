@@ -132,6 +132,9 @@ const structuredData = {
             <div><dt>向外发送数据</dt><dd>{program.privacy.sendsDataExternally ? "会" : "不会"}</dd></div>
             <div><dt>外部服务</dt><dd>{program.privacy.externalServices.length > 0 ? program.privacy.externalServices.join("、") : "无"}</dd></div>
           </dl>
+          {program.privacy.notes.length > 0 && (
+            <ul>{program.privacy.notes.map((item) => <li>{item}</li>)}</ul>
+          )}
         </section>
       </div>
 
