@@ -1,0 +1,511 @@
+# Programs 内容维护说明
+
+本文件用于手动新增或维护“做点啥呢”中的程序条目。
+
+> 重要：本文件使用 `.md.example` 扩展名，因此不会被 Astro 当成 Program 内容，也不会生成网页。
+> 新增程序时，请复制下面的“完整模板”，另存为 `<slug>.md`，例如 `my-tool.md`。
+
+## 1. 最快新增流程
+
+1. 复制本文件中的“完整模板”；
+2. 在当前目录新建 `<slug>.md`；
+3. 修改模板中的字段，删除不需要的可选字段；
+4. 若有图片、视频或小程序码，放到 `public/programs/<slug>/`；
+5. 执行 `npm run check`；
+6. 再执行 `npm run lint`、`npm test` 和 `npm run build`；
+7. 打开 `/programs/<slug>/` 检查详情页；
+8. 检查 `/projects/<slug>/` 是否跳转到新地址；
+9. 检查 Sitemap 只包含 `/programs/<slug>/`，不包含 `/projects/<slug>/`。
+
+## 2. 文件名与 slug
+
+推荐让文件名和 `slug` 完全一致：
+
+```text
+文件：src/content/programs/my-tool.md
+slug：my-tool
+主路由：/programs/my-tool/
+兼容路由：/projects/my-tool/
+媒体目录：public/programs/my-tool/
+```
+
+`slug` 建议只使用小写英文字母、数字和连字符：
+
+```text
+推荐：image-converter
+推荐：tidy-desk-2
+避免：Image Converter
+避免：我的程序
+避免：image_converter
+```
+
+同一站点内不能出现重复的 `slug`。
+
+## 3. 完整模板
+
+下面模板列出了当前 schema 支持的全部字段。带“可选”注释的字段可以整行或整段删除；不要保留空网址、空媒体项或虚构内容。
+
+```yaml
+---
+title: 程序显示名称
+slug: my-program
+summary: 用一两句话说明这是什么程序、解决什么问题。
+
+# 可选值：completed | in-progress | prototype | archived
+status: in-progress
+
+# 可选值见下方“category 参数”
+category: web-app
+
+# 可选；建议使用 YYYY-MM 或 YYYY-MM-DD
+startDate: 2026-08
+# endDate: 2026-12
+
+# true：参与首页精选排序；false：只在 /programs 列表显示
+featured: true
+
+# 数字越小越靠前；首页只展示排序最前的三个 featured Program
+order: 10
+
+stack:
+  - TypeScript
+  - Astro
+
+tags:
+  - 工具
+  - 前端
+
+# 可选值见下方“demoType 参数”
+demoType: external-live
+
+# 可选；有真实主要演示地址时填写。外部地址必须使用 HTTPS。
+demoUrl: https://example.com/
+
+# 可选；有真实公开源码时再填写，建议使用 HTTPS。
+sourceUrl: https://github.com/your-name/my-program
+
+# 可选；可同时配置网页版与微信小程序。
+platforms:
+  - kind: web
+    label: 打开网页版
+    url: https://example.com/
+  - kind: wechat-mini-program
+    label: 微信小程序
+    qrImage: /programs/my-program/wechat-qr.png
+    description: 微信扫码打开小程序。
+    alt: 程序名称微信小程序码
+
+# 可选；可添加多个 video、gif 或 screenshot。
+media:
+  - type: video
+    src: /programs/my-program/demo.mp4
+    poster: /programs/my-program/video-poster.webp
+    orientation: portrait
+    caption: 手机端操作演示
+  - type: screenshot
+    src: /programs/my-program/screenshot-home.webp
+    orientation: portrait
+    alt: 程序首页截图
+    caption: 首页与主要操作入口
+
+# 必填，至少一项；只写本人真实完成的工作。
+ownerContribution:
+  - 设计核心交互流程
+  - 完成前端开发与部署
+
+# 必填数组；没有已知限制时可以写 []。
+limitations:
+  - 当前仍在开发中
+  - 暂未提供账号同步
+
+# 必填。
+privacy:
+  # 可选值：none | local-only | external
+  storesData: none
+  sendsDataExternally: false
+  externalServices: []
+  notes:
+    - 不建立用户账号，不收集个人信息
+
+# 以下五组内容会直接显示在 Program 详情页。
+whatItIs: 说明这是什么程序、适合谁使用，以及当前完成状态。
+whyBuilt: 说明为什么编写它、实际问题或个人动机。
+
+coreFeatures:
+  - 核心功能一
+  - 核心功能二
+
+technicalApproach:
+  - 技术方案一
+  - 技术方案二
+
+# 可选；补充演示方式、媒体范围或暂未提供内容的原因。
+demoDescription: 网页版为真实在线版本，视频展示主要操作流程。
+
+# true 不进入生产列表、详情页、Sitemap 和首页；准备好后改为 false。
+draft: true
+---
+```
+
+当前 Program 详情页只读取 frontmatter 字段。写在第二个 `---` 后面的普通 Markdown 正文目前不会显示，因此需要公开的文字应填写到 `whatItIs`、`whyBuilt`、`ownerContribution`、`coreFeatures`、`technicalApproach`、`limitations`、`privacy.notes` 或 `demoDescription`。
+
+## 4. 必填字段
+
+以下字段必须存在：
+
+| 字段 | 用途 |
+| --- | --- |
+| `title` | 页面和列表显示名称 |
+| `slug` | 唯一 URL 标识 |
+| `summary` | 列表、首页和 SEO 摘要 |
+| `status` | 当前完成状态 |
+| `category` | 程序分类 |
+| `demoType` | 主要演示方式 |
+| `ownerContribution` | 本人完成内容，至少一项 |
+| `limitations` | 当前限制，可使用空数组 `[]` |
+| `privacy` | 数据存储、外发和外部服务说明 |
+| `whatItIs` | “这是什么程序” |
+| `whyBuilt` | “为什么编写它” |
+| `coreFeatures` | 核心功能，至少一项 |
+| `technicalApproach` | 技术方案，至少一项 |
+
+`featured`、`order`、`stack`、`tags`、`platforms`、`media`、`privacy.notes` 和 `draft` 在 schema 中有默认值，但为了以后维护清楚，建议在正式条目中明确填写。
+
+## 5. status 参数
+
+| 值 | 页面含义 | 适用情况 |
+| --- | --- | --- |
+| `completed` | 已完成 | 当前范围已经完成并可稳定使用 |
+| `in-progress` | 进行中 | 正在持续开发或完善 |
+| `prototype` | 原型 | 概念或完整原型，但不代表正式产品 |
+| `archived` | 已归档 | 不再维护但保留记录 |
+
+不要把“能打开”直接等同于 `completed`。如果 Android、后端安全、数据或关键能力仍在开发，可以使用 `in-progress` 或 `prototype`。
+
+## 6. category 参数
+
+当前只允许以下值：
+
+```text
+web-app
+desktop-app
+mini-program
+tool
+visualization
+automation
+game-prototype
+experiment
+other
+```
+
+选择最能代表程序主体的一个值；其他维度可放进 `tags`。
+
+## 7. demoType 参数
+
+| 值 | 含义 | 常见搭配 |
+| --- | --- | --- |
+| `external-live` | 有真实在线程序 | `demoUrl`、`platforms.web` |
+| `static-embedded` | 只有站内静态前端演示 | 明确显示静态演示限制 |
+| `video` | 主要通过视频演示 | `media.type: video` |
+| `gif` | 主要通过 GIF 演示 | `media.type: gif` |
+| `screenshots` | 主要通过截图展示 | 一个或多个 screenshot |
+| `none` | 暂无公开演示 | 使用 `demoDescription` 解释原因 |
+
+`demoType` 表示“主要演示方式”，`platforms` 和 `media` 表示可以组合展示的真实入口与素材。例如一个项目可以同时使用：
+
+```text
+demoType: external-live
++ 网页版入口
++ 微信小程序码
++ 竖屏视频
++ 多张截图
+```
+
+## 8. platforms 配置
+
+### 网页版
+
+```yaml
+platforms:
+  - kind: web
+    label: 打开网页版
+    url: https://example.com/
+```
+
+- `url` 必须是有效 HTTPS 地址；
+- 网页版通常会成为详情页主要按钮；
+- 如果 `demoUrl` 和网页版地址相同，可以同时填写，以保持列表筛选和详情入口一致。
+
+### 微信小程序
+
+```yaml
+platforms:
+  - kind: wechat-mini-program
+    label: 微信小程序
+    qrImage: /programs/my-program/wechat-qr.png
+    description: 微信扫码打开小程序。
+    alt: 程序名称微信小程序码
+```
+
+- `qrImage` 必须指向真实小程序码；
+- 必须填写可读的 `description` 和 `alt`；
+- 建议保留二维码自身白边，不要用像素滤镜破坏扫码能力。
+
+没有对应平台时，删除整个条目，不要填写空 URL 或占位二维码。
+
+## 9. media 配置
+
+### 视频
+
+```yaml
+media:
+  - type: video
+    src: /programs/my-program/demo.mp4
+    poster: /programs/my-program/video-poster.webp
+    orientation: portrait
+    caption: 手机端操作演示
+```
+
+参数：
+
+- `src`：必填，站内绝对路径或 HTTPS URL；
+- `poster`：可选，视频加载前显示的封面；
+- `orientation`：`portrait` 或 `landscape`；
+- `caption`：必填，说明视频内容；
+- 推荐 MP4 使用 H.264 + AAC，以获得较好的浏览器兼容性；
+- 页面默认提供 controls、`playsinline` 和 metadata 预载，不自动播放、不循环。
+
+### GIF
+
+```yaml
+media:
+  - type: gif
+    src: /programs/my-program/demo.gif
+    orientation: landscape
+    alt: 程序筛选功能演示
+    caption: 标签与关键词筛选
+```
+
+### 截图
+
+```yaml
+media:
+  - type: screenshot
+    src: /programs/my-program/screenshot-01.webp
+    orientation: landscape
+    alt: 程序桌面端首页截图
+    caption: 桌面端主要界面
+```
+
+GIF 和截图必须填写 `alt`；`caption` 可选但建议填写。
+
+## 10. 媒体文件路径
+
+站内媒体建议统一放置：
+
+```text
+public/programs/<slug>/
+├─ demo.mp4
+├─ video-poster.webp
+├─ wechat-qr.png
+├─ screenshot-01.webp
+└─ demo.gif
+```
+
+在内容文件中引用时，不写 `public`：
+
+```text
+实际文件：public/programs/my-program/demo.mp4
+内容路径：/programs/my-program/demo.mp4
+```
+
+允许的媒体地址：
+
+```text
+/programs/my-program/demo.mp4
+https://media.example.com/demo.mp4
+```
+
+不要使用：
+
+```text
+public/programs/my-program/demo.mp4
+../public/programs/my-program/demo.mp4
+http://example.com/demo.mp4
+C:\本地路径\demo.mp4
+```
+
+大视频优先使用独立媒体托管；本地文件仍只会在详情页引用，不会被序列化进首页内容数据。
+
+## 11. privacy 配置
+
+### 不存储、不外发
+
+```yaml
+privacy:
+  storesData: none
+  sendsDataExternally: false
+  externalServices: []
+  notes:
+    - 不建立账号，不保存用户输入
+```
+
+### 只保存在当前设备
+
+```yaml
+privacy:
+  storesData: local-only
+  sendsDataExternally: false
+  externalServices: []
+  notes:
+    - 数据仅保存在浏览器 IndexedDB 中
+```
+
+### 使用外部服务
+
+```yaml
+privacy:
+  storesData: external
+  sendsDataExternally: true
+  externalServices:
+    - 高德地图
+    - Geoapify
+  notes:
+    - 位置数据会在查询时发送给地图服务
+    - 不在本站业务数据库中持久化位置历史
+```
+
+`storesData` 的允许值：
+
+```text
+none        不存储数据
+local-only  只保存在当前设备
+external    由外部服务或远端系统处理/存储
+```
+
+如果 `sendsDataExternally: true`，必须在 `externalServices` 中列出真实服务，并使用 `notes` 说明发送什么、为什么发送、是否持久化以及仍存在的风险。
+
+## 12. 首页、列表与排序规则
+
+- `/programs/`：显示所有 `draft: false` 的 Program；
+- 首页深海区域：只取 `draft: false`、`featured: true` 且排序最前的三个 Program；
+- 星空入口：取排序最前的两个公开 Program；
+- 排序先看 `featured`，再按 `order` 从小到大；
+- 建议使用不重复且留有间隔的数字，例如 `10`、`20`、`30`，方便以后插入新条目；
+- `draft: true` 不进入生产列表、详情路由、兼容路由或 Sitemap。
+
+如果只想先写内容但暂不公开：
+
+```yaml
+draft: true
+featured: false
+```
+
+## 13. 外链和真实性规则
+
+- “做点啥呢”只展示本人编写，或本人参与并能明确说明贡献的程序；
+- 不伪造线上地址、源码、接口成功、账号、后端、数据库、用户量或已完成功能；
+- 外部公开地址应使用 HTTPS；
+- 没有源码地址时直接删除 `sourceUrl`；
+- 没有媒体时直接删除 `media`，并选择真实的 `demoType`；
+- 只有静态前端演示时，必须明确说明后端、数据库、登录或实时功能未接入；
+- API Key、Token、数据库密码和其他秘密不能写入内容或 `public/`。
+
+## 14. 新增后需要更新的测试
+
+当前静态输出测试会明确列出 Program 路由和 HTML 总数。新增一个 `draft: false` Program 后，通常会新增两个 HTML：
+
+```text
+/programs/<slug>/
+/projects/<slug>/
+```
+
+需要检查并按实际情况更新：
+
+```text
+tests/static-export.test.mjs
+├─ primaryRoutes：增加 dist/programs/<slug>/index.html
+├─ legacyRoutes：增加 dist/projects/<slug>/index.html
+└─ HTML 总数：在原数量上增加 2
+```
+
+不要只修改测试数字；还要确认两个实际文件确实由构建生成。
+
+## 15. 验证命令
+
+在网站项目根目录执行：
+
+```powershell
+npm run check
+npm run lint
+npm test
+npm run build
+```
+
+其中：
+
+- `npm run check`：检查 YAML/frontmatter、schema、Astro 与 TypeScript；
+- `npm run lint`：检查源码规范；
+- `npm test`：构建并检查静态路由、内容边界和回归项；
+- `npm run build`：生成正式静态目录 `dist/`。
+
+构建后至少确认：
+
+```text
+dist/programs/<slug>/index.html          存在
+dist/projects/<slug>/index.html          存在并跳转
+dist/server/                              不存在
+sitemap-0.xml                             包含 /programs/<slug>/
+sitemap-0.xml                             不包含 /projects/<slug>/
+```
+
+如有本地媒体，还要直接访问每个视频、图片和小程序码，确认 HTTP 200、MIME 类型正确且页面可以正常加载。
+
+## 16. 常见错误
+
+### Astro 提示 schema 校验失败
+
+常见原因：
+
+- `status`、`category`、`demoType` 或 `orientation` 拼写不在允许值中；
+- 缺少 `ownerContribution`、`coreFeatures` 或 `technicalApproach`；
+- 外部 `platforms.web.url` 不是 HTTPS；
+- 媒体路径不是以 `/` 或 `https://` 开头；
+- 视频缺少 `caption`；
+- GIF/截图缺少 `alt`；
+- 微信小程序缺少二维码、说明或 alt；
+- `privacy` 缺少 `storesData` 或 `sendsDataExternally`；
+- 出现重复 `slug`。
+
+### 新 Program 没出现在首页
+
+依次检查：
+
+```yaml
+draft: false
+featured: true
+order: 是否排进前三
+```
+
+如果公开 Program 已经超过三个，排序靠后的内容仍会显示在 `/programs/`，但不会进入首页三张卡片。
+
+### 按钮没有显示
+
+- 网页版主按钮需要真实的 `platforms.web.url`，或 `external-live` + `demoUrl`；
+- 源码按钮需要非空 `sourceUrl`；
+- 不要用空字符串代替缺失字段，直接删除字段更清楚。
+
+### Markdown 正文没有显示
+
+当前 Program 详情布局只使用 frontmatter；请把内容移入详情页支持的字段。若未来要支持任意 Markdown/MDX 正文，需要先修改详情渲染架构和相关测试，不能只在文件末尾追加正文。
+
+## 17. 可参考的现有条目
+
+```text
+laleme.md          外部网页版 + 微信小程序 + 竖屏视频 + 详细隐私
+pixel-journey.md   外部网页版
+tidy-desk.md       静态演示边界
+signal-garden.mdx  暂无完整在线演示的原型
+```
+
+维护时以 `src/content.config.ts` 为最终字段约束；如果 schema 以后发生变化，应同步更新本说明文件。

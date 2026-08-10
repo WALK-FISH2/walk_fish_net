@@ -2,7 +2,7 @@
 title: 拉了么
 slug: laleme
 summary: 一个以地图为核心的公共厕所查询项目，使用统一后端为网页版、微信小程序和开发中的 Android 客户端提供地点、厕所、地铁与导航能力。
-status: prototype
+status: in-progress
 category: web-app
 featured: true
 order: 0

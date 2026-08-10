@@ -10,7 +10,7 @@ const current = (href: string) => href === "/" ? pathname === sitePath("/") : pa
 <header class:list={["site-nav", floating && "site-nav--floating"]} data-site-nav>
   <a class="site-brand" href={sitePath("/")} aria-label={`${SITE_CONFIG.name}首页`}>
     <span class="brand-sprite" aria-hidden="true"></span>
-    <span><strong>{SITE_CONFIG.shortName}</strong><small>WORLD 02</small></span>
+    <span><strong>{SITE_CONFIG.shortName}</strong><small>PIXEL WORLD</small></span>
   </a>
   <nav class="desktop-nav" aria-label="主导航">
     {SITE_CONFIG.nav.map((item) => <a href={sitePath(item.href)} aria-current={current(item.href) ? "page" : undefined}>{item.label}</a>)}

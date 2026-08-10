@@ -6,7 +6,7 @@ status: in-progress
 category: web-app
 startDate: 2026-07
 featured: true
-order: 1
+order: 2
 stack:
   - Astro
   - TypeScript

@@ -267,7 +267,7 @@ export function ImmersiveHome({ articles, programs }: { articles: ArticleSummary
       onPointerMove={pointerMove}
     >
       <div className={`world-loader ${loadingVisible ? "" : "world-loader--done"}`} aria-hidden={!loadingVisible}>
-        <div className="loader-mark" aria-hidden="true"><span /><span /><span /></div><p>正在生成世界……</p><strong>LOADING WORLD 02</strong>
+        <div className="loader-mark" aria-hidden="true"><span /><span /><span /></div><p>正在生成世界……</p><strong>LOADING WORLD</strong>
         <div className="loader-track" role="progressbar" aria-label="世界加载进度" aria-valuemin={0} aria-valuemax={100} aria-valuenow={ready ? 100 : 0}><span style={{ width: ready ? "100%" : "16%" }} /></div>
         <button type="button" onClick={() => setSkipped(true)}>跳过动画</button>
       </div>
