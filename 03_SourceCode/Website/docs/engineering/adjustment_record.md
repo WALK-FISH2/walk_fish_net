@@ -273,7 +273,7 @@ Programs 卡片仍保留 terminal、probe、capsule 三种视觉外形、原有�
 | 375×812 full | 标题为 `relative`；三卡宽 `334px`、x=`13px`，按 01 → 02 → 03 排列，相交 0、横向溢出 0 |
 | Reduced Motion | 桌面和移动端均回到单列普通文档流；标题不执行专属渐暗；模式切换保持 progress `0.5 → 0.5` |
 | Canvas fallback | `.story-canvas` 隐藏、`.canvas-fallback` 显示；标题、三卡和总入口完整 |
-| Program 链接 | Programs 区域 8 个链接均 `tabIndex=0`；实际进入 `/programs/signal-garden/`，页面标题为 `Signal Garden · 像素漫游者` |
+| Program 链接 | Programs 区域 8 个链接均 `tabIndex=0`；实际进入 `/programs/signal-garden/`，页面标题为 `Signal Garden · WALK-FISH's PIXEL WORLD` |
 | 控制台 | 普通模式和 fallback 的 warn/error 均为空 |
 
 现有动效开关的“系统建议简化动画”可见提示保持当前隐藏状态；为避免未使用变量阻断 ESLint，只把该布尔状态暴露为无视觉影响的 `data-system-reduced-suggestion`，没有改变开关文案、点击行为或页面布局。

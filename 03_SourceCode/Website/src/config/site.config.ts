@@ -7,9 +7,9 @@ export function sitePath(path = "/") {
 }
 
 export const SITE_CONFIG = {
-  name: "像素漫游者",
+  name: "WALK-FISH's PIXEL WORLD",
   shortName: "WALK FISH",
-  title: "像素漫游者 · 软件开发与奇怪想法",
+  title: "WALK-FISH's PIXEL WORLD · 软件开发与奇怪想法",
   description: "一个关于软件开发、本人程序和奇怪想法的像素叙事网站。沿着陆地、深海与星空，看看文字如何变成作品。",
   author: "[Leyu Zhang]",
   role: "软件开发者，也喜欢把一些奇怪的想法做成东西。",
