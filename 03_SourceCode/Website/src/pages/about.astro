@@ -3,7 +3,7 @@ import PageShell from "../components/PageShell.astro";
 import { SITE_CONFIG, sitePath } from "../config/site.config";
 const skills = ["TypeScript", "React", "Vue", "Node.js", "Python", "Java", "Canvas", "Web 可访问性"];
 ---
-<PageShell title="关于我" description="关于像素漫游者：开发方向、工具箱、兴趣与联系方式。" theme="space" canonicalPath="/about/">
+<PageShell title="关于我" description="关于WALK-FISH：开发方向、工具箱、兴趣与联系方式。" theme="space" canonicalPath="/about/">
   <section class="about-hero">
     <div class="about-avatar" aria-hidden="true"><span></span><i></i></div>
     <div><p class="eyebrow">PLAYER PROFILE · SLOT 01</p><h1>你好，我是 {SITE_CONFIG.author}</h1><p class="about-lede">{SITE_CONFIG.role}</p><p>我关心清晰的软件结构，也关心一个按钮按下去时是否有恰到好处的反馈。这里收集我的文章、本人编写的程序，以及仍在学习的方向。</p><div class="detail-actions"><a class="pixel-button pixel-button--primary" href={`mailto:${SITE_CONFIG.email}`}>发一封邮件</a><a class="pixel-button" href={SITE_CONFIG.github} target="_blank" rel="noreferrer">GitHub</a></div></div>
