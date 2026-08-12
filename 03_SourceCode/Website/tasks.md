@@ -358,6 +358,17 @@ M3～M6.1、Programs、路由、静态输出和世界 0°无回归
 
 M7 已完成。真实“拉了么”内容、网页版、H.264 竖屏演示、poster、小程序码、贡献/限制/隐私均已接入；首页保持三卡并按确认顺序展示，第四个 Program 继续在列表公开；17 个静态 HTML、媒体隔离、无 Node 请求期运行时和全部工程门禁均有实际证据。发布后仍需项目所有者用微信真机复核线上小程序码扫码结果和最终视觉。
 
+## M7.1：外部工具介绍文章
+
+- [x] `M7.1-01` 明确 Uiverse、React Bits、Three.js 属于第三方工具介绍，只进入 Article，不进入 Program（文档/内容证据：`docs/product/m7-1-external-tools-articles-spec.md` 与三个 `src/content/articles/*.md`；Programs schema、内容与路由未增加第三方条目）
+- [x] `M7.1-02` 基于官方网站、官方文档、官方仓库和许可证完成三篇原创中文介绍（来源证据：Uiverse 官网、React Bits 官网/官方 GitHub、Three.js 官网/手册/官方 GitHub；三篇均标注 2026-08-13 核对日期）
+- [x] `M7.1-03` 为每篇文章补充用途、适用场景、使用/学习方式、工程边界、官方入口和时效说明（内容证据：`uiverse-ui-library.md`、`react-bits-animated-components.md`、`threejs-web-3d-foundations.md`）
+- [x] `M7.1-04` 保持三篇 `featured: false`，不替换首页既有三篇精选文章（内容/测试/构建证据：三篇 frontmatter 均为 false；首页 HTML 不含三个新 slug；M7.1 回归测试通过）
+- [x] `M7.1-05` 更新文章静态路由、Sitemap、HTML 总数和外链安全回归测试（测试/静态证据：三个详情 HTML 存在；Sitemap 收录三路由；显式官网入口均为 `target=_blank` + `noopener noreferrer`；生产共 18 个 HTML）
+- [x] `M7.1-06` 运行 Astro Check、ESLint、测试、生产构建和静态路由验证（2026-08-13 命令证据：Astro Check 45 文件 0 errors/warnings/hints；ESLint 通过；20/20 测试通过；`npm run build:sites` 成功；18/18 静态页面 HTTP 200、未知路由 404、`dist/server` 不存在）
+
+阶段状态：`[x]` M7.1 已完成。三篇外部工具文章均已公开，Article/Program 领域边界、首页精选稳定性、Sitemap、纯静态输出和全部工程门禁均有实际证据。
+
 ## M8：质量
 
 - [ ] `M8-01` 单元测试：进度映射与内容校验

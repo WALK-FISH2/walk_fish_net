@@ -171,3 +171,14 @@ M7 每次新增、转草稿或移除 Program 后，都必须重新统计独立 H
 - `demo.mp4`、`video-poster.webp`、`wechat-qr.png` 分别以 `video/mp4`、`image/webp`、`image/png` 返回 200；
 - 本地 `demo-HEVC.mp4` 只作为备份，构建时排除，`dist/` 与 `sites-dist/` 均不包含该文件；
 - `dist/server` 不存在，独立运行的“拉了么”后端没有成为本站请求期运行时；Sitemap 收录 4 个 canonical Program 并排除 `/projects`。
+
+### 2026-08-13 M7.1 外部工具文章完成基线
+
+- 新增 Uiverse、React Bits、Three.js 三篇公开 Article，不新增 Program 或 Projects 兼容页；
+- M7.1 开始时，当前仓库实际公开 3 个 Program，生产 HTML 为 15 个；
+- 三篇文章加入后，生产 HTML 预期增加为 18 个：14 个主页面和 4 个 Projects 兼容页；
+- 三个新详情路由必须进入 Sitemap，并能由纯静态服务器直接刷新；
+- 第三方网站只以 HTTPS 外链存在，不嵌入远程脚本、iframe 或请求期接口，因此不改变 Astro 静态部署边界；
+- `npm run check` 为 45 文件 0 errors / 0 warnings / 0 hints，ESLint 通过，20/20 测试通过，`npm run build:sites` 成功；
+- `dist/` 实际生成 18 个 HTML，静态服务器逐一验证 18/18 页面 HTTP 200，未知路由 HTTP 404，`dist/server` 不存在；
+- Sitemap 实际收录三个新 Article 路由，首页输出不包含三个新 slug，原精选内容未被替换。

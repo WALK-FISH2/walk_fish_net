@@ -17,6 +17,10 @@ draft: false
 
 规则：标题、摘要、发布日期必填；草稿不进入生产列表；slug 来自文件名且必须唯一。
 
+“文章&工具”允许收录两类内容：站点所有者的原创文章，以及基于官方资料整理的第三方工具/技术介绍。第三方工具介绍仍使用 Article，不得进入 Program；正文必须明确第三方归属，提供官方 HTTPS 来源，避免复制第三方正文、视觉素材或容易过期的宣传数字。`featured: false` 的公开文章进入 `/articles`、搜索、标签筛选、详情页和 Sitemap，但不参与首页三篇精选内容。
+
+M7.1 首批外部工具文章为 `uiverse-ui-library`、`react-bits-animated-components` 和 `threejs-web-3d-foundations`，统一使用 `工具` 标签，并按具体内容补充 `UI`、`CSS`、`React`、`动画`、`Three.js` 或 `Web 3D` 标签。
+
 ## 2. Program 领域定义
 
 “做点啥呢”不是普通项目经历、公司项目或宽泛作品列表。这里只展示站点所有者本人编写的程序、工具、网页应用、交互实验和程序演示。

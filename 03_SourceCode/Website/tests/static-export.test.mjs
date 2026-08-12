@@ -22,21 +22,22 @@ const primaryRoutes = [
   ["dist/articles/index.html", "沿途记录"],
   ["dist/articles/content-as-levels/index.html", "把内容当作关卡"],
   ["dist/articles/first-post/index.html", "在像素世界里搭一条可逆的路"],
+  ["dist/articles/react-bits-animated-components/index.html", "React Bits"],
   ["dist/articles/small-tools/index.html", "小工具也值得被认真记录"],
+  ["dist/articles/threejs-web-3d-foundations/index.html", "Three.js"],
+  ["dist/articles/uiverse-ui-library/index.html", "Uiverse"],
   ["dist/programs/index.html", "做点啥呢"],
   ["dist/programs/laleme/index.html", "拉了么"],
+  ["dist/programs/image_converter/index.html", "CRT转换器"],
   ["dist/programs/pixel-journey/index.html", "像素漫游个人站"],
-  ["dist/programs/tidy-desk/index.html", "Tidy Desk"],
-  ["dist/programs/signal-garden/index.html", "Signal Garden"],
   ["dist/404.html", "LOST COORDINATES"],
 ];
 
 const legacyRoutes = [
   ["dist/projects/index.html", "/programs/"],
   ["dist/projects/laleme/index.html", "/programs/laleme/"],
+  ["dist/projects/image_converter/index.html", "/programs/image_converter/"],
   ["dist/projects/pixel-journey/index.html", "/programs/pixel-journey/"],
-  ["dist/projects/tidy-desk/index.html", "/programs/tidy-desk/"],
-  ["dist/projects/signal-garden/index.html", "/programs/signal-garden/"],
 ];
 
 test("emits independent HTML for every primary and compatibility route", async () => {
@@ -54,7 +55,33 @@ test("emits independent HTML for every primary and compatibility route", async (
   }
 
   const outputEntries = await readdir(new URL("dist/", root), { recursive: true });
-  assert.equal(outputEntries.filter((entry) => entry.endsWith(".html")).length, 17);
+  assert.equal(outputEntries.filter((entry) => entry.endsWith(".html")).length, 18);
+});
+
+test("publishes M7.1 external tools as attributed articles without changing the Program domain", async () => {
+  const [articleIndex, uiverse, reactBits, threejs, sitemap, home] = await Promise.all([
+    readFile(new URL("dist/articles/index.html", root), "utf8"),
+    readFile(new URL("dist/articles/uiverse-ui-library/index.html", root), "utf8"),
+    readFile(new URL("dist/articles/react-bits-animated-components/index.html", root), "utf8"),
+    readFile(new URL("dist/articles/threejs-web-3d-foundations/index.html", root), "utf8"),
+    readFile(new URL("dist/sitemap-0.xml", root), "utf8"),
+    readFile(new URL("dist/index.html", root), "utf8"),
+  ]);
+
+  for (const title of ["Uiverse", "React Bits", "Three.js"]) {
+    assert.match(articleIndex, new RegExp(title));
+  }
+  assert.match(uiverse, /https:\/\/uiverse\.io\//);
+  assert.match(reactBits, /https:\/\/www\.reactbits\.dev\/get-started\/index/);
+  assert.match(threejs, /https:\/\/threejs\.org\//);
+  for (const html of [uiverse, reactBits, threejs]) {
+    assert.match(html, /target="_blank"/);
+    assert.match(html, /rel="noopener noreferrer"/);
+  }
+  assert.match(sitemap, /\/articles\/uiverse-ui-library\//);
+  assert.match(sitemap, /\/articles\/react-bits-animated-components\//);
+  assert.match(sitemap, /\/articles\/threejs-web-3d-foundations\//);
+  assert.doesNotMatch(home, /uiverse-ui-library|react-bits-animated-components|threejs-web-3d-foundations/);
 });
 
 test("program pages expose the required domain content without claiming missing services", async () => {
@@ -121,7 +148,7 @@ test("keeps content, SEO, motion modes, and migrated source boundaries", async (
 });
 
 test("implements M7 real Program publishing, detail-first actions, media isolation, and three-card ordering", async () => {
-  const [program, home, contentConfig, types, contentLib, layout, demo, css, sitemap, laleme, tidyDesk, signalGarden] = await Promise.all([
+  const [program, home, contentConfig, types, contentLib, layout, demo, css, sitemap, laleme, imageConverter, tidyDesk, signalGarden] = await Promise.all([
     readFile(new URL("dist/programs/laleme/index.html", root), "utf8"),
     readFile(new URL("dist/index.html", root), "utf8"),
     readFile(new URL("src/content.config.ts", root), "utf8"),
@@ -132,6 +159,7 @@ test("implements M7 real Program publishing, detail-first actions, media isolati
     readFile(new URL("src/styles/global.css", root), "utf8"),
     readFile(new URL("dist/sitemap-0.xml", root), "utf8"),
     readFile(new URL("src/content/programs/laleme.md", root), "utf8"),
+    readFile(new URL("src/content/programs/image_converter.md", root), "utf8"),
     readFile(new URL("src/content/programs/tidy-desk.md", root), "utf8"),
     readFile(new URL("src/content/programs/signal-garden.mdx", root), "utf8"),
   ]);
@@ -150,7 +178,7 @@ test("implements M7 real Program publishing, detail-first actions, media isolati
   const actionIndex = program.indexOf("打开网页版");
   const whatIndex = program.indexOf("这是什么程序");
   assert.ok(actionIndex > 0 && actionIndex < whatIndex, "primary web action precedes long-form content");
-  assert.match(program, /href="https:\/\/pp\.nuanzhualife\.cn\/"[^>]*target="_blank"[^>]*rel="noopener noreferrer"/);
+  assert.match(program, /href="https:\/\/poo\.nuanzhualife\.cn\/"[^>]*target="_blank"[^>]*rel="noopener noreferrer"/);
   assert.match(layout, /grid-area|program-showcase__media/);
   assert.match(layout, /sameAs: externalProgramUrls/);
 
@@ -179,30 +207,30 @@ test("implements M7 real Program publishing, detail-first actions, media isolati
   assert.doesNotMatch(home, /demo\.mp4|video-poster\.webp|wechat-qr\.png/);
   const homeProgramLinks = [
     home.indexOf("/programs/laleme/"),
+    home.indexOf("/programs/image_converter/"),
     home.indexOf("/programs/pixel-journey/"),
-    home.indexOf("/programs/tidy-desk/"),
   ];
   assert.ok(homeProgramLinks.every((index) => index > 0), "the three selected Programs are published on home");
-  assert.ok(homeProgramLinks[0] < homeProgramLinks[1] && homeProgramLinks[1] < homeProgramLinks[2], "home Program order is Laleme, Pixel Journey, Tidy Desk");
+  assert.ok(homeProgramLinks[0] < homeProgramLinks[1] && homeProgramLinks[1] < homeProgramLinks[2], "home Program order is Laleme, Image Converter, Pixel Journey");
   assert.equal((home.match(/class="porthole /g) ?? []).length, 3);
-  assert.match(laleme, /status:\s*prototype/);
+  assert.match(laleme, /status:\s*in-progress/);
   assert.match(laleme, /order:\s*0/);
   assert.match(laleme, /storesData:\s*external/);
   assert.match(laleme, /sendsDataExternally:\s*true/);
   assert.doesNotMatch(laleme, /sourceUrl:/);
-  assert.match(tidyDesk, /status:\s*prototype/);
-  assert.match(signalGarden, /status:\s*prototype/);
-  assert.match(tidyDesk, /draft:\s*false/);
-  assert.match(signalGarden, /draft:\s*false/);
-  await access(new URL("dist/programs/tidy-desk/index.html", root));
-  await access(new URL("dist/programs/signal-garden/index.html", root));
+  assert.match(imageConverter, /draft:\s*false/);
+  assert.match(tidyDesk, /draft:\s*true/);
+  assert.match(signalGarden, /draft:\s*true/);
+  await access(new URL("dist/programs/image_converter/index.html", root));
+  await assert.rejects(access(new URL("dist/programs/tidy-desk/index.html", root)));
+  await assert.rejects(access(new URL("dist/programs/signal-garden/index.html", root)));
   await access(new URL("dist/programs/laleme/index.html", root));
   await access(new URL("public/programs/laleme/demo.mp4", root));
   await access(new URL("public/programs/laleme/video-poster.webp", root));
   await access(new URL("public/programs/laleme/wechat-qr.png", root));
   assert.match(sitemap, /\/programs\/laleme\//);
-  assert.match(sitemap, /\/programs\/tidy-desk\//);
-  assert.match(sitemap, /\/programs\/signal-garden\//);
+  assert.match(sitemap, /\/programs\/image_converter\//);
+  assert.doesNotMatch(sitemap, /\/programs\/(?:tidy-desk|signal-garden)\//);
   assert.doesNotMatch(sitemap, /\/projects(?:\/|<)/);
 });
 

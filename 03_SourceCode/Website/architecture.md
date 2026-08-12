@@ -39,7 +39,7 @@ flowchart LR
     Programs["src/content/programs"]
     Pages["src/pages/*.astro"]
     Astro["Astro static build"]
-    HTML["17 个独立 HTML"]
+    HTML["18 个独立 HTML"]
     Assets["浏览器端 JS / CSS / Pixi 场景"]
     Dist["dist/"]
     Host["任意静态文件服务器"]
@@ -78,7 +78,7 @@ src/
 
 ## 5. 静态路由生成
 
-`src/pages/articles/[slug].astro` 和 `src/pages/programs/[slug].astro` 使用 `getStaticPaths()` 在构建期枚举非草稿内容；`src/pages/projects/[slug].astro` 使用同一公开 Programs slug 集合生成兼容跳转页。当前 `laleme`、`pixel-journey`、`tidy-desk` 与 `signal-garden` 均参与静态生成，首页只取排序前三项；当前 `npm run build` 生成以下 17 个 HTML：
+`src/pages/articles/[slug].astro` 和 `src/pages/programs/[slug].astro` 使用 `getStaticPaths()` 在构建期枚举非草稿内容；`src/pages/projects/[slug].astro` 使用同一公开 Programs slug 集合生成兼容跳转页。当前 6 篇 Article 与 `laleme`、`image_converter`、`pixel-journey` 3 个 Program 参与静态生成；`tidy-desk` 与 `signal-garden` 当前为草稿。首页分别只取三篇精选 Article 与排序前三的公开 Program。当前 `npm run build` 生成以下 18 个 HTML：
 
 | URL 路由 | 静态文件 | 来源 |
 | --- | --- | --- |
@@ -87,20 +87,21 @@ src/
 | `/articles/` | `dist/articles/index.html` | 文章列表 |
 | `/articles/content-as-levels/` | `dist/articles/content-as-levels/index.html` | 文章内容集合 |
 | `/articles/first-post/` | `dist/articles/first-post/index.html` | 文章内容集合 |
+| `/articles/react-bits-animated-components/` | `dist/articles/react-bits-animated-components/index.html` | M7.1 外部工具文章 |
 | `/articles/small-tools/` | `dist/articles/small-tools/index.html` | 文章内容集合 |
+| `/articles/threejs-web-3d-foundations/` | `dist/articles/threejs-web-3d-foundations/index.html` | M7.1 外部工具文章 |
+| `/articles/uiverse-ui-library/` | `dist/articles/uiverse-ui-library/index.html` | M7.1 外部工具文章 |
 | `/programs/` | `dist/programs/index.html` | “做点啥呢”主列表 |
 | `/programs/laleme/` | `dist/programs/laleme/index.html` | 拉了么真实 Program |
+| `/programs/image_converter/` | `dist/programs/image_converter/index.html` | CRT 转换器 Program |
 | `/programs/pixel-journey/` | `dist/programs/pixel-journey/index.html` | Program 内容集合 |
-| `/programs/tidy-desk/` | `dist/programs/tidy-desk/index.html` | Program 原型内容集合 |
-| `/programs/signal-garden/` | `dist/programs/signal-garden/index.html` | Program 原型内容集合 |
 | `/projects/` | `dist/projects/index.html` | 指向 `/programs/` 的兼容页 |
 | `/projects/laleme/` | `dist/projects/laleme/index.html` | 指向同 slug Program 的兼容页 |
+| `/projects/image_converter/` | `dist/projects/image_converter/index.html` | 指向同 slug Program 的兼容页 |
 | `/projects/pixel-journey/` | `dist/projects/pixel-journey/index.html` | 指向同 slug Program 的兼容页 |
-| `/projects/tidy-desk/` | `dist/projects/tidy-desk/index.html` | 指向同 slug Program 的兼容页 |
-| `/projects/signal-garden/` | `dist/projects/signal-garden/index.html` | 指向同 slug Program 的兼容页 |
 | `/404.html` | `dist/404.html` | `src/pages/404.astro` |
 
-静态路由测试逐一读取上述 17 个 HTML；兼容页通过 meta refresh、`window.location.replace` 和无脚本链接跳转，并使用 `noindex,follow` 与新 canonical。Sitemap 只收录公开主 Programs 路由，不收录 Projects 兼容页或草稿。
+静态路由测试逐一读取上述 18 个 HTML；兼容页通过 meta refresh、`window.location.replace` 和无脚本链接跳转，并使用 `noindex,follow` 与新 canonical。Sitemap 收录公开 Article 与主 Programs 路由，不收录 Projects 兼容页或草稿。M7.1 的三篇外部工具内容只扩展 Article 集合，不改变 Program 领域、路由结构或请求期运行时。
 
 ## 6. 静态输出与运行时边界
 
@@ -312,6 +313,8 @@ M5.5 浏览器验收覆盖 1280×720 的约 35% 三层浪和 82% 星空、1920×
 浏览器在 1280×720 标准动效下逐一验证 31.5%、32.8%、34.2%、35.0%、35.8%、36.8% 和 38.0%，并完成 38%→30% 倒放；在 375×812 下复验 31.5%、35.8%、38.0%、无正向横向溢出和链接可用；Reduced Motion 的 35.8% 间隔 700ms 两帧摘要及 38%→30%→35.8% 往返帧摘要一致；Canvas 强制降级时文章与 Programs DOM 仍完整。文章入口指针点击进入真实详情，Programs 导航指针点击进入 `/programs`，二者均 `tabIndex=0` 且可获得焦点；标准、Reduced Motion、移动端和降级状态的浏览器 warn/error 均为空。
 
 2026-08-09 M7 完成验收：Astro Check 45 文件 0 errors/warnings/hints，ESLint 通过，19/19 自动化测试通过，`npm run build` 与 `npm run build:sites` 无警告成功。`dist/` 生成 17 个 HTML；纯静态服务器逐一请求 17/17 路由均为 HTTP 200，未知路由为 404，三项“拉了么”媒体均以正确 MIME 返回 200，`dist/server` 不存在。视频为 H.264 High Profile、576×1280、22.133 秒；首页恰有三张卡片且顺序为“拉了么 → 像素漫游个人站 → Tidy Desk”，媒体地址不在首页 HTML 中；Sitemap 收录四个 canonical Program 并排除 Projects 兼容页。
+
+2026-08-13 M7.1 完成验收：在当前 15 个 HTML、3 个公开 Program 的仓库状态上新增三篇非精选 Article，最终 `dist/` 生成 18 个 HTML。Astro Check 为 45 文件 0 errors/warnings/hints，ESLint 通过，20/20 自动化测试通过，`npm run build:sites` 成功；静态服务器逐一验证 18/18 页面 HTTP 200，未知路由 HTTP 404，`dist/server` 不存在。Sitemap 收录 Uiverse、React Bits、Three.js 三个新 canonical 文章路由；首页 HTML 不含三者 slug，Program 领域与首页精选文章未改变。
 
 ## 11. 已知未完成项
 
