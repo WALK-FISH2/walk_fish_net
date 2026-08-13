@@ -957,6 +957,11 @@ canvas {
   overflow-y: auto;
 }
 
+.page-shell > .site-nav {
+  position: sticky;
+  top: 0;
+}
+
 .page-shell--land { background: #eff9e7; color: var(--land-ink); }
 .page-shell--sea { background: var(--sea-deep); color: var(--sea-text); }
 .page-shell--space { background: var(--space-void); color: var(--space-text); }

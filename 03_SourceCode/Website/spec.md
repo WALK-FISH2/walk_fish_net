@@ -135,7 +135,7 @@ M6.2 不修改现有五段全局进度、M4.5 浪花、M5 海空粒子、M5.5 �
 
 `/articles/`、文章详情、`/programs/`、Program 详情和 `/about/` 必须使用浏览器原生纵向文档滚动。通用页面外壳只允许抑制横向溢出，不得裁掉超过一屏的正文，也不得创建嵌套的页面级主滚动容器。
 
-移动导航可以在展开期间临时锁定文档滚动，但关闭、Escape、选择链接、视口切换和卸载后必须恢复。桌面与 375px 均需验证滚轮/触摸、PageDown/PageUp、Home/End、Tab 焦点推进、详情刷新、前进后退、到达页脚和零横向溢出。M6.3 不修改沉浸式首页的 ScrollTrigger、章节高度或动效模式。完整规格见 `docs/product/m6-3-content-page-scroll-spec.md`。
+普通内容页的现有顶部导航在页面滚动时必须停驻在视口顶部，保持原尺寸、颜色、边框和响应式菜单样式；正文仍由 document/body 原生滚动，不建立导航外的嵌套滚动容器。移动导航可以在展开期间临时锁定文档滚动，但关闭、Escape、选择链接、视口切换和卸载后必须恢复。桌面与 375px 均需验证滚轮/触摸、PageDown/PageUp、Home/End、Tab 焦点推进、详情刷新、前进后退、到达页脚和零横向溢出。M6.3 不修改沉浸式首页的 ScrollTrigger、章节高度或动效模式。完整规格见 `docs/product/m6-3-content-page-scroll-spec.md`。
 
 ## 6. “做点啥呢”程序系统
 

@@ -147,7 +147,7 @@ test("keeps content, SEO, motion modes, and migrated source boundaries", async (
   await access(new URL("src/content/programs/pixel-journey.md", root));
 });
 
-test("adds four recyclable scan-triggered targets to the Programs sonar", async () => {
+test("adds five recyclable scan-triggered targets to the Programs sonar", async () => {
   const [programsPage, sonarComponent, css, builtPage] = await Promise.all([
     readFile(new URL("src/pages/programs/index.astro", root), "utf8"),
     readFile(new URL("src/components/SonarRadar.astro", root), "utf8"),
@@ -156,8 +156,8 @@ test("adds four recyclable scan-triggered targets to the Programs sonar", async 
   ]);
 
   assert.match(programsPage, /<SonarRadar\s*\/>/);
-  assert.equal((builtPage.match(/data-sonar-target=/g) ?? []).length, 4);
-  for (const target of ["fish", "tag", "braces", "terminal"]) assert.match(builtPage, new RegExp(`data-sonar-target="${target}"`));
+  assert.equal((builtPage.match(/<span class="sonar-target[^"]*" data-sonar-target=/g) ?? []).length, 5);
+  for (const target of ["fish", "tag", "braces", "cat", "terminal"]) assert.match(builtPage, new RegExp(`data-sonar-target="${target}"`));
   assert.deepEqual(SONAR_RADAR_CONFIG.fadeDurationMs, [1_100, 2_100]);
   assert.equal(SONAR_RADAR_CONFIG.sweepDurationMs, 4_000);
   assert.equal(randomSonarFadeDuration(() => 0), 1_100);
@@ -276,6 +276,8 @@ test("keeps ordinary content pages vertically scrollable and restores mobile men
 
   assert.match(baseLayout, /!noShell && "page-shell"/);
   assert.match(css, /\.page-shell\s*\{[\s\S]*?min-height:\s*100vh;[\s\S]*?overflow-x:\s*hidden;[\s\S]*?overflow-y:\s*auto;[\s\S]*?\}/);
+  assert.match(css, /\.page-shell > \.site-nav\s*\{[^}]*position:\s*sticky;[^}]*top:\s*0;/);
+  assert.doesNotMatch(css, /\.page-shell > \.site-nav\s*\{[^}]*?(?:width|padding|border|background|color):/);
   assert.doesNotMatch(css, /\.page-shell\s*\{[^}]*overflow:\s*hidden;/);
   assert.doesNotMatch(css, /\.archive-hero::after\s*\{[^}]*100vw/);
   assert.match(css, /@media\s*\(max-width:\s*767px\)[\s\S]*?\.archive-hero\s*\{[^}]*overflow:\s*clip;/s);
@@ -508,9 +510,9 @@ test("derives reversible article exit and a non-reversing Programs entry offset"
   assert.equal(articleStart.articleCardsExitProgress, 0.12);
   assert.equal(articleTravel.articleCardsExitProgress, 0.58);
   assert.equal(articleExited.articleCardsTranslateYVh, -56);
-  assert.equal(programBefore.programCardsTranslateYVh, 54);
-  assert.equal(programMiddle.programCardsTranslateYVh, 54);
-  assert.equal(programTail.programCardsTranslateYVh, 54);
+  assert.equal(programBefore.programCardsTranslateYVh, 34);
+  assert.equal(programMiddle.programCardsTranslateYVh, 34);
+  assert.equal(programTail.programCardsTranslateYVh, 34);
   assert.deepEqual(getHomepageContentFlowState(0.342), articleTravel);
   assert.deepEqual(getHomepageContentFlowState(0.5), programMiddle);
 });
