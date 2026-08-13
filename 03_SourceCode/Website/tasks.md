@@ -363,11 +363,11 @@ M7 已完成。真实“拉了么”内容、网页版、H.264 竖屏演示、po
 - [x] `M7.1-01` 明确 Uiverse、React Bits、Three.js 属于第三方工具介绍，只进入 Article，不进入 Program（文档/内容证据：`docs/product/m7-1-external-tools-articles-spec.md` 与三个 `src/content/articles/*.md`；Programs schema、内容与路由未增加第三方条目）
 - [x] `M7.1-02` 基于官方网站、官方文档、官方仓库和许可证完成三篇原创中文介绍（来源证据：Uiverse 官网、React Bits 官网/官方 GitHub、Three.js 官网/手册/官方 GitHub；三篇均标注 2026-08-13 核对日期）
 - [x] `M7.1-03` 为每篇文章补充用途、适用场景、使用/学习方式、工程边界、官方入口和时效说明（内容证据：`uiverse-ui-library.md`、`react-bits-animated-components.md`、`threejs-web-3d-foundations.md`）
-- [x] `M7.1-04` 保持三篇 `featured: false`，不替换首页既有三篇精选文章（内容/测试/构建证据：三篇 frontmatter 均为 false；首页 HTML 不含三个新 slug；M7.1 回归测试通过）
-- [x] `M7.1-05` 更新文章静态路由、Sitemap、HTML 总数和外链安全回归测试（测试/静态证据：三个详情 HTML 存在；Sitemap 收录三路由；显式官网入口均为 `target=_blank` + `noopener noreferrer`；生产共 18 个 HTML）
-- [x] `M7.1-06` 运行 Astro Check、ESLint、测试、生产构建和静态路由验证（2026-08-13 命令证据：Astro Check 45 文件 0 errors/warnings/hints；ESLint 通过；20/20 测试通过；`npm run build:sites` 成功；18/18 静态页面 HTTP 200、未知路由 404、`dist/server` 不存在）
+- [x] `M7.1-04` 首次接入时三篇保持 `featured: false`，未替换首页既有三篇精选文章；项目所有者后续在 commit `b72683a` 将三篇改为精选，旧三篇同时保持草稿，当前首页因此展示这三篇工具文章（历史与当前内容证据：三个新 Article frontmatter、旧三篇 `draft: true`、首页构建产物）
+- [x] `M7.1-05` 更新文章静态路由、Sitemap、HTML 总数和外链安全回归测试（当前测试/静态证据：三个公开详情 HTML 存在；Sitemap 收录三路由；显式官网入口均为 `target=_blank` + `noopener noreferrer`；旧三篇草稿不生成路由，生产共 15 个 HTML）
+- [x] `M7.1-06` 运行 Astro Check、ESLint、测试、生产构建和静态路由验证（当前 2026-08-13 复核：Astro Check 45 文件 0 errors/warnings/hints；ESLint 通过；20/20 测试通过；`npm run build:sites` 成功；15 个静态 HTML、`dist/server` 不存在）
 
-阶段状态：`[x]` M7.1 已完成。三篇外部工具文章均已公开，Article/Program 领域边界、首页精选稳定性、Sitemap、纯静态输出和全部工程门禁均有实际证据。
+阶段状态：`[x]` M7.1 已完成。三篇外部工具文章均已公开；首页精选已按项目所有者后续 commit `b72683a` 更新为这三篇文章，Article/Program 领域边界、Sitemap、纯静态输出和全部工程门禁均有实际证据。
 
 ## M8：质量
 
@@ -381,6 +381,7 @@ M7 已完成。真实“拉了么”内容、网页版、H.264 竖屏演示、po
 - [ ] `M8-08` 控制台、内存和销毁检查
 - [x] `M8-09` 陆地人物可见走廊回归修复（视频与代码证据：Hero 桌面顶部由 `24vh` 改为 `max(88px, 12vh)`、375px 由 `18vh` 改为 `max(76px, 8vh)`；二次复验发现三张文章路牌仍遮挡后，将路牌组由 `38vh` 上移至 `28vh`，错层由 `18px` 降至 `12px`，装饰柱由 `76px` 降至 `52px`，并补充短视口压缩和 `≤980px` 横向轨道；旅行者 `start: 0.13`、`travel: 0.46` 和地面线不变；回归测试与全部质量门禁通过）
 - [x] `M8-10` Programs 档案非重叠文档流与 `?motion=full` 阶段高度回归修复（代码证据：标题、三张档案卡片和总入口改为顺序流，桌面/移动端/Reduced Motion 使用显式 gap；强制完整动效恢复桌面 `160/190/300/210vh` 和移动端 `130/170/230/120vh` 阶段高度；10/10 测试、15/15 静态路由验证通过）
+- [x] `M8-11` 首页陆地/海洋卡片纵向位置微调（代码证据：桌面文章路牌 sticky top 由 `28vh` 提前至 `24vh`，短视口由 `30vh` 提前至 `26vh`；桌面完整动画的 Programs 卡片组在既有 `--program-card-offset` 上增加 `clamp(48px, 6vh, 72px)`，卡片尺寸、间距、顺序、章节高度和移动端/Reduced Motion 参数不变；Astro Check、ESLint、20/20 测试、Sites 构建、桌面正反滚动、375px 与控制台验证通过）
 
 ## M9：发布
 

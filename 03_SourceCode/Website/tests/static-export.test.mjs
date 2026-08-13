@@ -20,10 +20,7 @@ const primaryRoutes = [
   ["dist/index.html", "沿途捡到的想法"],
   ["dist/about/index.html", "PLAYER PROFILE"],
   ["dist/articles/index.html", "沿途记录"],
-  ["dist/articles/content-as-levels/index.html", "把内容当作关卡"],
-  ["dist/articles/first-post/index.html", "在像素世界里搭一条可逆的路"],
   ["dist/articles/react-bits-animated-components/index.html", "React Bits"],
-  ["dist/articles/small-tools/index.html", "小工具也值得被认真记录"],
   ["dist/articles/threejs-web-3d-foundations/index.html", "Three.js"],
   ["dist/articles/uiverse-ui-library/index.html", "Uiverse"],
   ["dist/programs/index.html", "做点啥呢"],
@@ -55,7 +52,7 @@ test("emits independent HTML for every primary and compatibility route", async (
   }
 
   const outputEntries = await readdir(new URL("dist/", root), { recursive: true });
-  assert.equal(outputEntries.filter((entry) => entry.endsWith(".html")).length, 18);
+  assert.equal(outputEntries.filter((entry) => entry.endsWith(".html")).length, 15);
 });
 
 test("publishes M7.1 external tools as attributed articles without changing the Program domain", async () => {
@@ -81,7 +78,9 @@ test("publishes M7.1 external tools as attributed articles without changing the 
   assert.match(sitemap, /\/articles\/uiverse-ui-library\//);
   assert.match(sitemap, /\/articles\/react-bits-animated-components\//);
   assert.match(sitemap, /\/articles\/threejs-web-3d-foundations\//);
-  assert.doesNotMatch(home, /uiverse-ui-library|react-bits-animated-components|threejs-web-3d-foundations/);
+  for (const slug of ["uiverse-ui-library", "react-bits-animated-components", "threejs-web-3d-foundations"]) {
+    assert.match(home, new RegExp(`/articles/${slug}/`));
+  }
 });
 
 test("program pages expose the required domain content without claiming missing services", async () => {
@@ -279,8 +278,9 @@ test("keeps article content available across the Canvas fallback boundary", asyn
   ]);
 
   assert.match(home, /class="story-canvas pixel-art" aria-hidden="true"/);
-  assert.match(home, /\/articles\/first-post\//);
-  assert.match(home, /\/articles\/content-as-levels\//);
+  assert.match(home, /\/articles\/react-bits-animated-components\//);
+  assert.match(home, /\/articles\/threejs-web-3d-foundations\//);
+  assert.match(home, /\/articles\/uiverse-ui-library\//);
   assert.match(homeComponent, /catch\s*\{[\s\S]*?setCanvasFailed\(true\)/);
   assert.match(sceneController, /onContextLost\?\.\(\)/);
   assert.match(sceneController, /this\.destroyed \|\| !this\.initialized/);
@@ -432,13 +432,13 @@ test("keeps the traveler corridor and Programs archive free of content collision
   assert.match(css, /\.hero-copy\s*\{[\s\S]*?top:\s*var\(--hero-safe-top\)/);
   assert.match(css, /@media \(max-width:\s*767px\)[\s\S]*?--hero-safe-top:\s*max\(76px,\s*8vh\)/);
   assert.match(storyConfig, /land:\s*\{[\s\S]*?startX:\s*0\.13,[\s\S]*?endX:\s*0\.59/);
-  assert.match(css, /--road-sign-safe-top:\s*28vh/);
+  assert.match(css, /--road-sign-safe-top:\s*24vh/);
   assert.match(css, /--road-sign-min-height:\s*250px/);
   assert.match(css, /--road-sign-stagger:\s*12px/);
   assert.match(css, /--road-sign-post-height:\s*52px/);
   assert.match(css, /\.road-signs\s*\{[\s\S]*?top:\s*var\(--road-sign-safe-top\)/);
   assert.match(css, /\.road-sign\s*\{[\s\S]*?min-height:\s*var\(--road-sign-min-height\)/);
-  assert.match(css, /@media \(min-width:\s*981px\) and \(max-height:\s*820px\)[\s\S]*?--road-sign-min-height:\s*190px[\s\S]*?--road-sign-post-height:\s*28px/);
+  assert.match(css, /@media \(min-width:\s*981px\) and \(max-height:\s*820px\)[\s\S]*?--road-sign-safe-top:\s*26vh[\s\S]*?--road-sign-min-height:\s*190px[\s\S]*?--road-sign-post-height:\s*28px/);
   assert.match(css, /@media \(max-width:\s*980px\)[\s\S]*?grid-auto-flow:\s*column[\s\S]*?\.road-sign__post\s*\{\s*display:\s*none;/);
   assert.match(css, /@media \(max-width:\s*980px\) and \(max-height:\s*700px\)[\s\S]*?min-height:\s*190px/);
   assert.match(css, /\.road-signs\s*\{[\s\S]*?position:\s*sticky;[\s\S]*?top:\s*var\(--road-sign-safe-top\)/);
@@ -447,6 +447,8 @@ test("keeps the traveler corridor and Programs archive free of content collision
   assert.match(css, /html\[data-motion-mode="full"\] \.story-stage--programs \.programs-copy\s*\{[\s\S]*?position:\s*sticky;[\s\S]*?top:\s*var\(--program-title-safe-top\)/);
   assert.match(css, /grid-template-columns:\s*var\(--program-title-lane-width\) minmax\(0,\s*1fr\)/);
   assert.match(css, /\.story-stage--programs \.portholes\s*\{[\s\S]*?grid-column:\s*2;[\s\S]*?justify-items:\s*end;/);
+  assert.match(css, /--program-card-desktop-shift:\s*clamp\(48px,\s*6vh,\s*72px\)/);
+  assert.match(css, /\.story-stage--programs \.portholes\s*\{[\s\S]*?padding-top:\s*calc\(var\(--program-card-offset\) \+ var\(--program-card-desktop-shift\)\)/);
   assert.match(css, /@media \(max-width:\s*1199px\)[\s\S]*?\.story-stage--programs \.programs-copy\s*\{[\s\S]*?position:\s*relative;[\s\S]*?opacity:\s*1;/);
   assert.match(css, /\.portholes\s*\{\s*display:\s*grid;\s*gap:\s*var\(--program-card-gap\);/);
   assert.match(css, /\.porthole\s*\{\s*position:\s*relative;\s*top:\s*auto;/);

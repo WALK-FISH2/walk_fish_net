@@ -182,3 +182,10 @@ M7 每次新增、转草稿或移除 Program 后，都必须重新统计独立 H
 - `npm run check` 为 45 文件 0 errors / 0 warnings / 0 hints，ESLint 通过，20/20 测试通过，`npm run build:sites` 成功；
 - `dist/` 实际生成 18 个 HTML，静态服务器逐一验证 18/18 页面 HTTP 200，未知路由 HTTP 404，`dist/server` 不存在；
 - Sitemap 实际收录三个新 Article 路由，首页输出不包含三个新 slug，原精选内容未被替换。
+
+### 2026-08-13 M7.1 精选内容后续调整基线
+
+- 项目所有者在 commit `b72683a` 将 Uiverse、React Bits、Three.js 三篇公开文章改为 `featured: true`；原三篇文章保持 `draft: true`，因此首页当前精选同步改为三篇工具文章；
+- 当前公开 Article 仍为上述 3 篇，旧草稿不生成详情路由；公开 Program 为 3 个，Projects 兼容详情为 3 个；
+- 当前生产输出为 15 个 HTML，`npm test` 的路由、首页内容与 Canvas fallback 断言已同步此实际内容状态；
+- `npm run check` 为 45 文件 0 errors / 0 warnings / 0 hints，ESLint 与 20/20 测试通过，`npm run build:sites` 成功，`dist/server` 不存在。

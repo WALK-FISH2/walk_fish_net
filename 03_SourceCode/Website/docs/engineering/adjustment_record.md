@@ -718,3 +718,31 @@ M7 初次真实性清理把 `Tidy Desk` 与 `Signal Garden` 设为草稿，首�
 | Node 请求期运行时 | `dist/server` 不存在 |
 
 沿用 M7 初次实现时已通过的桌面双栏、375px 单列、键盘焦点和控制台浏览器基线；本轮未修改该布局、首页海洋动画或其他场景代码。发布后仍需项目所有者用微信真机复核线上小程序码扫码结果与最终媒体视觉。
+
+## 16. 2026-08-13 首页陆地与海洋卡片纵向位置微调
+
+### 16.1 调整范围
+
+本次只调整首页两组卡片的纵向位置，不修改卡片尺寸、内部间距、三卡顺序、文章/Program 内容、链接、小章鱼路径、海浪、Canvas、章节高度或进度语义。
+
+| 位置参数 | 调整前 | 调整后 | 生效范围 |
+| --- | --- | --- | --- |
+| 桌面文章路牌 sticky top | `28vh` | `24vh` | `>980px` 的常规桌面完整动画；使路牌在陆海交界前更早到达上方安全位 |
+| 短视口文章路牌 sticky top | `30vh` | `26vh` | `min-width: 981px` 且 `max-height: 820px`；与常规桌面保持相同的 `4vh` 提前量 |
+| 桌面 Programs 卡片组附加下移量 | 无 | `clamp(48px, 6vh, 72px)` | `min-width: 1200px` 且完整动画；叠加在原 `--program-card-offset` 上 |
+
+Programs 使用 `padding-top: calc(var(--program-card-offset) + var(--program-card-desktop-shift))` 承载整体下移，因此三张 `.porthole` 仍处于同一个 Grid 普通文档流，原 `--program-card-gap`、三种卡片轮廓和“打开全部程序”后续顺序不变。`≤1199px` 没有应用附加下移量；375px 完整动画仍为 `48px`，Reduced Motion 仍为 `50px`。
+
+### 16.2 验证证据
+
+| 验证 | 结果 |
+| --- | --- |
+| Astro Check | 45 个文件，0 errors / 0 warnings / 0 hints |
+| ESLint | 通过 |
+| 自动化测试 | 20/20 通过；新增/更新路牌提前量和 Programs 桌面下移量回归断言，并同步当前草稿/精选内容基线与 15 个静态 HTML |
+| Sites 生产构建 | `npm run build:sites` 通过，输出 `sites-dist/`；15 个静态 HTML，`dist/server` 不存在 |
+| 1700×926 桌面完整动画 | 路牌首卡 sticky top 实测约 `250px`；Programs 三卡在滚动位置 `3600px` 的 top 分别约 `-202 / 252 / 706px`，保持连续排列 |
+| 桌面反向滚动 | `4200 → 2450 → 3600px` 后，路牌与三卡返回相同坐标，没有状态漂移 |
+| 375×812 完整动画 | 三张 Programs 卡片存在；卡片组 padding 仍为 `48px`；无横向页面溢出 |
+| 375×812 Reduced Motion | 三张 Programs 卡片存在；正常文档流、padding `50px`；无横向页面溢出 |
+| 浏览器控制台 | 0 warnings / 0 errors |
