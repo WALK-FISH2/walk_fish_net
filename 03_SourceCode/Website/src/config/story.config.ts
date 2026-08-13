@@ -7,6 +7,21 @@ export const STORY_CONFIG = {
     oceanToSpace: [0.66, 0.8],
     space: [0.8, 1],
   },
+  contentFlow: {
+    articleCardsExit: {
+      start: [0.285, 0.315],
+      travel: [0.315, 0.342],
+      finish: [0.342, 0.368],
+      startWeight: 0.12,
+      travelWeight: 0.58,
+      maxRiseVh: 56,
+    },
+    programCardsEntryOffset: {
+      // A constant offset delays the whole card flow without reversing its
+      // scroll direction. Do not ramp or release this value over progress.
+      desktopVh: 34,
+    },
+  },
   overworld: {
     parallax: {
       // Fractions of the viewport width. Layer strengths match the documented
@@ -515,6 +530,25 @@ export function getProgramsArchiveState(progress: number) {
     titleOpacity: 1 - titleExitProgress,
     titleRisePx: Math.round(titleExitProgress * config.titleRisePx),
     titleColor: mixColor(config.titleColor.sea, config.titleColor.night, titleExitProgress),
+  };
+}
+
+export function getHomepageContentFlowState(progress: number) {
+  const articleConfig = STORY_CONFIG.contentFlow.articleCardsExit;
+  const programConfig = STORY_CONFIG.contentFlow.programCardsEntryOffset;
+  const articleStart = smoothstep(mapProgress(progress, articleConfig.start));
+  const articleTravel = smoothstep(mapProgress(progress, articleConfig.travel));
+  const articleFinish = smoothstep(mapProgress(progress, articleConfig.finish));
+  const articleCardsExitProgress = (
+    articleStart * articleConfig.startWeight
+    + articleTravel * (articleConfig.travelWeight - articleConfig.startWeight)
+    + articleFinish * (1 - articleConfig.travelWeight)
+  );
+
+  return {
+    articleCardsExitProgress,
+    articleCardsTranslateYVh: articleCardsExitProgress === 0 ? 0 : articleCardsExitProgress * -articleConfig.maxRiseVh,
+    programCardsTranslateYVh: programConfig.desktopVh,
   };
 }
 

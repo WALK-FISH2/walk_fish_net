@@ -358,14 +358,13 @@ canvas {
 .immersive-home {
   --hero-safe-top: max(88px, 12vh);
   --article-title-safe-top: max(88px, 9vh);
-  --road-sign-safe-top: 24vh;
+  --road-sign-safe-top: 28vh;
   --road-sign-top-padding: clamp(18px, 3vh, 32px);
   --road-sign-min-height: 250px;
   --road-sign-stagger: 12px;
   --road-sign-post-height: 52px;
   --program-title-offset: clamp(120px, 18vh, 190px);
   --program-card-offset: clamp(64px, 11vh, 112px);
-  --program-card-desktop-shift: clamp(48px, 6vh, 72px);
   --program-card-gap: clamp(72px, 12vh, 128px);
   position: relative;
   min-height: var(--story-height);
@@ -673,6 +672,14 @@ canvas {
   position: absolute;
   right: 0;
   bottom: 24vh;
+}
+
+@media (min-width: 981px) {
+  html[data-motion-mode="full"] .story-stage--articles .road-signs,
+  html[data-motion-mode="full"] .story-stage--articles > .stage-link {
+    translate: 0 var(--article-cards-exit-y, 0);
+    will-change: translate;
+  }
 }
 
 .portholes {
@@ -1660,7 +1667,7 @@ body[data-story-phase="space"] .site-nav--floating::after {
 @media (min-width: 981px) and (max-height: 820px) {
   .immersive-home {
     --article-title-safe-top: max(72px, 8vh);
-    --road-sign-safe-top: 26vh;
+    --road-sign-safe-top: 30vh;
     --road-sign-top-padding: 18px;
     --road-sign-min-height: 190px;
     --road-sign-stagger: 8px;
@@ -2041,7 +2048,9 @@ html[data-motion-mode="reduce"] .story-stage--programs .stage-copy { padding-top
     grid-column: 2;
     min-width: 0;
     justify-items: end;
-    padding-top: calc(var(--program-card-offset) + var(--program-card-desktop-shift));
+    padding-top: var(--program-card-offset);
+    translate: 0 var(--program-cards-entry-offset-y, 0);
+    will-change: translate;
   }
 
   html[data-motion-mode="full"] .story-stage--programs .porthole {
@@ -2062,6 +2071,8 @@ html[data-motion-mode="reduce"] .story-stage--programs .stage-copy { padding-top
     grid-row: 2;
     grid-column: 2;
     justify-self: end;
+    translate: 0 var(--program-cards-entry-offset-y, 0);
+    will-change: translate;
   }
 }
 

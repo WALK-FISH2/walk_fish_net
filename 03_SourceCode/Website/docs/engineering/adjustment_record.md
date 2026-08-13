@@ -719,19 +719,25 @@ M7 初次真实性清理把 `Tidy Desk` 与 `Signal Garden` 设为草稿，首�
 
 沿用 M7 初次实现时已通过的桌面双栏、375px 单列、键盘焦点和控制台浏览器基线；本轮未修改该布局、首页海洋动画或其他场景代码。发布后仍需项目所有者用微信真机复核线上小程序码扫码结果与最终媒体视觉。
 
-## 16. 2026-08-13 首页陆地与海洋卡片纵向位置微调
+## 16. 2026-08-13 首页陆地与海洋卡片出入场时机修正
 
 ### 16.1 调整范围
 
-本次只调整首页两组卡片的纵向位置，不修改卡片尺寸、内部间距、三卡顺序、文章/Program 内容、链接、小章鱼路径、海浪、Canvas、章节高度或进度语义。
+第一次调整错误地修改了静态停靠坐标：文章路牌由 `28vh/30vh` 改成 `24vh/26vh`，Programs 又增加固定 `clamp(48px, 6vh, 72px)` 下移。它只能改变停住后的构图，不能改变随 global progress 离场/进入的时机，因此本地滚动观感几乎没有达到目标。本节以下参数取代第一次方案。
 
-| 位置参数 | 调整前 | 调整后 | 生效范围 |
-| --- | --- | --- | --- |
-| 桌面文章路牌 sticky top | `28vh` | `24vh` | `>980px` 的常规桌面完整动画；使路牌在陆海交界前更早到达上方安全位 |
-| 短视口文章路牌 sticky top | `30vh` | `26vh` | `min-width: 981px` 且 `max-height: 820px`；与常规桌面保持相同的 `4vh` 提前量 |
-| 桌面 Programs 卡片组附加下移量 | 无 | `clamp(48px, 6vh, 72px)` | `min-width: 1200px` 且完整动画；叠加在原 `--program-card-offset` 上 |
+当前修正只调整首页两组卡片随滚动开始离场/进入的时机，不修改卡片尺寸、内部间距、三卡顺序、文章/Program 内容、链接、小章鱼路径、海浪、Canvas、章节高度或五段进度语义。
 
-Programs 使用 `padding-top: calc(var(--program-card-offset) + var(--program-card-desktop-shift))` 承载整体下移，因此三张 `.porthole` 仍处于同一个 Grid 普通文档流，原 `--program-card-gap`、三种卡片轮廓和“打开全部程序”后续顺序不变。`≤1199px` 没有应用附加下移量；375px 完整动画仍为 `48px`，Reduced Motion 仍为 `50px`。
+| 参数 | 当前值 | 生效范围 |
+| --- | --- | --- |
+| 文章路牌静态 sticky top | 常规 `28vh`；短视口 `30vh` | 恢复原停靠构图，不承担时机调整 |
+| 文章离场阶段 | `0.285–0.315` / `0.315–0.342` / `0.342–0.368` | 轻启、主行程、完成三段，最大上移 `56vh` |
+| Programs 静态 padding | `var(--program-card-offset)` | 删除固定 `--program-card-desktop-shift` |
+| Programs 延后进入 | 固定向下 `54vh` | 不随 progress 增长或释放，只改变首次进入视口的时间 |
+| 响应式门 | 文章 `min-width: 981px`；Programs `min-width: 1200px`；均要求 `data-motion-mode="full"` | 375px、中间宽度与 Reduced Motion 不变 |
+
+`STORY_CONFIG.contentFlow` 集中维护全部区间与幅度，`getHomepageContentFlowState(progress)` 是无内部状态的纯函数。`ImmersiveHome` 复用原唯一 ScrollTrigger 的 `updateProgress()` 写入 `--article-cards-exit-y` 与 `--program-cards-entry-offset-y`；没有新增监听器、pin 或第二套进度源。文章总入口与路牌同步，Programs 总入口与三卡同步；三张 `.porthole` 仍处于同一个 Grid 普通文档流。
+
+项目所有者将原最大延后从 `14vh` 调到 `54vh` 后，旧公式在 `0.400–0.470` 把偏移从 `0` 增长到 `54vh`、又在 `0.615–0.660` 释放回 `0`。偏移变化速度超过页面自身的上移速度，录像中出现卡片先被向下推、随后又快速向上的“来回弹跳”。修正后 `54vh` 从 Programs 内容组开始到结束保持恒定；卡片位置只由正常页面滚动推进，不存在额外方向反转。
 
 ### 16.2 验证证据
 
@@ -739,10 +745,17 @@ Programs 使用 `padding-top: calc(var(--program-card-offset) + var(--program-ca
 | --- | --- |
 | Astro Check | 45 个文件，0 errors / 0 warnings / 0 hints |
 | ESLint | 通过 |
-| 自动化测试 | 20/20 通过；新增/更新路牌提前量和 Programs 桌面下移量回归断言，并同步当前草稿/精选内容基线与 15 个静态 HTML |
-| Sites 生产构建 | `npm run build:sites` 通过，输出 `sites-dist/`；15 个静态 HTML，`dist/server` 不存在 |
-| 1700×926 桌面完整动画 | 路牌首卡 sticky top 实测约 `250px`；Programs 三卡在滚动位置 `3600px` 的 top 分别约 `-202 / 252 / 706px`，保持连续排列 |
-| 桌面反向滚动 | `4200 → 2450 → 3600px` 后，路牌与三卡返回相同坐标，没有状态漂移 |
-| 375×812 完整动画 | 三张 Programs 卡片存在；卡片组 padding 仍为 `48px`；无横向页面溢出 |
-| 375×812 Reduced Motion | 三张 Programs 卡片存在；正常文档流、padding `50px`；无横向页面溢出 |
+| 自动化测试 | 21/21 通过；纯函数覆盖 28.5%/31.5%/34.2%/36.8% 与 40%/47%/64%/66%，并断言反向确定性 |
+| 生产构建/静态输出 | Astro static build 通过，`dist/` 生成 15 个 HTML；路由与 Node 运行时边界测试通过 |
+| 1700×926 桌面完整动画 | 路牌 sticky top 为 `259.28px`（`28vh`）；31.5%/34.2%/36.8% 的附加位移为 `-6.720/-32.480/-56.000vh`；Programs padding 保持原 `101.86px`，进入偏移按下方 16.3 的录像修正改为恒定 `54vh` |
+| 桌面反向滚动 | `66% → 28.5%` 逐点返回；同一进度的 CSS 变量与元素 top 坐标和正向采样一致，无状态漂移 |
+| 375×812 完整动画 | `.road-signs`/`.portholes` 计算 `translate: none`；三张卡片、链接与原 `48px` padding 存在；`scrollWidth=clientWidth=360px` |
+| Reduced Motion | 两组计算 `translate: none`；三张卡片与原 `50px` padding 存在 |
+| Canvas fallback | Canvas 隐藏、替代背景显示；三张 Program 卡片和 8 个 Program 区域链接存在 |
 | 浏览器控制台 | 0 warnings / 0 errors |
+
+浏览器证据来自本地开发预览；本轮没有发布 Cloudflare 或其他远端部署。
+
+### 16.3 `54vh` 单向进场修正复验
+
+1700×926 本地完整动画在 40%、43%、47%、50%、59%、61.5%、64%、66% 采样时，Programs 偏移始终为 `54vh`（计算值 `500.04px`），卡片组 top 依次为 `926/715/433/222/-411/-587/-763/-904px`，连续向下滚动时严格单调减小，没有方向反转。三张卡片持续存在，控制台为 0 warnings / 0 errors。Astro Check 为 45 文件 0 errors/warnings/hints，ESLint 通过，自动化测试 21/21 通过，生产构建仍生成 15 个静态 HTML。

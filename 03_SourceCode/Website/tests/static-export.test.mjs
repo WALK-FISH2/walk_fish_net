@@ -13,7 +13,7 @@ import {
   storyProgressForScrollY,
   storyScrollYForProgress,
 } from "../src/lib/storyScroll.ts";
-import { getOctopusTravelerState, getProgramsArchiveState } from "../src/config/story.config.ts";
+import { getHomepageContentFlowState, getOctopusTravelerState, getProgramsArchiveState } from "../src/config/story.config.ts";
 
 const root = new URL("../", import.meta.url);
 const primaryRoutes = [
@@ -432,23 +432,24 @@ test("keeps the traveler corridor and Programs archive free of content collision
   assert.match(css, /\.hero-copy\s*\{[\s\S]*?top:\s*var\(--hero-safe-top\)/);
   assert.match(css, /@media \(max-width:\s*767px\)[\s\S]*?--hero-safe-top:\s*max\(76px,\s*8vh\)/);
   assert.match(storyConfig, /land:\s*\{[\s\S]*?startX:\s*0\.13,[\s\S]*?endX:\s*0\.59/);
-  assert.match(css, /--road-sign-safe-top:\s*24vh/);
+  assert.match(css, /--road-sign-safe-top:\s*28vh/);
   assert.match(css, /--road-sign-min-height:\s*250px/);
   assert.match(css, /--road-sign-stagger:\s*12px/);
   assert.match(css, /--road-sign-post-height:\s*52px/);
   assert.match(css, /\.road-signs\s*\{[\s\S]*?top:\s*var\(--road-sign-safe-top\)/);
   assert.match(css, /\.road-sign\s*\{[\s\S]*?min-height:\s*var\(--road-sign-min-height\)/);
-  assert.match(css, /@media \(min-width:\s*981px\) and \(max-height:\s*820px\)[\s\S]*?--road-sign-safe-top:\s*26vh[\s\S]*?--road-sign-min-height:\s*190px[\s\S]*?--road-sign-post-height:\s*28px/);
+  assert.match(css, /@media \(min-width:\s*981px\) and \(max-height:\s*820px\)[\s\S]*?--road-sign-safe-top:\s*30vh[\s\S]*?--road-sign-min-height:\s*190px[\s\S]*?--road-sign-post-height:\s*28px/);
   assert.match(css, /@media \(max-width:\s*980px\)[\s\S]*?grid-auto-flow:\s*column[\s\S]*?\.road-sign__post\s*\{\s*display:\s*none;/);
   assert.match(css, /@media \(max-width:\s*980px\) and \(max-height:\s*700px\)[\s\S]*?min-height:\s*190px/);
   assert.match(css, /\.road-signs\s*\{[\s\S]*?position:\s*sticky;[\s\S]*?top:\s*var\(--road-sign-safe-top\)/);
+  assert.match(css, /html\[data-motion-mode="full"\] \.story-stage--articles \.road-signs,[\s\S]*?translate:\s*0 var\(--article-cards-exit-y,\s*0\)/);
   assert.doesNotMatch(css, /\.road-signs\s*\{\s*position:\s*sticky;\s*top:\s*(?:37|38)vh/);
 
   assert.match(css, /html\[data-motion-mode="full"\] \.story-stage--programs \.programs-copy\s*\{[\s\S]*?position:\s*sticky;[\s\S]*?top:\s*var\(--program-title-safe-top\)/);
   assert.match(css, /grid-template-columns:\s*var\(--program-title-lane-width\) minmax\(0,\s*1fr\)/);
   assert.match(css, /\.story-stage--programs \.portholes\s*\{[\s\S]*?grid-column:\s*2;[\s\S]*?justify-items:\s*end;/);
-  assert.match(css, /--program-card-desktop-shift:\s*clamp\(48px,\s*6vh,\s*72px\)/);
-  assert.match(css, /\.story-stage--programs \.portholes\s*\{[\s\S]*?padding-top:\s*calc\(var\(--program-card-offset\) \+ var\(--program-card-desktop-shift\)\)/);
+  assert.doesNotMatch(css, /--program-card-desktop-shift/);
+  assert.match(css, /\.story-stage--programs \.portholes\s*\{[\s\S]*?padding-top:\s*var\(--program-card-offset\);[\s\S]*?translate:\s*0 var\(--program-cards-entry-offset-y,\s*0\)/);
   assert.match(css, /@media \(max-width:\s*1199px\)[\s\S]*?\.story-stage--programs \.programs-copy\s*\{[\s\S]*?position:\s*relative;[\s\S]*?opacity:\s*1;/);
   assert.match(css, /\.portholes\s*\{\s*display:\s*grid;\s*gap:\s*var\(--program-card-gap\);/);
   assert.match(css, /\.porthole\s*\{\s*position:\s*relative;\s*top:\s*auto;/);
@@ -458,6 +459,26 @@ test("keeps the traveler corridor and Programs archive free of content collision
   assert.doesNotMatch(css, /\.porthole\s*\{\s*position:\s*sticky/);
   assert.doesNotMatch(css, /\.porthole\s*\{\s*position:\s*fixed/);
   assert.doesNotMatch(css, /--porthole-index\) \* (?:6|8)vh/);
+});
+
+test("derives reversible article exit and a non-reversing Programs entry offset", () => {
+  const articleRest = getHomepageContentFlowState(0.285);
+  const articleStart = getHomepageContentFlowState(0.315);
+  const articleTravel = getHomepageContentFlowState(0.342);
+  const articleExited = getHomepageContentFlowState(0.368);
+  const programBefore = getHomepageContentFlowState(0.4);
+  const programMiddle = getHomepageContentFlowState(0.5);
+  const programTail = getHomepageContentFlowState(0.66);
+
+  assert.equal(articleRest.articleCardsTranslateYVh, 0);
+  assert.equal(articleStart.articleCardsExitProgress, 0.12);
+  assert.equal(articleTravel.articleCardsExitProgress, 0.58);
+  assert.equal(articleExited.articleCardsTranslateYVh, -56);
+  assert.equal(programBefore.programCardsTranslateYVh, 54);
+  assert.equal(programMiddle.programCardsTranslateYVh, 54);
+  assert.equal(programTail.programCardsTranslateYVh, 54);
+  assert.deepEqual(getHomepageContentFlowState(0.342), articleTravel);
+  assert.deepEqual(getHomepageContentFlowState(0.5), programMiddle);
 });
 
 test("derives the M6.1 Programs title fade reversibly from global progress", () => {

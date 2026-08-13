@@ -4,7 +4,7 @@ import { useCallback, useEffect, useLayoutEffect, useRef, useState, type CSSProp
 import diverOctopusUrl from "../assets/m6-2/octopus-diver.png";
 import landOctopusUrl from "../assets/m6-2/octopus-land.png";
 import { SITE_CONFIG, sitePath } from "../config/site.config";
-import { STORY_CONFIG, getDiveState, getOceanSpaceMorphState, getOctopusTravelerState, getProgramsArchiveState } from "../config/story.config";
+import { STORY_CONFIG, getDiveState, getHomepageContentFlowState, getOceanSpaceMorphState, getOctopusTravelerState, getProgramsArchiveState } from "../config/story.config";
 import { useMotionPreference } from "../hooks/useMotionPreference";
 import { SceneController, detectQuality } from "../interactive/SceneController";
 import { storyScrollYForProgress, type StoryScrollBounds } from "../lib/storyScroll";
@@ -43,6 +43,7 @@ export function ImmersiveHome({ articles, programs }: { articles: ArticleSummary
     progressRef.current = progress;
     const nextPhase = phaseFor(progress);
     const dive = getDiveState(progress);
+    const contentFlow = getHomepageContentFlowState(progress);
     const morph = getOceanSpaceMorphState(progress);
     const programsArchive = getProgramsArchiveState(progress);
     const octopus = getOctopusTravelerState(progress, window.innerWidth <= 767);
@@ -52,6 +53,8 @@ export function ImmersiveHome({ articles, programs }: { articles: ArticleSummary
     root?.style.setProperty("--waterline-y", String(dive.surfaceY));
     root?.style.setProperty("--waterline-opacity", String(dive.surfaceOpacity));
     root?.style.setProperty("--refraction-strength", String(dive.refraction));
+    root?.style.setProperty("--article-cards-exit-y", `${contentFlow.articleCardsTranslateYVh.toFixed(3)}vh`);
+    root?.style.setProperty("--program-cards-entry-offset-y", `${contentFlow.programCardsTranslateYVh.toFixed(3)}vh`);
     root?.style.setProperty("--program-exit-opacity", String(1 - morph.programsExit));
     root?.style.setProperty("--program-exit-y", `${Math.round(morph.programsExit * -72)}px`);
     root?.style.setProperty("--program-title-exit-progress", String(programsArchive.titleExitProgress));
@@ -65,6 +68,8 @@ export function ImmersiveHome({ articles, programs }: { articles: ArticleSummary
     root?.style.setProperty("--octopus-land-opacity", String(octopus.landOpacity));
     root?.style.setProperty("--octopus-diver-opacity", String(octopus.diverOpacity));
     root?.setAttribute("data-story-progress", progress.toFixed(4));
+    root?.setAttribute("data-article-cards-exit", contentFlow.articleCardsExitProgress.toFixed(4));
+    root?.setAttribute("data-program-cards-entry-offset-vh", contentFlow.programCardsTranslateYVh.toFixed(3));
     root?.setAttribute("data-octopus-form", octopus.form);
     root?.toggleAttribute("data-octopus-above-content", octopus.aboveContent);
     root?.toggleAttribute("data-programs-exited", morph.programsExit >= 0.995);
