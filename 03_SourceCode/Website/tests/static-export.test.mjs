@@ -14,6 +14,7 @@ import {
   storyScrollYForProgress,
 } from "../src/lib/storyScroll.ts";
 import { getHomepageContentFlowState, getOctopusTravelerState, getProgramsArchiveState } from "../src/config/story.config.ts";
+import { SONAR_RADAR_CONFIG, didSonarSweepCrossTarget, randomSonarFadeDuration, randomSonarTargetPosition } from "../src/lib/sonarRadar.ts";
 
 const root = new URL("../", import.meta.url);
 const primaryRoutes = [
@@ -144,6 +145,39 @@ test("keeps content, SEO, motion modes, and migrated source boundaries", async (
   assert.match(contentConfig, /const programs = defineCollection/);
   assert.doesNotMatch(contentConfig, /const projects = defineCollection/);
   await access(new URL("src/content/programs/pixel-journey.md", root));
+});
+
+test("adds four recyclable scan-triggered targets to the Programs sonar", async () => {
+  const [programsPage, sonarComponent, css, builtPage] = await Promise.all([
+    readFile(new URL("src/pages/programs/index.astro", root), "utf8"),
+    readFile(new URL("src/components/SonarRadar.astro", root), "utf8"),
+    readFile(new URL("src/styles/global.css", root), "utf8"),
+    readFile(new URL("dist/programs/index.html", root), "utf8"),
+  ]);
+
+  assert.match(programsPage, /<SonarRadar\s*\/>/);
+  assert.equal((builtPage.match(/data-sonar-target=/g) ?? []).length, 4);
+  for (const target of ["fish", "tag", "braces", "terminal"]) assert.match(builtPage, new RegExp(`data-sonar-target="${target}"`));
+  assert.deepEqual(SONAR_RADAR_CONFIG.fadeDurationMs, [1_100, 2_100]);
+  assert.equal(SONAR_RADAR_CONFIG.sweepDurationMs, 4_000);
+  assert.equal(randomSonarFadeDuration(() => 0), 1_100);
+  assert.equal(randomSonarFadeDuration(() => 1), 2_100);
+  assert.equal(randomSonarTargetPosition(() => 0).angle, 0);
+  assert.equal(didSonarSweepCrossTarget(350, 10, 2), true);
+  assert.equal(didSonarSweepCrossTarget(10, 40, 350), false);
+  assert.match(sonarComponent, /if \(fadeProgress >= 1\) placeTarget\(state\)/);
+  assert.match(sonarComponent, /visibilitychange/);
+  assert.match(sonarComponent, /cancelAnimationFrame\(animationFrame\)/);
+  assert.doesNotMatch(sonarComponent, /prefers-reduced-motion|data-motion-mode/);
+  assert.match(css, /--sonar-line-color:\s*var\(--sea-cyan\)/);
+  assert.match(css, /\.sonar-target\s*\{[\s\S]*?color:\s*var\(--sonar-line-color\)/);
+  assert.match(css, /\.sonar-target--fish b\s*\{[^}]*clip-path:\s*polygon\(0 50%, 50% 0, 100% 50%, 50% 100%\)/);
+  assert.match(css, /\.sonar-target--fish i::before\s*\{[^}]*clip-path:\s*polygon\(0 0, 100% 50%, 0 100%\)/);
+  assert.match(css, /\.sonar-target--fish i::after\s*\{[^}]*width:\s*4px;[^}]*height:\s*6px/);
+  assert.match(css, /\.sonar-target--fish b::before\s*\{[^}]*inset:\s*2px 3px/);
+  assert.match(css, /\.sonar-target--fish b::after\s*\{[^}]*width:\s*3px;[^}]*height:\s*3px/);
+  assert.doesNotMatch(css, /\.sonar-target--fish (?:i|b)\s*\{[^}]*border-radius/);
+  assert.doesNotMatch(css, /@keyframes sonar-sweep/);
 });
 
 test("implements M7 real Program publishing, detail-first actions, media isolation, and three-card ordering", async () => {

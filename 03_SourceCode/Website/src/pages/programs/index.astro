@@ -2,6 +2,7 @@
 import { getCollection } from "astro:content";
 import { ContentFilter } from "../../components/ContentFilter";
 import PageShell from "../../components/PageShell.astro";
+import SonarRadar from "../../components/SonarRadar.astro";
 import { programSummary, sortPrograms } from "../../lib/content";
 
 const entries = sortPrograms(await getCollection("programs", ({ data }) => !data.draft));
@@ -15,7 +16,7 @@ const programs = entries.map(programSummary);
       <h1>做点啥呢</h1>
       <p>这里专门收录我本人编写的程序、工具、网页应用、交互实验和程序演示。</p>
     </div>
-    <div class="sonar" aria-hidden="true"><span></span><span></span><span></span></div>
+    <SonarRadar />
   </section>
   <section class="archive-section" aria-label="程序列表">
     <ContentFilter client:load kind="program" items={programs} />

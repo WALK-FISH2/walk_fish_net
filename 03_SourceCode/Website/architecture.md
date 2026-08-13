@@ -151,6 +151,12 @@ BASE_PATH=/pixel-walk-audit
 
 该实现未进入 `ImmersiveHome`，没有改变首页唯一 ScrollTrigger、`6192px` 实测故事文档高度、完整/简化动效状态或 Canvas 生命周期。桌面和 375px 六类普通路由、刷新、历史导航、菜单、简化动画及首页 land → space → land 往返均已验证。详细证据见 `docs/product/m6-3-content-page-scroll-spec.md`、`tasks.md` 与 `docs/engineering/adjustment_record.md` 第 12 节。
 
+### M8-12 实际架构：Programs 雷达目标循环
+
+`/programs/` 的雷达由 `SonarRadar.astro` 承载四个装饰 DOM 节点，复用原同心圆和扫描棒。扫描角、目标方位、命中判断、随机安全半径和 `1.1–2.1s` 渐隐时长集中在 `src/lib/sonarRadar.ts`；组件只运行一个 `requestAnimationFrame` 循环，不读取首页 scroll progress，也不创建 ScrollTrigger。
+
+目标完全熄灭后才重新定位，因此页面停留不滚动时仍会出现新的随机探测点。组件在 `visibilitychange` 隐藏态暂停，在 `pagehide`/卸载时取消 RAF 并移除监听器，BFCache 返回或重新初始化时复用单实例清理入口。该低强度雷达按项目所有者要求不随 Reduced Motion 关闭；它保持 `aria-hidden` 与 `pointer-events: none`，不会进入 Programs 搜索、筛选或卡片交互链路。
+
 ### M7 实际架构：外部真实程序与组合媒体
 
 `ProgramDemo.astro` 已从单一 `demoType` 分支升级为组合媒体栏。M7 保留 `demoType`/`demoUrl` 作为主要演示类型和主要地址，同时增加组合入口、媒体和详细隐私说明：

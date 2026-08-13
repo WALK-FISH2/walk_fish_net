@@ -27,7 +27,7 @@ function ProgramCard({ item }: { item: ProgramSummary }) {
       <div className="card-kicker"><span>{PROGRAM_STATUS_LABELS[item.status]}</span><span>{item.category}</span></div>
       <h2><a href={sitePath(`/programs/${item.slug}/`)}>{item.title}</a></h2>
       <p>{item.summary}</p>
-      <div className="tag-row">{[...item.stack, ...item.tags].map((tag) => <span key={tag}>{tag}</span>)}</div>
+      <div className="tag-row">{[...item.stack, ...item.tags].map((tag, index) => <span key={`${tag}-${index}`}>{tag}</span>)}</div>
       <div className="card-footer"><span>{item.featured ? "FEATURED" : "ARCHIVE"}</span><a className="arrow-link" href={sitePath(`/programs/${item.slug}/`)}>查看程序 <span aria-hidden="true">→</span></a></div>
     </article>
   );

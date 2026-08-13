@@ -1,0 +1,129 @@
+---
+---
+
+<div class="sonar" data-sonar-radar aria-hidden="true">
+  <span class="sonar-target sonar-target--fish" data-sonar-target="fish"><i><b></b></i></span>
+  <span class="sonar-target sonar-target--code" data-sonar-target="tag">&lt;/&gt;</span>
+  <span class="sonar-target sonar-target--code" data-sonar-target="braces">{`{ }`}</span>
+  <span class="sonar-target sonar-target--code" data-sonar-target="cat">{`^⎚‸⎚^`}</span>
+  <span class="sonar-target sonar-target--code" data-sonar-target="terminal">&gt;_</span>
+</div>
+
+<script>
+  import {
+    SONAR_RADAR_CONFIG,
+    didSonarSweepCrossTarget,
+    randomSonarFadeDuration,
+    randomSonarTargetPosition,
+    type SonarTargetPosition,
+  } from "../lib/sonarRadar";
+
+  interface SonarTargetState {
+    element: HTMLElement;
+    position: SonarTargetPosition;
+    hitAt: number | null;
+    fadeDuration: number;
+  }
+
+  type SonarRadarElement = HTMLElement & { sonarCleanup?: () => void };
+
+  const radar = document.querySelector<SonarRadarElement>("[data-sonar-radar]");
+
+  if (radar) {
+    radar.sonarCleanup?.();
+    const elements = Array.from(radar.querySelectorAll<HTMLElement>("[data-sonar-target]"));
+    const states: SonarTargetState[] = [];
+    let animationFrame = 0;
+    let previousTimestamp = 0;
+    let sweepAngle = 0;
+    let destroyed = false;
+
+    const positionIsAvailable = (candidate: SonarTargetPosition, current?: SonarTargetState) => states.every((state) => {
+      if (state === current) return true;
+      return Math.hypot(candidate.x - state.position.x, candidate.y - state.position.y) >= SONAR_RADAR_CONFIG.minimumTargetDistance;
+    });
+
+    const placeTarget = (state: SonarTargetState) => {
+      let candidate = randomSonarTargetPosition();
+      for (let attempt = 1; attempt < SONAR_RADAR_CONFIG.maximumPlacementAttempts && !positionIsAvailable(candidate, state); attempt += 1) {
+        candidate = randomSonarTargetPosition();
+      }
+      state.position = candidate;
+      state.hitAt = null;
+      state.fadeDuration = 0;
+      state.element.style.left = `${(candidate.x * 100).toFixed(3)}%`;
+      state.element.style.top = `${(candidate.y * 100).toFixed(3)}%`;
+      state.element.style.opacity = "0";
+      state.element.dataset.sonarState = "waiting";
+    };
+
+    for (const element of elements) {
+      const state: SonarTargetState = {
+        element,
+        position: randomSonarTargetPosition(),
+        hitAt: null,
+        fadeDuration: 0,
+      };
+      states.push(state);
+      placeTarget(state);
+    }
+
+    const pause = () => {
+      cancelAnimationFrame(animationFrame);
+      animationFrame = 0;
+      previousTimestamp = 0;
+    };
+
+    const frame = (timestamp: number) => {
+      if (destroyed) return;
+      if (previousTimestamp === 0) previousTimestamp = timestamp;
+      const elapsed = Math.min(100, timestamp - previousTimestamp);
+      previousTimestamp = timestamp;
+      const previousAngle = sweepAngle;
+      sweepAngle = (sweepAngle + elapsed / SONAR_RADAR_CONFIG.sweepDurationMs * 360) % 360;
+      radar.style.setProperty("--sonar-sweep-angle", `${sweepAngle.toFixed(3)}deg`);
+
+      for (const state of states) {
+        if (state.hitAt === null) {
+          if (didSonarSweepCrossTarget(previousAngle, sweepAngle, state.position.angle)) {
+            state.hitAt = timestamp;
+            state.fadeDuration = randomSonarFadeDuration();
+            state.element.style.opacity = "1";
+            state.element.dataset.sonarState = "fading";
+          }
+          continue;
+        }
+
+        const fadeProgress = Math.min(1, (timestamp - state.hitAt) / state.fadeDuration);
+        state.element.style.opacity = String(1 - fadeProgress);
+        if (fadeProgress >= 1) placeTarget(state);
+      }
+
+      animationFrame = requestAnimationFrame(frame);
+    };
+
+    const resume = () => {
+      if (destroyed || document.hidden || animationFrame) return;
+      animationFrame = requestAnimationFrame(frame);
+    };
+
+    const onVisibilityChange = () => document.hidden ? pause() : resume();
+    const onPageHide = (event: PageTransitionEvent) => event.persisted ? pause() : cleanup();
+    const onPageShow = () => resume();
+    const cleanup = () => {
+      if (destroyed) return;
+      destroyed = true;
+      pause();
+      document.removeEventListener("visibilitychange", onVisibilityChange);
+      window.removeEventListener("pagehide", onPageHide);
+      window.removeEventListener("pageshow", onPageShow);
+      delete radar.sonarCleanup;
+    };
+
+    radar.sonarCleanup = cleanup;
+    document.addEventListener("visibilitychange", onVisibilityChange);
+    window.addEventListener("pagehide", onPageHide);
+    window.addEventListener("pageshow", onPageShow);
+    resume();
+  }
+</script>

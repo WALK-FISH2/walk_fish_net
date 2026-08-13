@@ -1024,7 +1024,9 @@ canvas {
 }
 
 .sonar {
+  --sonar-line-color: var(--sea-cyan);
   position: relative;
+  overflow: hidden;
   justify-self: end;
   width: 250px;
   height: 250px;
@@ -1032,6 +1034,7 @@ canvas {
   border-radius: 50%;
   background: radial-gradient(circle, var(--sea-light) 0 5px, transparent 5px), repeating-radial-gradient(circle, transparent 0 38px, rgba(137, 240, 215, 0.26) 39px 41px);
   box-shadow: 0 0 48px rgba(37, 190, 196, 0.22);
+  pointer-events: none;
 }
 
 .sonar::after {
@@ -1043,11 +1046,90 @@ canvas {
   background: var(--sea-light);
   box-shadow: 0 0 12px var(--sea-cyan);
   content: "";
+  transform: rotate(var(--sonar-sweep-angle, 0deg));
   transform-origin: left;
-  animation: sonar-sweep 4s linear infinite;
+  will-change: transform;
 }
 
-@keyframes sonar-sweep { to { transform: rotate(360deg); } }
+.sonar-target {
+  position: absolute;
+  z-index: 1;
+  display: grid;
+  width: 30px;
+  height: 20px;
+  place-items: center;
+  color: var(--sonar-line-color);
+  opacity: 0;
+  transform: translate(-50%, -50%);
+  filter: drop-shadow(0 0 3px color-mix(in srgb, var(--sonar-line-color) 65%, transparent));
+  pointer-events: none;
+  will-change: opacity, left, top;
+}
+
+.sonar-target--code {
+  font: 800 0.66rem/1 var(--font-pixel);
+  letter-spacing: -0.08em;
+  white-space: nowrap;
+}
+
+.sonar-target--fish i {
+  position: relative;
+  width: 27px;
+  height: 12px;
+}
+
+.sonar-target--fish i::before {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  width: 7px;
+  height: 10px;
+  background: currentColor;
+  clip-path: polygon(0 0, 100% 50%, 0 100%);
+  content: "";
+  transform: translateY(-50%);
+}
+
+.sonar-target--fish i::after {
+  position: absolute;
+  top: 50%;
+  left: 1px;
+  width: 4px;
+  height: 6px;
+  background: var(--deep-navy);
+  clip-path: polygon(0 0, 100% 50%, 0 100%);
+  content: "";
+  transform: translateY(-50%);
+}
+
+.sonar-target--fish b {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 20px;
+  height: 12px;
+  background: currentColor;
+  clip-path: polygon(0 50%, 50% 0, 100% 50%, 50% 100%);
+}
+
+.sonar-target--fish b::before {
+  position: absolute;
+  inset: 2px 3px;
+  background: var(--deep-navy);
+  clip-path: polygon(0 50%, 50% 0, 100% 50%, 50% 100%);
+  content: "";
+}
+
+.sonar-target--fish b::after {
+  position: absolute;
+  top: 50%;
+  right: 4px;
+  width: 3px;
+  height: 3px;
+  background: currentColor;
+  content: "";
+  transform: translateY(-50%);
+}
 
 .archive-section { padding: 56px 0 110px; }
 
