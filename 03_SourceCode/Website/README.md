@@ -1,4 +1,4 @@
-# PIXEL//WALK 个人像素叙事网站
+# WALK FISH PIXEL WORLD 
 
 一个以滚动进度驱动的 Astro 静态个人网站。首页使用 PixiJS 绘制陆地、下潜、深海与太空，GSAP 只负责把页面滚动映射为可逆的 `progress: 0 → 1`；文章、项目、导航和链接始终由可访问的真实 DOM 承载。
 
