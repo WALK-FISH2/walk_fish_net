@@ -47,5 +47,5 @@ technicalApproach:
   - PixiJS 绘制场景，GSAP ScrollTrigger 映射滚动进度
   - 生产输出为可独立托管的静态目录
 demoDescription: 当前网站本身就是该程序的在线版本，可从演示入口返回旅程首页。
-draft: false
+draft: true
 ---

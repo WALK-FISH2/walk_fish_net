@@ -1,10 +1,10 @@
 # 技术架构 Architecture
 
-版本：1.15.0
+版本：1.16.0
 
-状态：M6、M6.1、M6.2、M6.3 与 M7 已完成
+状态：M6、M6.1、M6.2、M6.3、M7 与 M7.1 已完成，M8 内容增量持续进行
 
-对账日期：2026-08-09
+对账日期：2026-08-21
 验证基线：Sites 源码仓库的 `3cd17db` 是“迁移到静态 Astro 世界”的提交，包含 Astro 配置、`src/pages/`、内容集合和静态导出测试。本地 Vibe Coding 文档最初位于另一条 Git 历史，因此首次对账时无法解析该提交；发布准备阶段只读获取 Sites 历史后已完成核对。本文结论同时采用 `3cd17db`、当前实现、实际构建和静态服务器结果。
 
 ## 1. 当前结论
@@ -39,7 +39,7 @@ flowchart LR
     Programs["src/content/programs"]
     Pages["src/pages/*.astro"]
     Astro["Astro static build"]
-    HTML["18 个独立 HTML"]
+    HTML["15 个独立 HTML"]
     Assets["浏览器端 JS / CSS / Pixi 场景"]
     Dist["dist/"]
     Host["任意静态文件服务器"]
@@ -78,30 +78,27 @@ src/
 
 ## 5. 静态路由生成
 
-`src/pages/articles/[slug].astro` 和 `src/pages/programs/[slug].astro` 使用 `getStaticPaths()` 在构建期枚举非草稿内容；`src/pages/projects/[slug].astro` 使用同一公开 Programs slug 集合生成兼容跳转页。当前 6 篇 Article 与 `laleme`、`image_converter`、`pixel-journey` 3 个 Program 参与静态生成；`tidy-desk` 与 `signal-garden` 当前为草稿。首页分别只取三篇精选 Article 与排序前三的公开 Program。当前 `npm run build` 生成以下 18 个 HTML：
+`src/pages/articles/[slug].astro` 和 `src/pages/programs/[slug].astro` 使用 `getStaticPaths()` 在构建期枚举非草稿内容；`src/pages/projects/[slug].astro` 使用同一公开 Programs slug 集合生成兼容跳转页。当前 3 篇 Article 与 `laleme`、`image_converter`、`spend-musk-money` 3 个 Program 参与静态生成；`pixel-journey`、`tidy-desk` 与 `signal-garden` 当前为草稿。首页分别只取三篇精选 Article 与排序前三的公开 Program。当前 `npm run build` 生成以下 15 个 HTML：
 
 | URL 路由 | 静态文件 | 来源 |
 | --- | --- | --- |
 | `/` | `dist/index.html` | `src/pages/index.astro` |
 | `/about/` | `dist/about/index.html` | `src/pages/about.astro` |
 | `/articles/` | `dist/articles/index.html` | 文章列表 |
-| `/articles/content-as-levels/` | `dist/articles/content-as-levels/index.html` | 文章内容集合 |
-| `/articles/first-post/` | `dist/articles/first-post/index.html` | 文章内容集合 |
 | `/articles/react-bits-animated-components/` | `dist/articles/react-bits-animated-components/index.html` | M7.1 外部工具文章 |
-| `/articles/small-tools/` | `dist/articles/small-tools/index.html` | 文章内容集合 |
 | `/articles/threejs-web-3d-foundations/` | `dist/articles/threejs-web-3d-foundations/index.html` | M7.1 外部工具文章 |
 | `/articles/uiverse-ui-library/` | `dist/articles/uiverse-ui-library/index.html` | M7.1 外部工具文章 |
 | `/programs/` | `dist/programs/index.html` | “做点啥呢”主列表 |
 | `/programs/laleme/` | `dist/programs/laleme/index.html` | 拉了么真实 Program |
 | `/programs/image_converter/` | `dist/programs/image_converter/index.html` | CRT 转换器 Program |
-| `/programs/pixel-journey/` | `dist/programs/pixel-journey/index.html` | Program 内容集合 |
+| `/programs/spend-musk-money/` | `dist/programs/spend-musk-money/index.html` | “花光马斯克的钱”真实外部 Program |
 | `/projects/` | `dist/projects/index.html` | 指向 `/programs/` 的兼容页 |
 | `/projects/laleme/` | `dist/projects/laleme/index.html` | 指向同 slug Program 的兼容页 |
 | `/projects/image_converter/` | `dist/projects/image_converter/index.html` | 指向同 slug Program 的兼容页 |
-| `/projects/pixel-journey/` | `dist/projects/pixel-journey/index.html` | 指向同 slug Program 的兼容页 |
+| `/projects/spend-musk-money/` | `dist/projects/spend-musk-money/index.html` | 指向同 slug Program 的兼容页 |
 | `/404.html` | `dist/404.html` | `src/pages/404.astro` |
 
-静态路由测试逐一读取上述 18 个 HTML；兼容页通过 meta refresh、`window.location.replace` 和无脚本链接跳转，并使用 `noindex,follow` 与新 canonical。Sitemap 收录公开 Article 与主 Programs 路由，不收录 Projects 兼容页或草稿。M7.1 的三篇外部工具内容只扩展 Article 集合，不改变 Program 领域、路由结构或请求期运行时。
+静态路由测试逐一读取上述 15 个 HTML；兼容页通过 meta refresh、`window.location.replace` 和无脚本链接跳转，并使用 `noindex,follow` 与新 canonical。Sitemap 收录公开 Article 与主 Programs 路由，不收录 Projects 兼容页或草稿。M7.1 的三篇外部工具内容只扩展 Article 集合，不改变 Program 领域、路由结构或请求期运行时；2026-08-21 新增的“花光马斯克的钱”沿用同一外部 Program 架构，没有引入新路由类型或请求期运行时。
 
 ## 6. 静态输出与运行时边界
 
@@ -172,7 +169,7 @@ Program
 
 详情页继续使用 Astro 静态生成和普通 DOM 文档流。桌面首屏为左文右媒体双栏，“打开网页版”紧跟标题、状态和简介；右侧承载 9:16 视频与小程序入口。移动端按“简介 → 打开网页版 → 视频 → 小程序码 → 详细说明”排列。视频使用原生 controls、`playsinline`、`preload="metadata"` 和诚实失败提示；媒体仅在详情页按需加载，不进入首页摘要。
 
-需要后端的真实程序继续由独立服务器承载，纯前端程序可以部署到独立静态托管。主站只输出链接、二维码、媒体和介绍，不代理外部 API，因此不会引入 Node 生产运行时。`Project_Demos`、DemoRegistry 和 sandbox iframe 保留为未来可选能力，不是本轮 M7 的必经层。平台种类进入搜索筛选，外部网址进入 SoftwareApplication `sameAs`；Sitemap 仍只使用 Astro 静态 canonical 路由。当前“拉了么”媒体位于 `public/programs/laleme/`，只在详情页加载；首页前三项为“拉了么”“像素漫游个人站”“Tidy Desk”，星座前两个 Program 为“拉了么”“像素漫游个人站”。完整决策和验收见 `docs/product/m7-real-program-showcase-spec.md` 与 ADR 0006。
+需要后端的真实程序继续由独立服务器承载，纯前端程序可以部署到独立静态托管。主站只输出链接、二维码、媒体和介绍，不代理外部 API，因此不会引入 Node 生产运行时。`Project_Demos`、DemoRegistry 和 sandbox iframe 保留为未来可选能力，不是本轮 M7 的必经层。平台种类进入搜索筛选，外部网址进入 SoftwareApplication `sameAs`；Sitemap 仍只使用 Astro 静态 canonical 路由。当前“拉了么”媒体位于 `public/programs/laleme/`，只在详情页加载；“花光马斯克的钱”使用外部网页入口，不把外站程序打包进主站。首页前三项为“拉了么”“CRT转换器”“花光马斯克的钱”，星座前两个 Program 为“拉了么”“CRT转换器”。`pixel-journey`、`tidy-desk` 与 `signal-garden` 当前为草稿。完整决策和验收见 `docs/product/m7-real-program-showcase-spec.md` 与 ADR 0006。
 
 ## 9. 首页交互架构
 
@@ -324,11 +321,13 @@ M5.5 浏览器验收覆盖 1280×720 的约 35% 三层浪和 82% 星空、1920×
 
 2026-08-13 M7.1 完成验收：在当前 15 个 HTML、3 个公开 Program 的仓库状态上新增三篇非精选 Article，最终 `dist/` 生成 18 个 HTML。Astro Check 为 45 文件 0 errors/warnings/hints，ESLint 通过，20/20 自动化测试通过，`npm run build:sites` 成功；静态服务器逐一验证 18/18 页面 HTTP 200，未知路由 HTTP 404，`dist/server` 不存在。Sitemap 收录 Uiverse、React Bits、Three.js 三个新 canonical 文章路由；首页 HTML 不含三者 slug，Program 领域与首页精选文章未改变。
 
+2026-08-21 M8-14 内容增量验收：新增 `spend-musk-money` 公开 Program，使用项目所有者提供的 Cloudflare Pages 网址作为真实外部入口；详情页诚实说明自由/限时挑战、本地保存、M0 原型限制和无业务后端边界。当前公开 Program 为“拉了么”“CRT转换器”“花光马斯克的钱”，首页保持三张卡片；`pixel-journey` 继续保留项目所有者设置的草稿状态。Astro Check、ESLint、23/23 自动化测试、生产构建、Sites 本地构建与 15 个静态 HTML 验证均通过；新增 canonical 与 Projects 兼容详情，Sitemap 只收录 canonical，`dist/server` 不存在。
+
 ## 11. 已知未完成项
 
 - Program `platforms`/`media`、新版详情布局、平台筛选、SEO 和媒体隔离已经实现并通过自动化与浏览器验收；
 - “拉了么”真实内容、H.264 视频、poster 和微信小程序码已经写入并通过自动化/静态构建验证；发布后仍需项目所有者在微信真机确认线上扫码和最终视觉；
-- 按项目所有者当前决定，Tidy Desk、Signal Garden 作为可继续维护的原型档案公开，用于恢复海洋区域三张卡片；两项保持 `prototype` 状态与明确限制，不增加未经确认的外链或后端能力；
+- `pixel-journey`、Tidy Desk、Signal Garden 当前均为草稿；首页三卡由“拉了么”“CRT转换器”“花光马斯克的钱”组成，不使用草稿补位；
 - DemoRegistry、`Project_Demos`、站内静态演示与 sandbox iframe 已延期为未来按需能力，不作为当前 M7 退出条件；
 - M3 陆地视差、M4 下潜/深海、M4.5 陆海翻涌、M5 气泡到繁星/流星、M5.5 视觉抛光和 M6 星空/动效模式均已完成正式验收；
 - M6.1 已完成实现与正式验收；

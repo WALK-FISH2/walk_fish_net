@@ -37,7 +37,7 @@ M7.1 首批外部工具文章为 `uiverse-ui-library`、`react-bits-animated-com
 
 ## 3. 当前真实 Program 内容示例
 
-“拉了么”是当前首个完整接入的真实 Program，首页排序值为 `0`，因此位于“像素漫游个人站”和 `Tidy Desk` 之前。其网页版由独立服务器承载，主站只发布介绍、外链、H.264 视频、poster 与小程序码，不代理后端 API。
+“拉了么”是首个完整接入的真实 Program，首页排序值为 `0`。其网页版由独立服务器承载，主站只发布介绍、外链、H.264 视频、poster 与小程序码，不代理后端 API。当前另外两张首页卡片为 `image_converter` 和 `spend-musk-money`；项目所有者已把 `pixel-journey` 设为草稿，本轮保持该状态。
 
 ```yaml
 title: 拉了么
@@ -78,9 +78,32 @@ privacy:
 
 完整资料位于 `src/content/programs/laleme.md`。状态使用 `prototype` 是因为网页版和微信小程序已形成完整原型，而 Android 客户端、公开后端安全加固与部分数据仍在继续开发；当前没有 `sourceUrl` 或 Android 下载入口。
 
-## 4. 当前公开原型内容格式示例
+“花光马斯克的钱”是当前公开的外部互动原型：
 
-Tidy Desk、Signal Garden 当前按项目所有者要求作为可继续维护的原型档案公开，以保证首页海洋区域保持三张完整卡片。它们的 `prototype` 状态、无公开演示或静态演示边界、限制和隐私字段必须保持清楚；后续可以由项目所有者手动替换，也可以在获得真实资料后由开发任务更新。不得在维护时补造在线地址、后端能力、用户数据或已完成功能。
+```yaml
+title: 花光马斯克的钱
+slug: spend-musk-money
+status: prototype
+category: game-prototype
+featured: true
+order: 10
+demoType: external-live
+demoUrl: https://exhaust-all-of-musk-s-money.pages.dev/#/pages/index/index
+platforms:
+  - kind: web
+    label: 打开网页版
+    url: https://exhaust-all-of-musk-s-money.pages.dev/#/pages/index/index
+privacy:
+  storesData: local-only
+  sendsDataExternally: false
+  externalServices: []
+```
+
+条目以页面公开功能和静态资源检查为事实边界：公开自由模式、30/60/300 秒挑战、商品分类/搜索、余额与结果统计、永久成就和本地纪录；不声明账号、云同步、服务端存档或实时财务数据。完整资料位于 `src/content/programs/spend-musk-money.md`。
+
+## 4. 草稿原型内容格式示例
+
+Tidy Desk、Signal Garden 当前保留为可继续维护的草稿原型，不参与生产生成。它们的 `prototype` 状态、无公开演示或静态演示边界、限制和隐私字段必须保持清楚；后续可以由项目所有者手动替换，也可以在获得真实资料后由开发任务更新。不得在维护时补造在线地址、后端能力、用户数据或已完成功能。
 
 ```yaml
 title: Tidy Desk

@@ -90,6 +90,8 @@ Program 搜索/筛选、SoftwareApplication、Sitemap 和 /projects 兼容无回
 
 2026-08-09 M7 完成验收：Astro Check 45 文件 0 errors/warnings/hints，ESLint 通过，19/19 自动化测试通过，`npm run build` 与 `npm run build:sites` 无警告通过。自动化断言“拉了么”外链优先级、安全属性、H.264/ poster/二维码路径、真实内容字段、无源码按钮、首页三卡顺序、媒体不进入首页、四个 Program Sitemap 和五个 Projects 兼容页。纯静态服务器验证 17/17 路由与三项媒体均为 200，未知路由 404，媒体 MIME 正确，`dist/server` 与 HEVC 备份均不在输出中。视频元数据为 H.264 High Profile、576×1280、22.133 秒；poster 为 1080×2210，码图为 258×258。沿用 2026-08-08 已完成的桌面/375px布局、键盘与控制台浏览器基线；本轮仍需发布后由项目所有者用微信真机复核扫码和最终视觉。
 
+2026-08-21 新增外部 Program 回归：静态测试必须确认 `spend-musk-money` 同时生成 canonical 详情与 `/projects` 兼容页，主要 HTTPS 外链具备 `target="_blank"` 和 `noopener noreferrer`，八类详情内容、`SoftwareApplication`、本地存储/不外发说明均存在。首页仍恰有三张卡片，当前顺序为“拉了么 → CRT转换器 → 花光马斯克的钱”；用户已改为草稿的 `pixel-journey` 不得被测试或文档擅自恢复。Sitemap 只包含新 canonical，不包含 Projects 兼容地址。
+
 ## 2. 视觉测试点
 
 截图：

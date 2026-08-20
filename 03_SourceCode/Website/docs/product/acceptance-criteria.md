@@ -154,6 +154,17 @@ M6.2 的逐项代码、命令和浏览器证据记录在 `tasks.md` 与 `docs/en
 - [x] 雷达保持 `aria-hidden`、不可点击、不可聚焦，不影响 Programs 搜索、筛选、卡片和导航；
 - [x] Astro Check、ESLint、雷达自动测试、生产构建与浏览器控制台验证通过。
 
+### M8-14 “花光马斯克的钱”Program 接入
+
+- [x] “花光马斯克的钱”作为本人编写的程序进入 Programs，而不是 Article 或第三方工具栏目；
+- [x] 状态明确标记为 `prototype`，正文说明 4000 亿美元虚拟预算、自由/限时挑战、商品筛选、消费统计、成就和本地恢复能力；
+- [x] 主要入口使用项目所有者提供的 HTTPS 地址，并具有 `target="_blank"` 与 `rel="noopener noreferrer"`；
+- [x] 详情页保留 Program 八项必备说明，明确 M0、非实时财务数据、本地数据可丢失、无账号/云同步/排行榜/服务端存档等限制；
+- [x] 不嵌入外站、不伪造源码或媒体、不把外部程序代码打包进首页；
+- [x] 首页保持三张 Program 卡片，当前顺序为“拉了么 → CRT转换器 → 花光马斯克的钱”；项目所有者已设为草稿的 `pixel-journey` 不被恢复公开；
+- [x] `/programs/spend-musk-money/`、`/projects/spend-musk-money/`、Programs 列表、SEO 和 Sitemap 静态输出通过；Projects 兼容页不进入 Sitemap；
+- [x] Astro Check、ESLint、23 项测试、生产构建、Sites 本地构建和 15 个静态 HTML 验证通过。
+
 - [ ] 类型、Lint、单元、集成和 E2E 通过；
 - [ ] 生产构建通过；
 - [ ] 控制台无未处理错误；

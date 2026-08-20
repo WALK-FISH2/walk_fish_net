@@ -189,3 +189,10 @@ M7 每次新增、转草稿或移除 Program 后，都必须重新统计独立 H
 - 当前公开 Article 仍为上述 3 篇，旧草稿不生成详情路由；公开 Program 为 3 个，Projects 兼容详情为 3 个；
 - 当前生产输出为 15 个 HTML，`npm test` 的路由、首页内容与 Canvas fallback 断言已同步此实际内容状态；
 - `npm run check` 为 45 文件 0 errors / 0 warnings / 0 hints，ESLint 与 20/20 测试通过，`npm run build:sites` 成功，`dist/server` 不存在。
+
+### 2026-08-21 “花光马斯克的钱”Program 基线
+
+- 项目所有者将 `pixel-journey` 保持为草稿，并新增公开 `spend-musk-money`；公开 Program 总数仍为 3；
+- 新增 `/programs/spend-musk-money/` canonical 与 `/projects/spend-musk-money/` 兼容页，替代先前已转草稿的 `pixel-journey` 两个生产路由，因此静态 HTML 总数仍为 15；
+- 首页三卡为“拉了么 → CRT转换器 → 花光马斯克的钱”；外站只通过 HTTPS 新标签页打开，不嵌入 iframe、不进入首页媒体包；
+- Sitemap 收录 `/programs/spend-musk-money/`，排除对应 `/projects` 地址；`dist/server` 继续不存在。

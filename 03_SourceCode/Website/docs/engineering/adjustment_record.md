@@ -836,3 +836,52 @@ M7 初次真实性清理把 `Tidy Desk` 与 `Signal Garden` 设为草稿，首�
 | 浏览器控制台 | 桌面、375px 和首页均为 0 warnings / 0 errors |
 
 本次本地验收使用 `http://localhost:4321/`，没有发布 Cloudflare。
+
+## 19. 2026-08-21 “花光马斯克的钱”Program 接入
+
+### 19.1 目标与内容边界
+
+项目所有者提供在线地址 `https://exhaust-all-of-musk-s-money.pages.dev/#/pages/index/index`，要求将本人编写的网站加入“做点啥呢”。本次将其建模为真实外部 Program，而不是文章、内嵌 Demo 或第三方工具；主站只生成介绍、搜索数据、SEO 与外链，不复制外站代码，也不引入外站运行时。
+
+公开页面与静态资源检查确认该版本使用“花光马斯克的钱”标题、`$400B` 虚拟预算、Taro/React H5、PWA manifest 与 Service Worker。可见交互包括自由模式、30/60/300 秒挑战、商品分类和搜索、数量调整、余额/消费进度、清单与结果、成就、挑战纪录、恢复和本地清理。静态脚本未发现业务 API、Axios、WebSocket 或远程数据接口，因此内容按当前事实写为“浏览器本地保存、无业务后端”；若外站未来接入账号或服务端，必须同步修改 Program 的隐私和限制字段。
+
+### 19.2 内容参数
+
+| 参数 | 当前值 |
+| --- | --- |
+| 内容文件 | `src/content/programs/spend-musk-money.md` |
+| `slug` | `spend-musk-money` |
+| 状态 / 分类 | `prototype` / `game-prototype` |
+| 首页展示 | `featured: true`，`order: 10` |
+| 演示方式 | `external-live` |
+| 主要地址 | `https://exhaust-all-of-musk-s-money.pages.dev/#/pages/index/index` |
+| 技术栈 | Taro、React、JavaScript、PWA、Cloudflare Pages |
+| 数据边界 | `storesData: local-only`、`sendsDataExternally: false` |
+| Program 主路由 | `/programs/spend-musk-money/` |
+| 旧链接兼容 | `/projects/spend-musk-money/` 跳转到同 slug 主路由 |
+
+正文补齐了“这是什么程序、为什么编写它、本人完成了什么、核心功能、技术方案、程序演示、当前限制、数据和隐私说明”八项内容。限制明确写出 M0 原型、预算/价格并非实时财务数据、本地数据可因清理而丢失，以及暂无账号、云同步、排行榜、多人或服务端存档。未增加未经提供的源码地址、视频、二维码或后端能力。
+
+### 19.3 首页、路由与隔离结果
+
+`pixel-journey` 保留项目所有者现有的 `draft: true`，本次没有恢复或覆盖该改动。新 Program 设为精选后，首页继续保持三张卡片，当前顺序为：
+
+1. 拉了么（`order: 0`）；
+2. CRT转换器（`order: 1`）；
+3. 花光马斯克的钱（`order: 10`）。
+
+外部地址只在 Program 详情的主要入口中出现，使用 `target="_blank"` 和 `rel="noopener noreferrer"`；首页只包含摘要，不嵌入或预加载外站。Sitemap 收录 `/programs/spend-musk-money/`，不收录 `/projects/spend-musk-money/` 兼容页。
+
+### 19.4 验证证据
+
+| 验证 | 结果 |
+| --- | --- |
+| Astro Check | 通过；0 errors |
+| ESLint | 通过 |
+| 自动化测试 | 23/23 通过；覆盖 schema、八项详情、外链安全、首页三卡、canonical、Sitemap 和兼容路由 |
+| 生产构建 | Astro static build 成功，`dist/` 生成 15 个 HTML |
+| Sites 本地构建 | `npm run build:sites` 通过 |
+| 静态路由 | 新 canonical 与 Projects 兼容详情均生成，15 个 HTML 与路由清单一致 |
+| 请求期运行时 | `dist/server` 不存在，未新增 Node 请求期依赖 |
+
+本次只进行了本地内容、构建和静态输出验收，没有发布 Cloudflare，也没有修改首页场景、滚动动画或其他 Program 内容。

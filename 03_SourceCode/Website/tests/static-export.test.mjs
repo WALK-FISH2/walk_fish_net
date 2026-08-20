@@ -27,7 +27,7 @@ const primaryRoutes = [
   ["dist/programs/index.html", "做点啥呢"],
   ["dist/programs/laleme/index.html", "拉了么"],
   ["dist/programs/image_converter/index.html", "CRT转换器"],
-  ["dist/programs/pixel-journey/index.html", "像素漫游个人站"],
+  ["dist/programs/spend-musk-money/index.html", "花光马斯克的钱"],
   ["dist/404.html", "LOST COORDINATES"],
 ];
 
@@ -35,7 +35,7 @@ const legacyRoutes = [
   ["dist/projects/index.html", "/programs/"],
   ["dist/projects/laleme/index.html", "/programs/laleme/"],
   ["dist/projects/image_converter/index.html", "/programs/image_converter/"],
-  ["dist/projects/pixel-journey/index.html", "/programs/pixel-journey/"],
+  ["dist/projects/spend-musk-money/index.html", "/programs/spend-musk-money/"],
 ];
 
 test("emits independent HTML for every primary and compatibility route", async () => {
@@ -54,6 +54,36 @@ test("emits independent HTML for every primary and compatibility route", async (
 
   const outputEntries = await readdir(new URL("dist/", root), { recursive: true });
   assert.equal(outputEntries.filter((entry) => entry.endsWith(".html")).length, 15);
+});
+
+test("publishes Spend Musk Money as an honest external Program and fills the third home card", async () => {
+  const [source, program, programIndex, home, sitemap] = await Promise.all([
+    readFile(new URL("src/content/programs/spend-musk-money.md", root), "utf8"),
+    readFile(new URL("dist/programs/spend-musk-money/index.html", root), "utf8"),
+    readFile(new URL("dist/programs/index.html", root), "utf8"),
+    readFile(new URL("dist/index.html", root), "utf8"),
+    readFile(new URL("dist/sitemap-0.xml", root), "utf8"),
+  ]);
+
+  assert.match(source, /status:\s*prototype/);
+  assert.match(source, /category:\s*game-prototype/);
+  assert.match(source, /featured:\s*true/);
+  assert.match(source, /demoType:\s*external-live/);
+  assert.match(source, /storesData:\s*local-only/);
+  assert.match(source, /sendsDataExternally:\s*false/);
+  assert.doesNotMatch(source, /sourceUrl:/);
+
+  for (const section of ["这是什么程序", "为什么编写它", "本人完成了什么", "核心功能", "技术方案", "程序演示", "当前限制", "数据和隐私说明"]) {
+    assert.match(program, new RegExp(section));
+  }
+  assert.match(program, /href="https:\/\/exhaust-all-of-musk-s-money\.pages\.dev\/#\/pages\/index\/index"[^>]*target="_blank"[^>]*rel="noopener noreferrer"/);
+  assert.match(program, /SoftwareApplication/);
+  assert.match(program, /4000 亿美元/);
+  assert.match(programIndex, /花光马斯克的钱/);
+  assert.match(home, /\/programs\/spend-musk-money\//);
+  assert.equal((home.match(/class="porthole /g) ?? []).length, 3);
+  assert.match(sitemap, /\/programs\/spend-musk-money\//);
+  assert.doesNotMatch(sitemap, /\/projects\/spend-musk-money\//);
 });
 
 test("publishes M7.1 external tools as attributed articles without changing the Program domain", async () => {
@@ -95,15 +125,15 @@ test("program pages expose the required domain content without claiming missing 
     "当前限制",
     "数据和隐私说明",
   ];
-  const [pixelJourney, home, programDemo] = await Promise.all([
-    readFile(new URL("dist/programs/pixel-journey/index.html", root), "utf8"),
+  const [spendMuskMoney, home, programDemo] = await Promise.all([
+    readFile(new URL("dist/programs/spend-musk-money/index.html", root), "utf8"),
     readFile(new URL("dist/index.html", root), "utf8"),
     readFile(new URL("src/components/ProgramDemo.astro", root), "utf8"),
   ]);
 
-  for (const section of requiredSections) assert.match(pixelJourney, new RegExp(section));
-  assert.match(pixelJourney, /SoftwareApplication/);
-  assert.match(pixelJourney, /\/programs\//);
+  for (const section of requiredSections) assert.match(spendMuskMoney, new RegExp(section));
+  assert.match(spendMuskMoney, /SoftwareApplication/);
+  assert.match(spendMuskMoney, /\/programs\//);
 
   const staticDisclaimer = "这是静态演示版，部分后端、数据库、登录或实时功能未接入。";
   assert.match(programDemo, new RegExp(staticDisclaimer));
@@ -122,7 +152,7 @@ test("static output has no Node server runtime and sitemap favors canonical rout
     readFile(new URL("dist/sitemap-0.xml", root), "utf8"),
     readFile(new URL("dist/robots.txt", root), "utf8"),
   ]);
-  assert.match(sitemap, /\/programs\/pixel-journey\//);
+  assert.match(sitemap, /\/programs\/spend-musk-money\//);
   assert.doesNotMatch(sitemap, /\/projects(?:\/|<)/);
   assert.match(robots, /Sitemap:/);
 });
@@ -130,21 +160,21 @@ test("static output has no Node server runtime and sitemap favors canonical rout
 test("keeps content, SEO, motion modes, and migrated source boundaries", async () => {
   const [home, program, css, contentConfig, baseLayout] = await Promise.all([
     readFile(new URL("dist/index.html", root), "utf8"),
-    readFile(new URL("dist/programs/pixel-journey/index.html", root), "utf8"),
+    readFile(new URL("dist/programs/spend-musk-money/index.html", root), "utf8"),
     readFile(new URL("src/styles/global.css", root), "utf8"),
     readFile(new URL("src/content.config.ts", root), "utf8"),
     readFile(new URL("src/layouts/BaseLayout.astro", root), "utf8"),
   ]);
   assert.match(home, /aria-label="旅程阶段"/);
-  assert.match(home, /\/programs\/pixel-journey\//);
-  assert.match(program, /rel="canonical"[^>]+\/programs\/pixel-journey\//);
+  assert.match(home, /\/programs\/spend-musk-money\//);
+  assert.match(program, /rel="canonical"[^>]+\/programs\/spend-musk-money\//);
   assert.match(program, /og:image/);
   assert.match(css, /html\[data-motion-mode="reduce"\]/);
   assert.match(baseLayout, /prefers-reduced-motion: reduce/);
   assert.match(baseLayout, /data-motion-mode="full"/);
   assert.match(contentConfig, /const programs = defineCollection/);
   assert.doesNotMatch(contentConfig, /const projects = defineCollection/);
-  await access(new URL("src/content/programs/pixel-journey.md", root));
+  await access(new URL("src/content/programs/spend-musk-money.md", root));
 });
 
 test("adds five recyclable scan-triggered targets to the Programs sonar", async () => {
@@ -241,10 +271,10 @@ test("implements M7 real Program publishing, detail-first actions, media isolati
   const homeProgramLinks = [
     home.indexOf("/programs/laleme/"),
     home.indexOf("/programs/image_converter/"),
-    home.indexOf("/programs/pixel-journey/"),
+    home.indexOf("/programs/spend-musk-money/"),
   ];
   assert.ok(homeProgramLinks.every((index) => index > 0), "the three selected Programs are published on home");
-  assert.ok(homeProgramLinks[0] < homeProgramLinks[1] && homeProgramLinks[1] < homeProgramLinks[2], "home Program order is Laleme, Image Converter, Pixel Journey");
+  assert.ok(homeProgramLinks[0] < homeProgramLinks[1] && homeProgramLinks[1] < homeProgramLinks[2], "home Program order is Laleme, Image Converter, Spend Musk Money");
   assert.equal((home.match(/class="porthole /g) ?? []).length, 3);
   assert.match(laleme, /status:\s*in-progress/);
   assert.match(laleme, /order:\s*0/);
